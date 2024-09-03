@@ -28,15 +28,5 @@ TrelloPowerUp.initialize({
       text: 'Open Product Form', // Text for the button
       callback: onBtnClick // Function to execute when the button is clicked
     }];
-  },
-
-  // Implement the 'card-detail-badges' capability
-  'card-detail-badges': function(t, options) {
-    console.log('Initializing card-detail-badges capability');
-    return [{
-      title: 'Product Form Badge',
-      text: 'Open Product Form',
-      callback: onBtnClick // Function to execute when the badge is clicked
-    }];
   }
 });

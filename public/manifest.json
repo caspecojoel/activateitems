@@ -6,8 +6,7 @@
   },
   "author": "Caspeco AB",
   "capabilities": [
-    "card-buttons",
-    "card-detail-badges"
+    "card-buttons"
   ],
   "id": "unique-id-for-your-powerup",
   "apiVersion": 1,
