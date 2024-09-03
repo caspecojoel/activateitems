@@ -8,6 +8,7 @@
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
+            max-width: 600px; /* Set a maximum width for the popup */
         }
         h1 {
             color: #333;
@@ -22,6 +23,9 @@
         .form-group {
             margin-bottom: 15px;
         }
+        #save {
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -35,10 +39,10 @@
         </div>
 
         <div class="form-group product-selection">
-            <h2>Select a Product</h2>
-            <label><input type="radio" name="product" value="Product A"> Product A</label>
-            <label><input type="radio" name="product" value="Product B"> Product B</label>
-            <label><input type="radio" name="product" value="Product C"> Product C</label>
+            <h2>Select Products</h2>
+            <label><input type="checkbox" name="product" value="Product A"> Product A</label>
+            <label><input type="checkbox" name="product" value="Product B"> Product B</label>
+            <label><input type="checkbox" name="product" value="Product C"> Product C</label>
         </div>
 
         <button id="save">Save</button>
