@@ -113,14 +113,14 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Form submitted successfully!');
+                    alert('Klarmarkering skickades till säljaren!');
                 } else {
-                    alert('Error submitting form');
+                    alert('Fel när klarmarkeringen skulle skickas, kontakta systemadministratör');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error submitting form');
+                alert('Fel när klarmarkeringen skulle skickas, kontakta systemadministratör');
             });
         });
     </script>
