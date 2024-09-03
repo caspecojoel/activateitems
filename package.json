@@ -1,6 +1,7 @@
 {
-  "name": "your-app-name",
+  "name": "activate-items", 
   "version": "1.0.0",
+  "description": "A Trello Power-Up for custom forms and HubSpot ID integration.",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
@@ -8,5 +9,21 @@
   "dependencies": {
     "express": "^4.17.1",
     "cors": "^2.8.5"
-  }
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "author": "Joel Ekberg <joel.ekberg@caspeco.se>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/caspecojoel/activateitems"
+  },
+  "keywords": [
+    "trello",
+    "power-up",
+    "hubspot",
+    "express",
+    "node"
+  ]
 }
