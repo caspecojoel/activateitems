@@ -21,18 +21,18 @@ var onBtnClick = function(t, opts) {
 
 // Initialize the Trello Power-Up
 TrelloPowerUp.initialize({
-  'card-buttons': function(t, options) {
-    return [{
-      icon: '/favicon.ico',
-      text: 'Open Product Form', // Button text
-      callback: onBtnClick
-    }];
-  },
-  'card-detail-badges': function(t, options) {
-    return [{
-      title: 'Custom Badge', // Tooltip when hovering over the badge
-      text: 'Product Form', // Badge text
-      callback: onBtnClick
-    }];
-  }
-});
+    'card-buttons': function(t, options) {
+      return [{
+        icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico', // Ensure this URL is correct
+        text: 'Open Product Form',
+        callback: onBtnClick
+      }];
+    },
+    'card-detail-badges': function(t, options) {
+      return [{
+        title: 'Custom Badge', // Tooltip when hovering over the badge
+        text: 'Product Form',
+        callback: onBtnClick
+      }];
+    }
+  });
