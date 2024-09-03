@@ -1,88 +1,12 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>Product and HubSpot ID Form</title>
-    <link rel="icon" href="/favicon.ico" type="image/x-icon">
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 20px;
-        padding: 20px;
-      }
-      label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: bold;
-      }
-      input[type="text"], textarea {
-        width: 100%;
-        padding: 8px;
-        margin-bottom: 12px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-      }
-      button {
-        background-color: #4CAF50;
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-      }
-      button:hover {
-        background-color: #45a049;
-      }
-    </style>
-    <!-- Link to the client.js file -->
-    <script src="/client.js"></script>
-  </head>
-  <body>
-    <h1>Enter Product Details and HubSpot ID</h1>
-    <form id="product-form">
-      <label for="product-name">Product Name:</label>
-      <input type="text" id="product-name" name="productName" required>
-
-      <label for="product-description">Product Description:</label>
-      <textarea id="product-description" name="productDescription" rows="4" required></textarea>
-
-      <label for="hubspot-id">HubSpot ID:</label>
-      <input type="text" id="hubspot-id" name="hubspotId" required>
-
-      <button type="submit">Submit</button>
-    </form>
-
-    <script>
-      // Function to get URL parameters
-      function getQueryParams() {
-        var params = {};
-        window.location.search.substring(1).split('&').forEach(function(param) {
-          var parts = param.split('=');
-          params[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1]);
-        });
-        return params;
-      }
-
-      // Auto-fill the HubSpot ID field
-      var params = getQueryParams();
-      if (params.hubspotId) {
-        document.getElementById('hubspot-id').value = params.hubspotId;
-      }
-
-      document.getElementById('product-form').addEventListener('submit', function(event) {
-        event.preventDefault();
-        const productName = document.getElementById('product-name').value;
-        const productDescription = document.getElementById('product-description').value;
-        const hubspotId = document.getElementById('hubspot-id').value;
-
-        // Example of how you might send this data to your server or another service
-        console.log('Product Name:', productName);
-        console.log('Product Description:', productDescription);
-        console.log('HubSpot ID:', hubspotId);
-
-        // Reset the form
-        this.reset();
-      });
-    </script>
-  </body>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Iframe</title>
+</head>
+<body>
+    <h1>Form will load here</h1>
+    <p>This is a simple placeholder message.</p>
+</body>
 </html>
