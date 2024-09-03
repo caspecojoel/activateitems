@@ -6,16 +6,16 @@ var onBtnClick = function(t, opts) {
       return t.get(card.id, 'shared', 'customFieldData');
     })
     .then(function(customFieldData) {
-      var baseUrl = 'https://example.com/search?';
+      var baseUrl = 'https://activateitems-d22e28f2e719.herokuapp.com/iframe'; // Your Heroku app's URL
       var params = Object.keys(customFieldData).map(function(key) {
         return encodeURIComponent(key) + '=' + encodeURIComponent(customFieldData[key]);
       }).join('&');
-      var url = baseUrl + params;
+      var url = baseUrl + '?' + params;
       return t.modal({
-        url: url,
-        height: 500,
-        fullscreen: false,
-        title: 'External Webpage'
+        url: url,  // The URL for the iframe content
+        height: 500, // The height of the modal
+        fullscreen: false, // Whether the modal should be fullscreen
+        title: 'Custom iFrame Page' // Title of the modal
       });
     });
 };
@@ -23,14 +23,14 @@ var onBtnClick = function(t, opts) {
 TrelloPowerUp.initialize({
   'card-buttons': function(t, options) {
     return [{
-      icon: 'https://example.com/icon.png',
-      text: 'Open Custom Page',
+      icon: 'https://example.com/icon.png', // Update this to your desired icon URL
+      text: 'Open Custom iFrame', // Update the button text
       callback: onBtnClick
     }];
   },
   'card-detail-badges': function(t, options) {
     return [{
-      text: 'Custom Button',
+      text: 'Custom iFrame Badge', // Update the badge text
       callback: onBtnClick
     }];
   }
