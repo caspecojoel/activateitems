@@ -19,19 +19,22 @@ var onBtnClick = function(t, opts) {
 
 TrelloPowerUp.initialize({
   'card-buttons': function(t, options) {
-    console.log('Initializing card-buttons capability');
     return [{
-      icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico', // Replace with your icon URL
-      text: 'Open External Page', // Text for the button
+      icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+      text: 'Open Product Form',
       callback: onBtnClick
     }];
   },
   'card-detail-badges': function(t, options) {
-    console.log('Initializing card-detail-badges capability');
     return [{
-      title: 'External Page Badge',
-      text: 'Open External Page',
+      title: 'Product Form Badge',
+      text: 'Open Product Form',
       callback: onBtnClick
     }];
+  },
+  'show-authorization': function(t, options) {
+    return {
+      url: 'https://activateitems-d22e28f2e719.herokuapp.com/authorize'
+    };
   }
 });
