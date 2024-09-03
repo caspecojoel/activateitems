@@ -38,7 +38,7 @@ app.post('/submit-form', (req, res) => {
 
   // Skapa innehållet för e-postmeddelandet
   let mailOptions = {
-    from: '"Operations - Leverans" <caspeco.oncall@gmail.com>',  // avsändaradress
+    from: '"Operations - Leverans " <caspeco.oncall@gmail.com>',  // avsändaradress
     to: 'joel.ekberg@caspeco.se',  // mottagarens email
     subject: `Aktivering av produkter: ${cardTitle}`,  // Ämne för mailet inkluderar kortets titel
     html: `
@@ -46,10 +46,10 @@ app.post('/submit-form', (req, res) => {
         <div style="background-color: #ffffff; padding: 20px; border-radius: 10px; max-width: 600px; margin: 0 auto; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
           <h1 style="color: #1a73e8;">Aktivering av Produkter</h1>
           <p>Hej!</p>
-          <p>Vi på operations har nu aktiverat följande produkt(er) för kunden: <strong>${cardTitle}</strong>.</p>
-          <ul style="margin: 20px 0; padding: 0; list-style-type: none;">
-            ${generateProductListHtml(selectedLabels)}
-          </ul>
+          <p>Vi på operations har nu aktiverat följande produkt(er) för kortet: <strong>${cardTitle}</strong>.</p>
+          <ul style="margin: 20px 0; padding-left: 20px; list-style-type: disc;">
+          ${generateProductListHtml(selectedLabels)}
+        </ul>
           <p>Formuläret skickades av: <strong>${userName}</strong>.</p>
           <p>Tveka inte att kontakta oss om du har några frågor eller behöver ytterligare hjälp.</p>
           <div style="margin-top: 30px; font-size: 14px; color: #777;">
