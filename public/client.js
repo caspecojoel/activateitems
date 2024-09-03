@@ -29,7 +29,7 @@ var onBtnClick = function(t, opts) {
       var externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?hubspotId=${hubspotId}&labels=${encodeURIComponent(labels)}`;
 
       return t.popup({
-        title: 'Open External Page',
+        title: 'Klarmarkering',
         url: externalUrl,
         height: 800,
         width: 1000
