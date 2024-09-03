@@ -2,14 +2,15 @@
     "name": "Custom Button Power-Up",
     "description": "A Trello Power-Up to display a custom form with HubSpot ID.",
     "icon": "https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico",
-    "author": "Your Name or Company",
+    "author": "Caspeco AB",
     "capabilities": {
       "card-buttons": {
         "url": "https://activateitems-d22e28f2e719.herokuapp.com/client.js",
         "name": "Open Product Form"
       },
       "card-detail-badges": {
-        "url": "https://activateitems-d22e28f2e719.herokuapp.com/client.js"
+        "url": "https://activateitems-d22e28f2e719.herokuapp.com/client.js",
+        "name": "Product Form Badge"
       },
       "show-authorization": {
         "url": "https://activateitems-d22e28f2e719.herokuapp.com/authorize"
