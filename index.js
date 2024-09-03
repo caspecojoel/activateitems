@@ -31,18 +31,6 @@ app.get('/manifest.json', (req, res) => {
   });
 });
 
-// Route to serve the iframe content
-app.get('/iframe', (req, res) => {
-  console.log('Serving iframe content');
-  res.sendFile(__dirname + '/public/iframe.html', (err) => {
-    if (err) {
-      console.error('Error serving iframe.html:', err);
-    } else {
-      console.log('iframe.html served successfully');
-    }
-  });
-});
-
 // Handle non-existent routes
 app.use((req, res, next) => {
   console.warn(`404 error: ${req.originalUrl} not found`);
