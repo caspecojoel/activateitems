@@ -1,14 +1,77 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Iframe</title>
+  <title>Product Selection</title>
+  <script src="https://p.trellocdn.com/power-up.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .product-selection {
+      margin-bottom: 20px;
+    }
+    .product-selection label {
+      display: block;
+      margin: 5px 0;
+    }
+  </style>
 </head>
 <body>
-    <script src="https://p.trellocdn.com/power-up.min.js"></script>
-    <script src="/client.js"></script>
-    <h1>Form will load here</h1>
-    <p>This is a very simple placeholder message.</p>
+  <div class="product-selection">
+    <h2>Select a Product</h2>
+    <label>
+      <input type="radio" name="product" value="Product A"> Product A
+    </label>
+    <label>
+      <input type="radio" name="product" value="Product B"> Product B
+    </label>
+    <label>
+      <input type="radio" name="product" value="Product C"> Product C
+    </label>
+  </div>
+  <div>
+    <h2>HubSpot ID</h2>
+    <input type="text" id="hubspot-id" readonly>
+  </div>
+  <button id="save">Save</button>
+  <script>
+    TrelloPowerUp.initialize({
+      'card-back-section': function(t, options) {
+        // Fetch the custom field and set it in the input
+        return t.card('customField')
+          .then(function(card) {
+            // Assuming the custom field ID is 'hubspot_id'
+            var hubspotIdField = card.customFieldValues.find(field => field.idCustomField === 'hubspot_id');
+            if (hubspotIdField) {
+              document.getElementById('hubspot-id').value = hubspotIdField.value;
+            } else {
+              console.error('HubSpot ID custom field not found.');
+            }
+          })
+          .catch(function(error) {
+            console.error('Error fetching custom field:', error);
+          });
+      }
+    });
+
+    document.getElementById('save').addEventListener('click', function() {
+      var selectedProduct = document.querySelector('input[name="product"]:checked');
+      if (!selectedProduct) {
+        alert('Please select a product.');
+        return;
+      }
+
+      var productValue = selectedProduct.value;
+      var hubspotId = document.getElementById('hubspot-id').value;
+
+      // Save the selected product and HubSpot ID
+      // You can use Trello's API to save this data to the card
+      console.log('Selected product:', productValue);
+      console.log('HubSpot ID:', hubspotId);
+
+      // Optionally, you can use t.set to update card data
+    });
+  </script>
 </body>
 </html>
