@@ -1,5 +1,5 @@
 {
-  "name": "activate-items", 
+  "name": "activate-items",
   "version": "1.0.0",
   "description": "A Trello Power-Up for custom forms and HubSpot ID integration.",
   "main": "index.js",
@@ -7,8 +7,9 @@
     "start": "node index.js"
   },
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^4.17.1",
-    "cors": "^2.8.5"
+    "morgan": "^1.10.0"
   },
   "engines": {
     "node": ">=14.0.0"
