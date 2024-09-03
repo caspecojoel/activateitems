@@ -1,0 +1,34 @@
+{
+    "name": "Custom Button Power-Up",
+    "description": "A Trello Power-Up to display a custom form with HubSpot ID.",
+    "icon": "https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico",
+    "author": "Your Name or Company",
+    "capabilities": {
+      "card-buttons": {
+        "url": "https://activateitems-d22e28f2e719.herokuapp.com/client.js",
+        "name": "Open Product Form"
+      },
+      "card-detail-badges": {
+        "url": "https://activateitems-d22e28f2e719.herokuapp.com/client.js"
+      },
+      "show-authorization": {
+        "url": "https://activateitems-d22e28f2e719.herokuapp.com/authorize"
+      }
+    },
+    "connectors": {
+      "iframe": {
+        "url": "https://activateitems-d22e28f2e719.herokuapp.com/iframe",
+        "size": {
+          "height": 500
+        }
+      }
+    },
+    "id": "unique-id-for-your-powerup",
+    "apiVersion": 1,
+    "scopes": ["read", "write"],
+    "request_limits": {
+      "hourly": 1000,
+      "daily": 10000
+    }
+  }
+  
