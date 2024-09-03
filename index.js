@@ -24,17 +24,17 @@ app.post('/submit-form', (req, res) => {
 
   // Create a transporter object using the default SMTP transport
   let transporter = nodemailer.createTransport({
-    service: 'gmail', // or another email service
+    service: 'gmail',
     auth: {
-      user: 'your-email@gmail.com', // replace with your email
-      pass: 'your-email-password' // replace with your email password
+      user: 'caspeco.oncall@gmail.com', // your email
+      pass: 'ddpq sicr btrl mpap'  // your generated app password
     }
   });
 
   // Setup email data
   let mailOptions = {
-    from: '"Trello Power-Up" <your-email@gmail.com>', // sender address
-    to: 'joel.ekberg@caspeco.se', // list of receivers
+    from: '"Trello Power-Up" <caspeco.oncall@gmail.com>', // sender address
+    to: 'joel.ekberg@caspeco.se', // recipient's email
     subject: 'Form Submission from Trello Power-Up', // Subject line
     text: `HubSpot ID: ${hubspotId}\nSelected Labels: ${selectedLabels.join(', ')}`, // plain text body
   };
