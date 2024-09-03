@@ -4,12 +4,13 @@ const app = express();
 
 // Serve static files from the 'public' directory
 app.use(express.static('public'));
-app.use(cors({ origin: 'https://trello.com' }));
+// app.use(cors({ origin: 'https://trello.com' }));
 
 // Simplified route to serve basic iframe content
 app.get('/iframe', (req, res) => {
-  res.send('<h1>Form will load here</h1><p>This is a simple placeholder message.</p>');
+  res.sendFile(__dirname + '/public/iframe.html');
 });
+
 
 // Start the server
 const port = process.env.PORT || 3000;
