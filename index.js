@@ -6,9 +6,9 @@ const app = express();
 app.use(express.static('public'));
 app.use(cors({ origin: 'https://trello.com' }));
 
-// Route to serve the iframe content
+// Simplified route to serve basic iframe content
 app.get('/iframe', (req, res) => {
-  res.sendFile(__dirname + '/public/index.html'); // Adjust this if you have a different file for the iframe
+  res.send('<h1>Form will load here</h1><p>This is a simple placeholder message.</p>');
 });
 
 // Start the server
