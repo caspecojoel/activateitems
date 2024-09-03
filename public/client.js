@@ -6,7 +6,7 @@ var onBtnClick = function(t, opts) {
   console.log('Button clicked on card:', opts);
 
   // Replace with the actual external URL you want to open
-  var externalUrl = 'https://activateitems-d22e28f2e719.herokuapp.com/external-page';
+  var externalUrl = 'https://activateitems-d22e28f2e719.herokuapp.com/';
 
   return t.navigate({
     url: externalUrl, // The external URL to open
