@@ -50,6 +50,22 @@
     </form>
 
     <script>
+      // Function to get URL parameters
+      function getQueryParams() {
+        var params = {};
+        window.location.search.substring(1).split('&').forEach(function(param) {
+          var parts = param.split('=');
+          params[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1]);
+        });
+        return params;
+      }
+
+      // Auto-fill the HubSpot ID field
+      var params = getQueryParams();
+      if (params.hubspotId) {
+        document.getElementById('hubspot-id').value = params.hubspotId;
+      }
+
       document.getElementById('product-form').addEventListener('submit', function(event) {
         event.preventDefault();
         const productName = document.getElementById('product-name').value;
@@ -57,7 +73,6 @@
         const hubspotId = document.getElementById('hubspot-id').value;
 
         // Example of how you might send this data to your server or another service
-        // This would typically involve an AJAX request, or you could use fetch/axios
         console.log('Product Name:', productName);
         console.log('Product Description:', productDescription);
         console.log('HubSpot ID:', hubspotId);
