@@ -15,7 +15,7 @@ var onBtnClick = function(t, opts) {
       var externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?hubspotId=${hubspotId}`;
 
       return t.popup({
-        title: 'Open External Page',
+        title: 'Klarmarkera',
         url: externalUrl,
         height: 800,  // Set height here
         width: 1000   // Set width here
