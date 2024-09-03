@@ -24,7 +24,7 @@ TrelloPowerUp.initialize({
     console.log('Initializing card-buttons capability');
     return [{
       icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-      text: 'Open External Page',
+      text: 'Klarmarkering',
       callback: onBtnClick
     }];
   }
