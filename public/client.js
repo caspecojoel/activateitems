@@ -18,33 +18,27 @@ var onBtnClick = function(t, opts) {
   });
 };
 
-// Initialize the Trello Power-Up
 TrelloPowerUp.initialize({
-  // Implement the 'card-buttons' capability
   'card-buttons': function(t, options) {
-    console.log('Initializing card-buttons capability');
     return [{
-      icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico', // Replace with your icon URL
-      text: 'Open Product Form', // Text for the button
-      callback: onBtnClick // Function to execute when the button is clicked
+      icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+      text: 'Open Product Form',
+      callback: onBtnClick
     }];
   },
 
-  // Implement the 'card-detail-badges' capability
   'card-detail-badges': function(t, options) {
-    console.log('Initializing card-detail-badges capability');
     return [{
       title: 'Product Form Badge',
       text: 'Open Product Form',
-      callback: onBtnClick // Function to execute when the badge is clicked
+      callback: onBtnClick
     }];
   },
 
-  // Implement the 'show-authorization' capability
   'show-authorization': function(t, options) {
-    console.log('Initializing show-authorization capability');
     return {
-      url: 'https://activateitems-d22e28f2e719.herokuapp.com/authorize' // URL for authorization
+      url: 'https://activateitems-d22e28f2e719.herokuapp.com/authorize'
     };
   }
 });
+
