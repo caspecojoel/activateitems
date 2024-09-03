@@ -59,9 +59,7 @@
 
             <div class="form-group product-selection">
                 <h3>Välj produkter</h3>
-                <label><input type="checkbox" name="product" value="Product A"> Product A</label>
-                <label><input type="checkbox" name="product" value="Product B"> Product B</label>
-                <label><input type="checkbox" name="product" value="Product C"> Product C</label>
+                <div id="labels-container"></div>
             </div>
 
             <button id="save">Spara</button>
@@ -70,18 +68,26 @@
 
     <script src="https://p.trellocdn.com/power-up.min.js"></script>
     <script>
-        // Function to get URL parameters
         function getUrlParameter(name) {
             name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
             var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
             var results = regex.exec(location.search);
             return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
         }
-    
-        // Get the hubspotId parameter from the URL and populate the input field
+
+        // Get HubSpot ID and labels from the URL
         var hubspotId = getUrlParameter('hubspotId');
-        console.log('HubSpot ID from URL:', hubspotId);
+        var labels = getUrlParameter('labels').split(',');
+
         document.getElementById('hubspot-id').value = hubspotId;
+
+        // Populate the labels as checkbox options
+        var labelsContainer = document.getElementById('labels-container');
+        labels.forEach(function(label) {
+            var labelElement = document.createElement('label');
+            labelElement.innerHTML = `<input type="checkbox" name="product" value="${label}"> ${label}`;
+            labelsContainer.appendChild(labelElement);
+        });
     </script>
     
     <script src="/client.js"></script>
