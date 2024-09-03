@@ -23,7 +23,7 @@ var onBtnClick = function(t, opts) {
 TrelloPowerUp.initialize({
   'card-buttons': function(t, options) {
     return [{
-      icon: 'https://example.com/icon.png', // Replace with your own icon URL
+      icon: '/favicon.ico',
       text: 'Open Product Form', // Button text
       callback: onBtnClick
     }];
