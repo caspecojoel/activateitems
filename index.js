@@ -20,12 +20,12 @@ app.get('/client.js', (req, res) => {
 
 // Funktion för att generera HTML-lista av valda produkter
 function generateProductListHtml(selectedLabels) {
-  return selectedLabels.map(label => `<li>${label}</li>`).join('');
+  return selectedLabels.map(label => `<li><strong>${label}</strong></li>`).join('');
 }
 
 // Endpoint för att hantera formulärinlämning
 app.post('/submit-form', (req, res) => {
-  const { hubspotId, selectedLabels, userName } = req.body;
+  const { hubspotId, selectedLabels, userName, cardTitle } = req.body;
 
   // Skapa en transporter-objekt med standard SMTP-transport
   let transporter = nodemailer.createTransport({
@@ -38,15 +38,15 @@ app.post('/submit-form', (req, res) => {
 
   // Skapa innehållet för e-postmeddelandet
   let mailOptions = {
-    from: '"Trello Power-Up" <caspeco.oncall@gmail.com>',  // avsändaradress
+    from: '"Operations - Leverans" <caspeco.oncall@gmail.com>',  // avsändaradress
     to: 'joel.ekberg@caspeco.se',  // mottagarens email
-    subject: 'Aktivering av Produkter',  // Ämne för mailet
+    subject: `Aktivering av produkter: ${cardTitle}`,  // Ämne för mailet inkluderar kortets titel
     html: `
       <div style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; padding: 20px;">
         <div style="background-color: #ffffff; padding: 20px; border-radius: 10px; max-width: 600px; margin: 0 auto; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
           <h1 style="color: #1a73e8;">Aktivering av Produkter</h1>
           <p>Hej!</p>
-          <p>Vi på operations har nu aktiverat följande produkt(er):</p>
+          <p>Vi på operations har nu aktiverat följande produkt(er) för kunden: <strong>${cardTitle}</strong>.</p>
           <ul style="margin: 20px 0; padding: 0; list-style-type: none;">
             ${generateProductListHtml(selectedLabels)}
           </ul>
