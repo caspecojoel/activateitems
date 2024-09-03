@@ -1,10 +1,8 @@
 const express = require('express');
-const cors = require('cors');
 const app = express();
 
 // Serve static files from the 'public' directory
 app.use(express.static('public'));
-app.use(cors({ origin: 'https://trello.com' }));
 
 // Route to serve the iframe content
 app.get('/iframe', (req, res) => {
