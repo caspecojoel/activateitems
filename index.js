@@ -27,7 +27,7 @@ app.post('/submit-form', (req, res) => {
     service: 'gmail',
     auth: {
       user: 'caspeco.oncall@gmail.com', // your email
-      pass: 'ddpq sicr btrl mpap'  // your generated app password
+      pass: 'ddpqsicrbtrlmpap'  // your generated app password
     }
   });
 
