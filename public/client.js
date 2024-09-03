@@ -16,7 +16,9 @@ var onBtnClick = function(t, opts) {
 
       return t.popup({
         title: 'Open External Page',
-        url: externalUrl
+        url: externalUrl,
+        height: 800,  // Set height here
+        width: 1000   // Set width here
       }).then(() => {
         console.log('Popup displayed successfully with HubSpot ID:', hubspotId);
       }).catch(err => {
