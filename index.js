@@ -16,10 +16,17 @@ app.get('/client.js', (req, res) => {
   res.sendFile(path.join(__dirname, 'client.js'));
 });
 
+// Serve the HTML file for the external form
+app.get('/external-form', (req, res) => {
+  res.sendFile(path.join(__dirname, 'external-form.html'));
+});
+
+// Handle non-existent routes
 app.use((req, res, next) => {
   res.status(404).send('404 Not Found');
 });
 
+// Error handling middleware
 app.use((err, req, res, next) => {
   res.status(500).send('Internal Server Error');
 });

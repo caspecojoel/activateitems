@@ -5,7 +5,7 @@ var POWER_UP_NAME = 'Custom Button Power-Up';
 var onBtnClick = function(t, opts) {
   console.log('Button clicked on card:', opts);
 
-  var externalUrl = 'https://activateitems-d22e28f2e719.herokuapp.com/';
+  var externalUrl = 'https://activateitems-d22e28f2e719.herokuapp.com/external-form';
 
   return t.navigate({
     url: externalUrl,
