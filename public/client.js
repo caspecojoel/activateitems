@@ -8,6 +8,9 @@ var onBtnClick = function(t, opts) {
     .then(function(card) {
       console.log('Card data:', card);
 
+      // Get the card title
+      const cardTitle = card.name;
+
       // Find the custom field with the specific ID
       const customField = card.customFieldItems.find(field => field.idCustomField === '66d715a7584d0c33d06ab06f');
       console.log('Found custom field:', customField);
@@ -25,8 +28,8 @@ var onBtnClick = function(t, opts) {
       // Get labels from the card
       const labels = card.labels.map(label => label.name).join(',');
 
-      // URL of the page you want to display in the popup
-      var externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?hubspotId=${hubspotId}&labels=${encodeURIComponent(labels)}`;
+      // URL of the page you want to display in the popup, including cardTitle
+      var externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?hubspotId=${hubspotId}&labels=${encodeURIComponent(labels)}&cardTitle=${encodeURIComponent(cardTitle)}`;
 
       return t.popup({
         title: 'Klarmarkering',
@@ -34,7 +37,7 @@ var onBtnClick = function(t, opts) {
         height: 800,
         width: 1000
       }).then(() => {
-        console.log('Popup displayed successfully with HubSpot ID and labels:', hubspotId, labels);
+        console.log('Popup displayed successfully with HubSpot ID, labels, and card title:', hubspotId, labels, cardTitle);
       }).catch(err => {
         console.error('Error displaying popup:', err);
       });
