@@ -77,11 +77,13 @@
             var results = regex.exec(location.search);
             return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
         }
-
+    
         // Get the hubspotId parameter from the URL and populate the input field
         var hubspotId = getUrlParameter('hubspotId');
+        console.log('HubSpot ID from URL:', hubspotId);
         document.getElementById('hubspot-id').value = hubspotId;
     </script>
+    
     <script src="/client.js"></script>
 </body>
 </html>
