@@ -88,6 +88,41 @@
             labelElement.innerHTML = `<input type="checkbox" name="product" value="${label}"> ${label}`;
             labelsContainer.appendChild(labelElement);
         });
+
+        // Handle form submission
+        document.getElementById('save').addEventListener('click', function() {
+            // Collect form data
+            var selectedLabels = [];
+            document.querySelectorAll('input[name="product"]:checked').forEach(function(checkbox) {
+                selectedLabels.push(checkbox.value);
+            });
+
+            var formData = {
+                hubspotId: document.getElementById('hubspot-id').value,
+                selectedLabels: selectedLabels
+            };
+
+            // Send form data to the server
+            fetch('/submit-form', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Form submitted successfully!');
+                } else {
+                    alert('Error submitting form');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error submitting form');
+            });
+        });
     </script>
     
     <script src="/client.js"></script>

@@ -2,10 +2,12 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const morgan = require('morgan');
+const nodemailer = require('nodemailer');
 const app = express();
 
 app.use(morgan('combined'));
 app.use(express.static('public'));
+app.use(express.json()); // To parse JSON request bodies
 app.use(cors({ origin: 'https://trello.com' }));
 
 app.get('/manifest.json', (req, res) => {
@@ -14,6 +16,38 @@ app.get('/manifest.json', (req, res) => {
 
 app.get('/client.js', (req, res) => {
   res.sendFile(path.join(__dirname, 'client.js'));
+});
+
+// Endpoint to handle form submission
+app.post('/submit-form', (req, res) => {
+  const { hubspotId, selectedLabels } = req.body;
+
+  // Create a transporter object using the default SMTP transport
+  let transporter = nodemailer.createTransport({
+    service: 'gmail', // or another email service
+    auth: {
+      user: 'your-email@gmail.com', // replace with your email
+      pass: 'your-email-password' // replace with your email password
+    }
+  });
+
+  // Setup email data
+  let mailOptions = {
+    from: '"Trello Power-Up" <your-email@gmail.com>', // sender address
+    to: 'joel.ekberg@caspeco.se', // list of receivers
+    subject: 'Form Submission from Trello Power-Up', // Subject line
+    text: `HubSpot ID: ${hubspotId}\nSelected Labels: ${selectedLabels.join(', ')}`, // plain text body
+  };
+
+  // Send mail with defined transport object
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log(error);
+      return res.json({ success: false, message: 'Error sending email' });
+    }
+    console.log('Message sent: %s', info.messageId);
+    res.json({ success: true, message: 'Email sent successfully' });
+  });
 });
 
 // Handle non-existent routes
