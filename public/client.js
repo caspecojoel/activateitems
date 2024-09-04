@@ -59,15 +59,3 @@ TrelloPowerUp.initialize({
     }];
   }
 });
-
-
-TrelloPowerUp.initialize({
-  'card-buttons': function(t, options) {
-    console.log('Initializing card-buttons capability');
-    return [{
-      icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-      text: 'Klarmarkering',
-      callback: onBtnClick
-    }];
-  }
-});
