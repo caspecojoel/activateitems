@@ -75,10 +75,11 @@
             return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
         }
 
-        // Get HubSpot ID, labels, and card title from the URL
+        // Get HubSpot ID, labels, card title, and user name from the URL
         var hubspotId = getUrlParameter('hubspotId');
         var labels = getUrlParameter('labels').split(',');
         var cardTitle = getUrlParameter('cardTitle');
+        var userName = getUrlParameter('userName'); // Retrieve the user name from the URL
 
         document.getElementById('hubspot-id').value = hubspotId;
 
@@ -101,8 +102,11 @@
             var formData = {
                 hubspotId: document.getElementById('hubspot-id').value,
                 selectedLabels: selectedLabels,
-                cardTitle: cardTitle // Include the card title in the form data
+                cardTitle: cardTitle, // Include the card title in the form data
+                userName: userName  // Include the user name in the form data
             };
+
+            console.log("Form Data being sent:", formData);
 
             // Send form data to the server
             fetch('/submit-form', {
