@@ -93,11 +93,6 @@
 
         // Handle form submission
         document.getElementById('save').addEventListener('click', function() {
-            var saveButton = document.getElementById('save');
-
-            // Disable the save button to prevent duplicates
-            saveButton.disabled = true;
-
             // Collect form data
             var selectedLabels = [];
             document.querySelectorAll('input[name="product"]:checked').forEach(function(checkbox) {
@@ -124,17 +119,14 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Close the popup if form submission is successful
-                    t.closePopup();
+                    alert('Klarmarkering skickades till säljaren!');
                 } else {
                     alert('Fel när klarmarkeringen skulle skickas, kontakta systemadministratör');
-                    saveButton.disabled = false; // Re-enable the save button in case of error
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 alert('Fel när klarmarkeringen skulle skickas, kontakta systemadministratör');
-                saveButton.disabled = false; // Re-enable the save button in case of error
             });
         });
     </script>
