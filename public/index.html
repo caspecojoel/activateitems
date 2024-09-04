@@ -62,12 +62,15 @@
                 <div id="labels-container"></div>
             </div>
 
-            <button id="save">Skicka</button>
+            <button id="save">Spara</button>
         </div>
     </div>
 
     <script src="https://p.trellocdn.com/power-up.min.js"></script>
     <script>
+        // Get Trello client object using TrelloPowerUp.iframe()
+        var t = window.TrelloPowerUp.iframe();
+
         function getUrlParameter(name) {
             name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
             var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
@@ -124,7 +127,7 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Close the popup if form submission is successful
+                    // Close the popup using TrelloPowerUp's t.closePopup() function
                     t.closePopup();
                 } else {
                     alert('Fel när klarmarkeringen skulle skickas, kontakta systemadministratör');
