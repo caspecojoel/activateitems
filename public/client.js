@@ -39,31 +39,34 @@ var onBtnClick = function(t, opts) {
                 // URL of the page you want to display in the popup, including cardTitle and userName
                 var externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?hubspotId=${hubspotId}&labels=${encodeURIComponent(labels)}&cardTitle=${encodeURIComponent(cardTitle)}&userName=${encodeURIComponent(userName)}`;
 
-                // Make API call to get account details
-                const apiUrl = `https://cas-test.loveyourq.se/dev/GetYouniumOrders?OrgNo=${orgNum}&HubspotDealId=${hubspotId}`;
-                console.log('API URL:', apiUrl);
+                // Make API call to backend to proxy the external API
+                fetch('/proxy-younium-orders', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ OrgNo: orgNum, HubspotDealId: hubspotId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('API Response:', data);
 
-                fetch(apiUrl)
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log('API Response:', data);
+                    // Extract account information
+                    if (data && data.length > 0) {
+                        const accountInfo = data[0].account;
+                        const accountName = accountInfo.name;
+                        const accountNumber = accountInfo.accountNumber;
 
-                        // Extract account information
-                        if (data && data.length > 0) {
-                            const accountInfo = data[0].account;
-                            const accountName = accountInfo.name;
-                            const accountNumber = accountInfo.accountNumber;
-
-                            // Display the account information in the popup
-                            alert(`Account Name: ${accountName}\nAccount Number: ${accountNumber}`);
-                        } else {
-                            alert('No data found for this OrgNo and HubSpot ID.');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error fetching API data:', error);
-                        alert('Error fetching API data.');
-                    });
+                        // Display the account information in the popup
+                        alert(`Account Name: ${accountName}\nAccount Number: ${accountNumber}`);
+                    } else {
+                        alert('No data found for this OrgNo and HubSpot ID.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching API data:', error);
+                    alert('Error fetching API data.');
+                });
 
                 return t.popup({
                     title: 'Klarmarkering',
