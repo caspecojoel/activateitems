@@ -1,3 +1,9 @@
+// Function to get custom field value
+const getCustomFieldValue = (fields, fieldId) => {
+  const field = fields.find(f => f.idCustomField === fieldId);
+  return field?.value?.text || field?.value?.number || '';
+};
+
 // Function to get activation status
 const getActivationStatus = (youniumData) => {
   if (!youniumData || !youniumData.charges) {
@@ -10,10 +16,20 @@ const getActivationStatus = (youniumData) => {
   if (activatedCharges === totalCharges && totalCharges > 0) {
     return { status: 'all', text: 'All products activated', color: 'green' };
   } else if (activatedCharges > 0) {
-    return { status: 'partial', text: `${activatedCharges}/${totalCharges} products activated`, color: 'light-green' };
+    return { status: 'partial', text: `${activatedCharges}/${totalCharges} products activated`, color: 'lime' };
   } else {
     return { status: 'none', text: 'No products activated', color: 'red' };
   }
+};
+
+// Function to fetch Younium data
+const fetchYouniumData = (orgNo, hubspotId) => {
+  return fetch(`/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`)
+    .then(response => response.json())
+    .catch(err => {
+      console.error('Error fetching Younium data:', err);
+      return null;
+    });
 };
 
 // Define the Power-Up
@@ -25,12 +41,6 @@ const onBtnClick = (t, opts) => {
 
     const cardTitle = card.name;
 
-    // Get HubSpot ID and Org Number from custom fields
-    const getCustomFieldValue = (fields, fieldId) => {
-      const field = fields.find(f => f.idCustomField === fieldId);
-      return field?.value?.text || field?.value?.number || '';
-    };
-
     const hubspotId = getCustomFieldValue(card.customFieldItems, '66d715a7584d0c33d06ab06f');
     const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
     console.log('HubSpot ID:', hubspotId);
@@ -41,10 +51,13 @@ const onBtnClick = (t, opts) => {
       const labels = card.labels.map(label => label.name).join(',');
 
       // Fetch Younium data and display in popup
-      return fetch(`/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`)
-        .then(response => response.json())
+      return fetchYouniumData(orgNo, hubspotId)
         .then(youniumData => {
           console.log('Younium data:', youniumData);
+
+          if (!youniumData) {
+            throw new Error('Failed to fetch Younium data');
+          }
 
           const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(youniumData))}&hubspotId=${encodeURIComponent(hubspotId)}&orgNo=${encodeURIComponent(orgNo)}`;
 
@@ -57,7 +70,13 @@ const onBtnClick = (t, opts) => {
           });
         })
         .then(() => console.log('Popup displayed successfully with all data'))
-        .catch(err => console.error('Error fetching Younium data or displaying popup:', err));
+        .catch(err => {
+          console.error('Error fetching Younium data or displaying popup:', err);
+          return t.alert({
+            message: 'Failed to load Younium data. Please try again later.',
+            duration: 5
+          });
+        });
     });
   });
 };
@@ -70,8 +89,7 @@ TrelloPowerUp.initialize({
         const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
         const hubspotId = getCustomFieldValue(card.customFieldItems, '66d715a7584d0c33d06ab06f');
 
-        return fetch(`/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`)
-          .then(response => response.json())
+        return fetchYouniumData(orgNo, hubspotId)
           .then(youniumData => {
             const status = getActivationStatus(youniumData);
             return [{
@@ -82,7 +100,7 @@ TrelloPowerUp.initialize({
             }];
           })
           .catch(err => {
-            console.error('Error fetching Younium data:', err);
+            console.error('Error processing Younium data:', err);
             return [{
               text: 'Error loading status',
               icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
