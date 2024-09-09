@@ -52,8 +52,11 @@ const handleActivateButtonClick = (chargeId) => {
     if (response.ok) {
       console.log(`Charge ${chargeId} activated successfully`);
       // Update the UI to show the activation
-      document.querySelector(`[data-charge-id="${chargeId}"]`).textContent = "Activated";
-      document.querySelector(`[data-charge-id="${chargeId}"]`).disabled = true;
+      const button = document.querySelector(`[data-charge-id="${chargeId}"]`);
+      button.textContent = "Activated";
+      button.disabled = true;
+      button.previousElementSibling.textContent = "Activated for invoicing";
+      button.previousElementSibling.style.color = "green";
     } else {
       console.error('Failed to activate the charge');
     }
