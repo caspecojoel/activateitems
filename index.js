@@ -1,11 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const morgan = require('morgan');
 const axios = require('axios');
 const app = express();
 
-app.use(morgan('combined'));
 app.use(express.static('public'));
 app.use(express.json());
 app.use(cors({ origin: 'https://trello.com' }));
