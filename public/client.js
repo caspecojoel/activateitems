@@ -73,10 +73,17 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName) => {
         button.className = "activate-button";
       }
     } else {
-      console.error('Failed to update the charge status');
+      // Handle the error
+      return response.json().then(errorData => {
+        console.error('Failed to update the charge status:', errorData);
+        alert(`Error: Failed to update the status for ${productName}. Please try again. \nError Details: ${errorData.message || "Unknown error"}`);
+      });
     }
   })
-  .catch(error => console.error('Error updating the charge status:', error));
+  .catch(error => {
+    console.error('Error updating the charge status:', error);
+    alert(`An error occurred while updating the status for ${productName}. Please try again. \nError: ${error.message || "Unknown error"}`);
+  });
 };
 
 // Add event listener for toggle buttons
