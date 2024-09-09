@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Younium Order Details</title>
     <link rel="stylesheet" href="styles.css">
-    <!-- Add a modern CSS framework for better styling and responsiveness -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-100">
@@ -25,9 +24,9 @@
                 </div>
             </div>
 
-            <!-- Products and Charges section -->
+            <!-- Products section -->
             <div class="mb-6">
-                <h2 class="text-xl font-semibold mb-2">Products & Charges</h2>
+                <h2 class="text-xl font-semibold mb-2">Products</h2>
                 <div id="products-container"></div>
             </div>
 
@@ -71,46 +70,45 @@
         domElements.accountName.textContent = youniumData.account.name;
         domElements.accountNumber.textContent = youniumData.account.accountNumber;
 
-        // Populate Products and Charges
+        // Populate Products
         youniumData.products.forEach(product => {
             const productElement = document.createElement('div');
             productElement.className = 'bg-gray-50 p-4 rounded mb-4';
-            productElement.innerHTML = `<h3 class="text-lg font-semibold mb-2">${product.name}</h3>`;
+            
+            const isReady4Invoicing = product.charges.every(charge => charge.isReady4Invoicing);
+            const status = isReady4Invoicing ? 'Ready for invoicing' : 'Not ready for invoicing';
+            const statusColor = isReady4Invoicing ? 'text-green-600' : 'text-red-600';
+            const buttonText = isReady4Invoicing ? 'Deactivate' : 'Activate';
+            const buttonColor = isReady4Invoicing ? 'bg-red-500 hover:bg-red-700' : 'bg-green-500 hover:bg-green-700';
 
-            const chargeList = document.createElement('ul');
-            chargeList.className = 'space-y-2';
-            product.charges.forEach(charge => {
-                const chargeItem = document.createElement('li');
-                chargeItem.className = 'flex items-center justify-between';
-                const status = charge.isReady4Invoicing ? 'Activated' : 'Not activated';
-                const statusColor = charge.isReady4Invoicing ? 'text-green-600' : 'text-red-600';
-                
-                chargeItem.innerHTML = `
-                    <span>${charge.name || 'Unnamed Charge'}</span>
+            productElement.innerHTML = `
+                <h3 class="text-lg font-semibold mb-2">${product.name}</h3>
+                <div class="flex items-center justify-between">
                     <span class="${statusColor}">${status}</span>
-                    <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-sm toggle-activation" data-charge-id="${charge.id}">
-                        ${charge.isReady4Invoicing ? 'Deactivate' : 'Activate'}
+                    <button class="${buttonColor} text-white font-bold py-1 px-2 rounded text-sm toggle-activation" data-product-id="${product.productNumber}">
+                        ${buttonText}
                     </button>
-                `;
-                chargeList.appendChild(chargeItem);
-            });
+                </div>
+            `;
 
-            productElement.appendChild(chargeList);
             domElements.productsContainer.appendChild(productElement);
         });
 
         // Add event listener for activation toggle buttons
         document.addEventListener('click', function(e) {
             if (e.target && e.target.classList.contains('toggle-activation')) {
-                const chargeId = e.target.getAttribute('data-charge-id');
+                const productId = e.target.getAttribute('data-product-id');
                 // TODO: Implement API call to Younium to toggle activation status
-                console.log(`Toggle activation for charge ID: ${chargeId}`);
+                console.log(`Toggle activation for product ID: ${productId}`);
                 // Update UI after successful API call
                 const statusSpan = e.target.previousElementSibling;
-                const newStatus = statusSpan.textContent === 'Activated' ? 'Not activated' : 'Activated';
+                const newStatus = statusSpan.textContent === 'Ready for invoicing' ? 'Not ready for invoicing' : 'Ready for invoicing';
                 statusSpan.textContent = newStatus;
-                statusSpan.className = newStatus === 'Activated' ? 'text-green-600' : 'text-red-600';
-                e.target.textContent = newStatus === 'Activated' ? 'Deactivate' : 'Activate';
+                statusSpan.className = newStatus === 'Ready for invoicing' ? 'text-green-600' : 'text-red-600';
+                e.target.textContent = newStatus === 'Ready for invoicing' ? 'Deactivate' : 'Activate';
+                e.target.className = newStatus === 'Ready for invoicing' 
+                    ? 'bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-sm toggle-activation'
+                    : 'bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded text-sm toggle-activation';
             }
         });
     </script>
