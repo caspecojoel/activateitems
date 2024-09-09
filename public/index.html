@@ -78,8 +78,11 @@
             product.charges.forEach(charge => {
                 const chargeItem = document.createElement('li');
 
+                // Handle both boolean and string values for isReady4Invoicing
+                const isReady4Invoicing = charge.isReady4Invoicing === true || charge.isReady4Invoicing === "True";
+
                 // Conditionally set the text and color based on isReady4Invoicing
-                if (charge.isReady4Invoicing === true) {
+                if (isReady4Invoicing) {
                     chargeItem.innerHTML = `<span style="color: green;">Activated for invoicing</span>`;
                 } else {
                     chargeItem.innerHTML = `<span style="color: red;">Not activated for invoicing</span>`;
@@ -91,6 +94,7 @@
             productElement.appendChild(chargeList);
             domElements.productsContainer.appendChild(productElement);
         });
+
     </script>
 
     <!-- Import client.js for Trello Power-Up functionality -->
