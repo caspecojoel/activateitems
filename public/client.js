@@ -1,3 +1,21 @@
+// Function to get activation status
+const getActivationStatus = (youniumData) => {
+  if (!youniumData || !youniumData.charges) {
+    return { status: 'error', text: 'No data available' };
+  }
+
+  const totalCharges = youniumData.charges.length;
+  const activatedCharges = youniumData.charges.filter(charge => charge.isready4invoicing).length;
+
+  if (activatedCharges === totalCharges && totalCharges > 0) {
+    return { status: 'all', text: 'All products activated', color: 'green' };
+  } else if (activatedCharges > 0) {
+    return { status: 'partial', text: `${activatedCharges}/${totalCharges} products activated`, color: 'light-green' };
+  } else {
+    return { status: 'none', text: 'No products activated', color: 'red' };
+  }
+};
+
 // Define the Power-Up
 const onBtnClick = (t, opts) => {
   console.log('Button clicked on card:', opts);
@@ -44,68 +62,34 @@ const onBtnClick = (t, opts) => {
   });
 };
 
-// Initialize Trello Power-Up with badge color based on activation status
+// Initialize Trello Power-Up with dynamic card-detail-badge
 TrelloPowerUp.initialize({
-  'card-detail-badges': async (t, options) => {
-    try {
-      // Fetch the Younium data
-      const card = await t.card('all');
-      const hubspotId = card.customFieldItems?.find(field => field.idCustomField === '66d715a7584d0c33d06ab06f')?.value?.text;
-      const orgNo = card.customFieldItems?.find(field => field.idCustomField === '66deaa1c355f14009a688b5d')?.value?.text;
+  'card-detail-badges': (t, options) => {
+    return t.card('all')
+      .then(card => {
+        const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
+        const hubspotId = getCustomFieldValue(card.customFieldItems, '66d715a7584d0c33d06ab06f');
 
-      // Return if we can't find the HubSpot ID or Org Number
-      if (!hubspotId || !orgNo) {
-        throw new Error('Missing HubSpot ID or Org Number.');
-      }
-
-      // Get data from API
-      const youniumData = await fetch(`/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`)
-        .then(response => response.json());
-
-      if (!youniumData || !youniumData.products) {
-        throw new Error('No products found in Younium data.');
-      }
-
-      // Count total charges and activated charges
-      let totalCharges = 0;
-      let activatedCharges = 0;
-
-      youniumData.products.forEach(product => {
-        if (product.charges) {
-          product.charges.forEach(charge => {
-            totalCharges++;
-            if (charge.isReady4Invoicing === true || charge.isReady4Invoicing === "True") {
-              activatedCharges++;
-            }
+        return fetch(`/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`)
+          .then(response => response.json())
+          .then(youniumData => {
+            const status = getActivationStatus(youniumData);
+            return [{
+              text: status.text,
+              icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+              color: status.color,
+              callback: onBtnClick
+            }];
+          })
+          .catch(err => {
+            console.error('Error fetching Younium data:', err);
+            return [{
+              text: 'Error loading status',
+              icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+              color: 'red',
+              callback: onBtnClick
+            }];
           });
-        }
       });
-
-      let badgeText = '';
-      let badgeColor = '';
-
-      // Set the badge text and color based on the number of activated charges
-      if (activatedCharges === 0) {
-        badgeText = 'No products activated';
-        badgeColor = 'red';
-      } else if (activatedCharges === totalCharges) {
-        badgeText = 'All products activated';
-        badgeColor = 'green';
-      } else {
-        badgeText = `${activatedCharges}/${totalCharges} products activated`;
-        badgeColor = 'lightgreen';
-      }
-
-      // Return the badge
-      return [{
-        text: badgeText,
-        color: badgeColor,  // Set the badge color dynamically
-        icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-        callback: onBtnClick
-      }];
-    } catch (error) {
-      console.error('Error in card-detail-badges:', error);
-      return [];  // Return an empty badge in case of error
-    }
   }
 });
