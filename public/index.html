@@ -88,20 +88,18 @@
             const chargeList = document.createElement('ul');
             product.charges.forEach(charge => {
                 const chargeItem = document.createElement('li');
-                
-                // Include span with id for updating status dynamically
-                if (charge.isReady4Invoicing === true) {
-                    chargeItem.innerHTML = `
-                        <span class="status-text" id="status-${charge.id}" style="color:green;">Activated for invoicing</span>
-                        <button class="toggle-button" data-charge-id="${charge.id}" data-product-name="${product.name}" style="background-color:green;">Deactivate</button>
-                    `;
-                } else {
-                    chargeItem.innerHTML = `
-                        <span class="status-text" id="status-${charge.id}" style="color:red;">Not activated for invoicing</span>
-                        <button class="toggle-button" data-charge-id="${charge.id}" data-product-name="${product.name}" style="background-color:red;">Activate</button>
-                    `;
-                }
 
+                // Set button class based on the current status
+                const buttonClass = charge.isReady4Invoicing ? 'inactivate-button' : 'activate-button';
+                const buttonText = charge.isReady4Invoicing ? 'Inactivate' : 'Activate';
+
+                // Add button to the charge item
+                chargeItem.innerHTML = `
+                    <button class="${buttonClass}" data-charge-id="${charge.id}" data-product-name="${product.name}">
+                        ${buttonText}
+                    </button>
+                `;
+                
                 chargeList.appendChild(chargeItem);
             });
 

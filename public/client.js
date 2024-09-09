@@ -61,20 +61,16 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName) => {
     if (response.ok) {
       console.log(`Charge ${chargeId} status updated successfully`);
 
-      // Get the button and status text elements
+      // Get the button element
       const button = document.querySelector(`[data-charge-id="${chargeId}"]`);
-      const statusText = document.getElementById(`status-${chargeId}`);
 
+      // Toggle the button class and text based on the new status
       if (newStatus) {
-        button.textContent = "Deactivate";
-        button.style.backgroundColor = "green";
-        statusText.textContent = "Activated for invoicing";
-        statusText.style.color = "green";
+        button.textContent = "Inactivate";
+        button.className = "inactivate-button";
       } else {
         button.textContent = "Activate";
-        button.style.backgroundColor = "red";
-        statusText.textContent = "Not activated for invoicing";
-        statusText.style.color = "red";
+        button.className = "activate-button";
       }
     } else {
       console.error('Failed to update the charge status');
@@ -85,10 +81,10 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName) => {
 
 // Add event listener for toggle buttons
 document.addEventListener('click', function (event) {
-  if (event.target && event.target.classList.contains('toggle-button')) {
+  if (event.target && event.target.tagName === 'BUTTON') {
     const chargeId = event.target.getAttribute('data-charge-id');
     const productName = event.target.getAttribute('data-product-name');
-    const currentStatus = event.target.textContent.trim() === "Deactivate"; // Determine current status based on the button text
+    const currentStatus = event.target.textContent.trim() === "Inactivate"; // Determine current status based on the button text
     handleToggleButtonClick(chargeId, currentStatus, productName);
   }
 });

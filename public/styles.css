@@ -30,11 +30,7 @@ body {
     border-top: 1px solid #ddd;
 }
 
-#save {
-    margin-top: 10px;
-    align-self: flex-start;
-}
-
+/* Activate Button */
 .activate-button {
     background-color: green;
     color: white;
@@ -46,4 +42,18 @@ body {
 
 .activate-button:hover {
     background-color: darkgreen;
+}
+
+/* Inactivate Button */
+.inactivate-button {
+    background-color: red;
+    color: white;
+    padding: 8px 12px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.inactivate-button:hover {
+    background-color: darkred;
 }
