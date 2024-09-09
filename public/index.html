@@ -34,90 +34,128 @@
             justify-content: space-between;
         }
 
+        .form-group {
+            margin-bottom: 15px;
+        }
+
         .product-selection label {
             display: block;
             margin: 5px 0;
         }
 
-        .form-group {
-            margin-bottom: 15px;
+        #labels-container {
+            margin-bottom: 20px;
         }
 
         #save {
             margin-top: 10px;
             align-self: flex-start;
         }
+
+        .younium-details {
+            margin-top: 20px;
+            border-top: 1px solid #ccc;
+            padding-top: 20px;
+        }
+
+        .younium-details h2, .younium-details h3 {
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="form-section">
-          <div class="form-group">
-            HubSpot ID: <span id="hubspot-id"></span>
-          </div>
-          <div class="form-group">
-            Org Number: <span id="org-number"></span>
-          </div>
-          <div class="form-group">
-            Account Name: <span id="account-name"></span>
-          </div>
-          <div class="form-group">
-            Account Number: <span id="account-number"></span>
-          </div>
-          <div class="form-group product-selection">
-            <h3>Välj produkter</h3>
-            <div id="labels-container"></div>
-          </div>
-          <button id="save">Skicka</button>
+            <div class="form-group">
+                HubSpot ID: <span id="hubspot-id"></span>
+            </div>
+            <div class="form-group">
+                Org Number: <span id="org-number"></span>
+            </div>
+            <div class="form-group">
+                Account Name: <span id="account-name"></span>
+            </div>
+            <div class="form-group">
+                Account Number: <span id="account-number"></span>
+            </div>
+
+            <!-- Section to display Younium details -->
+            <div class="younium-details">
+                <h2>Younium Order Details</h2>
+                <div class="form-group">
+                    Order ID: <span id="order-id"></span>
+                </div>
+                <div class="form-group">
+                    Order Status: <span id="order-status"></span>
+                </div>
+                <div class="form-group">
+                    Order Description: <span id="order-description"></span>
+                </div>
+                <div class="form-group">
+                    Order Start Date: <span id="order-start-date"></span>
+                </div>
+
+                <!-- Section for products and charges -->
+                <div class="form-group product-selection">
+                    <h3>Products & Charges</h3>
+                    <div id="products-container"></div>
+                </div>
+            </div>
+
+            <button id="save">Skicka</button>
         </div>
     </div>
 
     <script src="https://p.trellocdn.com/power-up.min.js"></script>
     <script>
-        function getUrlParameter(name) {
-            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
-            var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
-            var results = regex.exec(location.search);
-            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
-        }
-
+        // Parse the URL and get Younium data
         const urlParams = new URLSearchParams(window.location.search);
+        const youniumData = JSON.parse(urlParams.get('youniumData'));  // Expecting the youniumData JSON to be passed
+
+        // Populate Younium Account and Order data
         document.getElementById('hubspot-id').textContent = urlParams.get('hubspotId');
         document.getElementById('org-number').textContent = urlParams.get('orgNo');
+        document.getElementById('account-name').textContent = youniumData.account.name;
+        document.getElementById('account-number').textContent = youniumData.account.accountNumber;
+        document.getElementById('order-id').textContent = youniumData.id;
+        document.getElementById('order-status').textContent = youniumData.status;
+        document.getElementById('order-description').textContent = youniumData.description;
+        document.getElementById('order-start-date').textContent = youniumData.effectiveStartDate;
 
-        // Populate the new Younium fields
-        document.getElementById('account-name').textContent = urlParams.get('accountName');  // Younium Account Name
-        document.getElementById('account-number').textContent = urlParams.get('accountNumber');  // Younium Account Number
-
-        // Get HubSpot ID, labels, card title, and user name from the URL
-        var hubspotId = getUrlParameter('hubspotId');
-        var labels = getUrlParameter('labels').split(',');
-        var cardTitle = getUrlParameter('cardTitle');
-        var userName = getUrlParameter('userName');
-        var orgNo = getUrlParameter('orgNo');
-
-        // Populate the labels as checkbox options
-        var labelsContainer = document.getElementById('labels-container');
-        labels.forEach(function(label) {
-            var labelElement = document.createElement('label');
-            labelElement.innerHTML = `<input type="checkbox" name="product" value="${label}"> ${label}`;
-            labelsContainer.appendChild(labelElement);
+        // Populate Products and Charges
+        const productsContainer = document.getElementById('products-container');
+        youniumData.products.forEach(function(product) {
+            const productElement = document.createElement('div');
+            productElement.innerHTML = `
+                <h4>${product.name} (Product Number: ${product.productNumber})</h4>
+                <ul>
+                    ${product.charges.map(charge => `
+                        <li>
+                            Charge Name: ${charge.name} <br>
+                            Charge ID: ${charge.id} <br>
+                            Effective Start Date: ${charge.effectiveStartDate} <br>
+                            Is Ready for Invoicing: ${charge.isReady4Invoicing}
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+            productsContainer.appendChild(productElement);
         });
 
         // Handle form submission
         document.getElementById('save').addEventListener('click', function() {
-            // Collect form data
-            var selectedLabels = [];
+            // Collect selected labels
+            const selectedLabels = [];
             document.querySelectorAll('input[name="product"]:checked').forEach(function(checkbox) {
                 selectedLabels.push(checkbox.value);
             });
 
-            var formData = {
-                hubspotId: hubspotId,
+            const formData = {
+                hubspotId: urlParams.get('hubspotId'),
                 selectedLabels: selectedLabels,
-                cardTitle: cardTitle,
-                userName: userName,
-                orgNo: orgNo
+                cardTitle: urlParams.get('cardTitle'),
+                userName: urlParams.get('userName'),
+                orgNo: urlParams.get('orgNo')
             };
 
             console.log("Form Data being sent:", formData);

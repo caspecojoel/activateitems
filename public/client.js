@@ -51,10 +51,10 @@ var onBtnClick = function(t, opts) {
           .then(response => response.json())
           .then(youniumData => {
             console.log('Younium data:', youniumData);
-
-            // URL of the page you want to display in the popup, including all data
-            var externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?hubspotId=${encodeURIComponent(hubspotId)}&labels=${encodeURIComponent(labels)}&cardTitle=${encodeURIComponent(cardTitle)}&userName=${encodeURIComponent(userName)}&orgNo=${encodeURIComponent(orgNo)}&accountName=${encodeURIComponent(youniumData.name || '')}&accountNumber=${encodeURIComponent(youniumData.accountNumber || '')}`;
-
+          
+            // Build URL for popup with all Younium data
+            const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(youniumData))}`;
+          
             return t.popup({
               title: 'Klarmarkering',
               url: externalUrl,

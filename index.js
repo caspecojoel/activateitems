@@ -27,26 +27,45 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
   try {
     console.log(`Fetching Younium data for OrgNo: ${orgNo}, HubspotDealId: ${hubspotDealId}`);
 
-    // Axios request with Basic Auth
     const response = await axios.get(`https://cas-test.loveyourq.se/dev/GetYouniumOrders`, {
       params: {
         OrgNo: orgNo,
         HubspotDealId: hubspotDealId
       },
       auth: {
-        username: process.env.AUTH_USERNAME,  // Use Heroku config var
-        password: process.env.AUTH_PASSWORD   // Use Heroku config var
+        username: process.env.AUTH_USERNAME,
+        password: process.env.AUTH_PASSWORD
       }
     });
 
     console.log('Younium API Response:', JSON.stringify(response.data, null, 2));
+
+    // If we have data, extract all necessary fields
     if (response.data && response.data.length > 0) {
-      const account = response.data[0].account;
+      const youniumOrder = response.data[0];
+
       return {
-        name: account.name,
-        accountNumber: account.accountNumber
+        id: youniumOrder.id,
+        status: youniumOrder.status,
+        description: youniumOrder.description,
+        effectiveStartDate: youniumOrder.effectiveStartDate,
+        account: {
+          name: youniumOrder.account.name,
+          accountNumber: youniumOrder.account.accountNumber
+        },
+        products: youniumOrder.products.map(product => ({
+          productNumber: product.productNumber,
+          name: product.name,
+          charges: product.charges.map(charge => ({
+            id: charge.id,
+            name: charge.name,
+            effectiveStartDate: charge.effectiveStartDate,
+            isReady4Invoicing: charge.customFields.isReady4Invoicing
+          }))
+        }))
       };
     }
+
     return null;
   } catch (error) {
     console.error('Error fetching Younium data:', error.response ? error.response.data : error.message);
