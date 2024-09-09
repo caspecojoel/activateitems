@@ -22,7 +22,7 @@ const getActivationStatus = (youniumData) => {
   youniumData.products.forEach(product => {
     if (product.charges && Array.isArray(product.charges)) {
       totalCharges += product.charges.length;
-      activatedCharges += product.charges.filter(charge => charge.isready4invoicing).length;
+      activatedCharges += product.charges.filter(charge => charge.isReady4Invoicing === "True").length; // Check if isReady4Invoicing is "True" as a string
     }
   });
 
