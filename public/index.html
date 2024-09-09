@@ -89,9 +89,12 @@
             product.charges.forEach(charge => {
                 const chargeItem = document.createElement('li');
 
-                // Set button class based on the current status
-                const buttonClass = charge.isReady4Invoicing ? 'inactivate-button' : 'activate-button';
-                const buttonText = charge.isReady4Invoicing ? 'Inactivate' : 'Activate';
+                // Convert string "True" or "False" to a boolean
+                const isActivated = charge.isReady4Invoicing === "True"; // Check explicitly if the value is "True"
+
+                // Set button class and text based on the current status
+                const buttonClass = isActivated ? 'inactivate-button' : 'activate-button';
+                const buttonText = isActivated ? 'Inactivate' : 'Activate';
 
                 // Add button to the charge item
                 chargeItem.innerHTML = `
@@ -99,7 +102,7 @@
                         ${buttonText}
                     </button>
                 `;
-                
+
                 chargeList.appendChild(chargeItem);
             });
 
