@@ -38,18 +38,28 @@ var onBtnClick = function(t, opts) {
 
                 // URL of the page you want to display in the popup, including cardTitle and userName
                 var externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?hubspotId=${hubspotId}&labels=${encodeURIComponent(labels)}&cardTitle=${encodeURIComponent(cardTitle)}&userName=${encodeURIComponent(userName)}`;
+                
+                // Construct the backend proxy URL
+                const proxyUrl = '/proxy-younium-orders';
+                
+                // Log the proxy URL and the body being sent
+                console.log(`POST to proxy URL: ${proxyUrl}`);
+                console.log(`POST body: OrgNo: ${orgNum}, HubspotDealId: ${hubspotId}`);
 
                 // Make API call to backend to proxy the external API
-                fetch('/proxy-younium-orders', {
+                fetch(proxyUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({ OrgNo: orgNum, HubspotDealId: hubspotId })
                 })
-                .then(response => response.json())
+                .then(response => {
+                    console.log('API response:', response);
+                    return response.json();
+                })
                 .then(data => {
-                    console.log('API Response:', data);
+                    console.log('Parsed API Response:', data);
 
                     // Extract account information
                     if (data && data.length > 0) {
