@@ -1,24 +1,18 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const morgan = require('morgan');
-const nodemailer = require('nodemailer');
 const axios = require('axios');
 const app = express();
 
-app.use(morgan('combined'));
 app.use(express.static('public'));
 app.use(express.json());
 app.use(cors({ origin: 'https://trello.com' }));
-
-app.get('/manifest.json', (req, res) => {
-  res.sendFile(path.join(__dirname, 'manifest.json'));
-});
 
 app.get('/client.js', (req, res) => {
   res.sendFile(path.join(__dirname, 'client.js'));
 });
 
+// Fetch Younium Order Data
 async function getYouniumOrderData(orgNo, hubspotDealId) {
   try {
     const response = await axios.get(`https://cas-test.loveyourq.se/dev/GetYouniumOrders`, {
@@ -41,12 +35,9 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
           accountNumber: youniumOrder.account.accountNumber
         },
         products: youniumOrder.products.map(product => ({
-          productNumber: product.productNumber,
           name: product.name,
           charges: product.charges.map(charge => ({
-            id: charge.id,
             name: charge.name,
-            effectiveStartDate: charge.effectiveStartDate,
             isReady4Invoicing: charge.customFields.isReady4Invoicing
           }))
         }))
