@@ -1,0 +1,24 @@
+# Environment files
+.env
+
+# Node.js dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Log files
+*.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# IDE/editor directories
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
