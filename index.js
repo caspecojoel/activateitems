@@ -26,11 +26,21 @@ function generateProductListHtml(selectedLabels) {
 async function getYouniumOrderData(orgNo, hubspotDealId) {
   try {
     console.log(`Fetching Younium data for OrgNo: ${orgNo}, HubspotDealId: ${hubspotDealId}`);
-    const response = await axios.get(`https://cas-test.loveyourq.se/dev/GetYouniumOrders?OrgNo=${orgNo}&HubspotDealId=${hubspotDealId}`);
-    console.log('Full Younium API Response:', response.data);
 
+    // Axios request with Basic Auth
+    const response = await axios.get(`https://cas-test.loveyourq.se/dev/GetYouniumOrders`, {
+      params: {
+        OrgNo: orgNo,
+        HubspotDealId: hubspotDealId
+      },
+      auth: {
+        username: process.env.AUTH_USERNAME,  // Use Heroku config var
+        password: process.env.AUTH_PASSWORD   // Use Heroku config var
+      }
+    });
+
+    console.log('Younium API Response:', JSON.stringify(response.data, null, 2));
     if (response.data && response.data.length > 0) {
-      console.log('Response Data:', response.data[0]);
       const account = response.data[0].account;
       return {
         name: account.name,
