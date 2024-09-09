@@ -38,45 +38,38 @@ var onBtnClick = function(t, opts) {
 
                 // URL of the page you want to display in the popup, including cardTitle and userName
                 var externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?hubspotId=${hubspotId}&labels=${encodeURIComponent(labels)}&cardTitle=${encodeURIComponent(cardTitle)}&userName=${encodeURIComponent(userName)}`;
+
+                // Construct the correct API URL
+                const apiUrl = `https://cas-test.loveyourq.se/dev/GetYouniumOrders?OrgNo=${orgNum}&HubspotDealId=${hubspotId}`;
                 
-                // Construct the backend proxy URL
-                const proxyUrl = '/proxy-younium-orders';
-                
-                // Log the proxy URL and the body being sent
-                console.log(`POST to proxy URL: ${proxyUrl}`);
-                console.log(`POST body: OrgNo: ${orgNum}, HubspotDealId: ${hubspotId}`);
+                // Log the API URL being used
+                console.log(`Fetching data from API: ${apiUrl}`);
 
-                // Make API call to backend to proxy the external API
-                fetch(proxyUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ OrgNo: orgNum, HubspotDealId: hubspotId })
-                })
-                .then(response => {
-                    console.log('API response:', response);
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Parsed API Response:', data);
+                // Make API call directly to the correct endpoint
+                fetch(apiUrl)
+                    .then(response => {
+                        console.log('API response:', response);
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Parsed API Response:', data);
 
-                    // Extract account information
-                    if (data && data.length > 0) {
-                        const accountInfo = data[0].account;
-                        const accountName = accountInfo.name;
-                        const accountNumber = accountInfo.accountNumber;
+                        // Extract account information
+                        if (data && data.length > 0) {
+                            const accountInfo = data[0].account;
+                            const accountName = accountInfo.name;
+                            const accountNumber = accountInfo.accountNumber;
 
-                        // Display the account information in the popup
-                        alert(`Account Name: ${accountName}\nAccount Number: ${accountNumber}`);
-                    } else {
-                        alert('No data found for this OrgNo and HubSpot ID.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching API data:', error);
-                    alert('Error fetching API data.');
-                });
+                            // Display the account information in the popup
+                            alert(`Account Name: ${accountName}\nAccount Number: ${accountNumber}`);
+                        } else {
+                            alert('No data found for this OrgNo and HubSpot ID.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching API data:', error);
+                        alert('Error fetching API data.');
+                    });
 
                 return t.popup({
                     title: 'Klarmarkering',
