@@ -3,11 +3,12 @@ const cors = require('cors');
 const path = require('path');
 const morgan = require('morgan');
 const nodemailer = require('nodemailer');
+const axios = require('axios'); // Add this line to import axios
 const app = express();
 
 app.use(morgan('combined'));
 app.use(express.static('public'));
-app.use(express.json()); // För att kunna parsa JSON-begäran
+app.use(express.json());
 app.use(cors({ origin: 'https://trello.com' }));
 
 app.get('/manifest.json', (req, res) => {
@@ -18,29 +19,46 @@ app.get('/client.js', (req, res) => {
   res.sendFile(path.join(__dirname, 'client.js'));
 });
 
-// Funktion för att generera HTML-lista av valda produkter
 function generateProductListHtml(selectedLabels) {
   return selectedLabels.map(label => `<li><strong>${label}</strong></li>`).join('');
 }
 
-// Endpoint för att hantera formulärinlämning
-app.post('/submit-form', (req, res) => {
-  const { hubspotId, selectedLabels, userName, cardTitle } = req.body;
+// New function to get Younium order data
+async function getYouniumOrderData(orgNo, hubspotDealId) {
+  try {
+    const response = await axios.get(`https://cas-test.loveyourq.se/dev/GetYouniumOrders?OrgNo=${orgNo}&HubspotDealId=${hubspotDealId}`);
+    if (response.data && response.data.length > 0) {
+      const account = response.data[0].account;
+      return {
+        name: account.name,
+        accountNumber: account.accountNumber
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error fetching Younium data:', error);
+    return null;
+  }
+}
 
-  // Skapa en transporter-objekt med standard SMTP-transport
+app.post('/submit-form', async (req, res) => {
+  const { hubspotId, selectedLabels, userName, cardTitle, orgNo } = req.body;
+
+  // Fetch Younium order data
+  const youniumData = await getYouniumOrderData(orgNo, hubspotId);
+
   let transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: 'caspeco.oncall@gmail.com',  // din email
-      pass: 'ddpqsicrbtrlmpap'  // din genererade app-lösenord utan mellanslag
+      user: 'caspeco.oncall@gmail.com',
+      pass: 'ddpqsicrbtrlmpap'
     }
   });
 
-  // Skapa innehållet för e-postmeddelandet
   let mailOptions = {
-    from: '"Operations - Leverans " <caspeco.oncall@gmail.com>',  // avsändaradress
-    to: 'joel.ekberg@caspeco.se',  // mottagarens email
-    subject: `Aktivering av produkter: ${cardTitle}`,  // Ämne för mailet inkluderar kortets titel
+    from: '"Operations - Leverans " <caspeco.oncall@gmail.com>',
+    to: 'joel.ekberg@caspeco.se',
+    subject: `Aktivering av produkter: ${cardTitle}`,
     html: `
       <div style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; padding: 20px;">
         <div style="background-color: #ffffff; padding: 20px; border-radius: 10px; max-width: 600px; margin: 0 auto; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
@@ -48,9 +66,16 @@ app.post('/submit-form', (req, res) => {
           <p>Hej!</p>
           <p>Vi på operations har nu aktiverat följande produkt(er) för kortet: <strong>${cardTitle}</strong>.</p>
           <ul style="margin: 20px 0; padding-left: 20px; list-style-type: disc;">
-          ${generateProductListHtml(selectedLabels)}
-        </ul>
+            ${generateProductListHtml(selectedLabels)}
+          </ul>
           <p>Formuläret skickades av: <strong>${userName}</strong>.</p>
+          ${youniumData ? `
+          <p>Younium Order Information:</p>
+          <ul>
+            <li>Name: ${youniumData.name}</li>
+            <li>Account Number: ${youniumData.accountNumber}</li>
+          </ul>
+          ` : ''}
           <p>Tveka inte att kontakta oss om du har några frågor eller behöver ytterligare hjälp.</p>
           <div style="margin-top: 30px; font-size: 14px; color: #777;">
             <p>Med vänliga hälsningar,<br>Operations Teamet</p>
@@ -60,7 +85,6 @@ app.post('/submit-form', (req, res) => {
     `
   };
 
-  // Skicka e-post med definierat transportobjekt
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
       console.log(error);
@@ -71,12 +95,10 @@ app.post('/submit-form', (req, res) => {
   });
 });
 
-// Hantera icke-existerande routes
 app.use((req, res, next) => {
   res.status(404).send('404 Not Found');
 });
 
-// Middleware för felhantering
 app.use((err, req, res, next) => {
   res.status(500).send('Internal Server Error');
 });
