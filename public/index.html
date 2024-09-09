@@ -37,25 +37,12 @@
             margin-bottom: 15px;
         }
 
-        .product-selection label {
-            display: block;
-            margin: 5px 0;
-        }
-
-        #labels-container {
-            margin-bottom: 20px;
-        }
-
         #save {
             margin-top: 10px;
             align-self: flex-start;
         }
 
-        .younium-details {
-            margin-top: 0px;
-        }
-
-        .younium-details h2, .younium-details h3 {
+        .younium-details h2 {
             margin: 10px 0;
         }
     </style>
@@ -87,15 +74,13 @@
             </div>
     
             <button id="save">Skicka</button>
-    
+
             <!-- Small text area for displaying IDs -->
             <div class="id-info" style="font-size: 0.8em; color: #666; margin-top: 10px;">
                 <p>HubSpot ID: <span id="hubspot-id"></span></p>
                 <p>Org Number: <span id="org-number"></span></p>
                 <p>Order ID: <span id="order-id"></span></p>
                 <p>Account Number: <span id="account-number"></span></p>
-                <p>Product/Charge IDs will be listed below:</p>
-                <div id="product-charge-ids"></div>
             </div>
         </div>
     </div>    
@@ -116,67 +101,25 @@
         document.getElementById('order-description').textContent = youniumData.description;
         document.getElementById('order-start-date').textContent = youniumData.effectiveStartDate;
 
-        // Populate Products and Charges
+        // Populate Products and Charges (only Product Name and isReady4Invoicing)
         const productsContainer = document.getElementById('products-container');
         youniumData.products.forEach(function(product) {
             const productElement = document.createElement('div');
-            productElement.innerHTML = `
-                <h4>${product.name} (Product Number: ${product.productNumber})</h4>
-                <ul>
-                    ${product.charges.map(charge => `
-                        <li>
-                            Charge Name: ${charge.name} <br>
-                            Charge ID: ${charge.id} <br>
-                            Effective Start Date: ${charge.effectiveStartDate} <br>
-                            Is Ready for Invoicing: ${charge.isReady4Invoicing}
-                        </li>
-                    `).join('')}
-                </ul>
-            `;
+            productElement.innerHTML = `<h4>${product.name}</h4>`;
+            
+            const chargeList = document.createElement('ul');
+            product.charges.forEach(function(charge) {
+                const chargeItem = document.createElement('li');
+                chargeItem.innerHTML = `isReady4Invoicing: ${charge.isReady4Invoicing}`;
+                chargeList.appendChild(chargeItem);
+            });
+            
+            productElement.appendChild(chargeList);
             productsContainer.appendChild(productElement);
         });
-
-        // Handle form submission
-        document.getElementById('save').addEventListener('click', function() {
-            // Collect selected labels
-            const selectedLabels = [];
-            document.querySelectorAll('input[name="product"]:checked').forEach(function(checkbox) {
-                selectedLabels.push(checkbox.value);
-            });
-
-            const formData = {
-                hubspotId: urlParams.get('hubspotId'),
-                selectedLabels: selectedLabels,
-                cardTitle: urlParams.get('cardTitle'),
-                userName: urlParams.get('userName'),
-                orgNo: urlParams.get('orgNo')
-            };
-
-            console.log("Form Data being sent:", formData);
-
-            // Send form data to the server
-            fetch('/submit-form', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Klarmarkering skickades till säljaren!');
-                } else {
-                    alert('Fel när klarmarkeringen skulle skickas, kontakta systemadministratör');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Fel när klarmarkeringen skulle skickas, kontakta systemadministratör');
-            });
-        });
     </script>
-    
+
+    <!-- Import client.js for Trello Power-Up functionality -->
     <script src="/client.js"></script>
 </body>
 </html>
