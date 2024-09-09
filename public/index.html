@@ -72,7 +72,6 @@
         domElements.orderDescription.textContent = youniumData.description;
         domElements.orderStartDate.textContent = youniumData.effectiveStartDate;
 
-        // Populate Products and Charges
         youniumData.products.forEach(product => {
             const productElement = document.createElement('div');
             productElement.innerHTML = `<h4>${product.name}</h4>`;
@@ -80,9 +79,12 @@
             const chargeList = document.createElement('ul');
             product.charges.forEach(charge => {
                 const chargeItem = document.createElement('li');
-                
+
+                // Log the isReady4Invoicing value to ensure it's being handled correctly
+                console.log('isReady4Invoicing value:', charge.isReady4Invoicing);
+
                 // Conditionally set the text and color based on isReady4Invoicing
-                if (charge.isReady4Invoicing) {
+                if (Boolean(charge.isReady4Invoicing)) {
                     chargeItem.innerHTML = `<span style="color: green;">Activated for invoicing</span>`;
                 } else {
                     chargeItem.innerHTML = `<span style="color: red;">Not activated for invoicing</span>`;
