@@ -43,35 +43,8 @@ const onBtnClick = (t, opts) => {
   });
 };
 
-// Initialize Trello Power-Up
+// Initialize Trello Power-Up with only the card-detail-badge
 TrelloPowerUp.initialize({
-  'card-buttons': (t, options) => [{
-    icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-    text: 'Klarmarkering',
-    callback: onBtnClick
-  }],
-
-  // Button on the card details section (back of card)
-  'card-back-section': (t, options) => {
-    return [{
-      title: 'Power-Up Button (Card Back)',
-      icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-      content: {
-        type: 'iframe',
-        url: t.signUrl('./powerup.html'),
-        height: 150
-      }
-    }];
-  },
-
-  // Add a board-level button above the card lists
-  'board-buttons': (t, options) => [{
-    icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-    text: 'Power-Up Button (Board)',
-    callback: onBtnClick
-  }],
-
-  // Add a badge on the card detail page (back)
   'card-detail-badges': (t, options) => [{
     text: 'Power-Up Badge',
     icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
@@ -79,4 +52,3 @@ TrelloPowerUp.initialize({
     callback: onBtnClick
   }]
 });
-
