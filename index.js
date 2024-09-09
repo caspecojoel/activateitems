@@ -3,7 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const morgan = require('morgan');
 const nodemailer = require('nodemailer');
-const axios = require('axios'); // Add this line to import axios
+const axios = require('axios');
 const app = express();
 
 app.use(morgan('combined'));
@@ -23,10 +23,11 @@ function generateProductListHtml(selectedLabels) {
   return selectedLabels.map(label => `<li><strong>${label}</strong></li>`).join('');
 }
 
-// New function to get Younium order data
 async function getYouniumOrderData(orgNo, hubspotDealId) {
   try {
+    console.log(`Fetching Younium data for OrgNo: ${orgNo}, HubspotDealId: ${hubspotDealId}`);
     const response = await axios.get(`https://cas-test.loveyourq.se/dev/GetYouniumOrders?OrgNo=${orgNo}&HubspotDealId=${hubspotDealId}`);
+    console.log('Younium API Response:', JSON.stringify(response.data, null, 2));
     if (response.data && response.data.length > 0) {
       const account = response.data[0].account;
       return {
@@ -36,7 +37,7 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
     }
     return null;
   } catch (error) {
-    console.error('Error fetching Younium data:', error);
+    console.error('Error fetching Younium data:', error.response ? error.response.data : error.message);
     return null;
   }
 }
@@ -46,6 +47,7 @@ app.post('/submit-form', async (req, res) => {
 
   // Fetch Younium order data
   const youniumData = await getYouniumOrderData(orgNo, hubspotId);
+  console.log('Younium data:', youniumData);
 
   let transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -91,7 +93,7 @@ app.post('/submit-form', async (req, res) => {
       return res.json({ success: false, message: 'Error sending email' });
     }
     console.log('Message sent: %s', info.messageId);
-    res.json({ success: true, message: 'Email sent successfully' });
+    res.json({ success: true, message: 'Email sent successfully', youniumData });
   });
 });
 

@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -59,13 +58,19 @@
           <div class="form-group">
             Org Number: <span id="org-number"></span>
           </div>
+          <div class="form-group">
+            Account Name: <span id="account-name"></span>
+          </div>
+          <div class="form-group">
+            Account Number: <span id="account-number"></span>
+          </div>
           <div class="form-group product-selection">
             <h3>Välj produkter</h3>
             <div id="labels-container"></div>
           </div>
-          <button onclick="submitForm()">Skicka</button>
+          <button id="save">Skicka</button>
         </div>
-      </div>
+    </div>
 
     <script src="https://p.trellocdn.com/power-up.min.js"></script>
     <script>
@@ -84,9 +89,8 @@
         var hubspotId = getUrlParameter('hubspotId');
         var labels = getUrlParameter('labels').split(',');
         var cardTitle = getUrlParameter('cardTitle');
-        var userName = getUrlParameter('userName'); // Retrieve the user name from the URL
-
-        document.getElementById('hubspot-id').value = hubspotId;
+        var userName = getUrlParameter('userName');
+        var orgNo = getUrlParameter('orgNo');
 
         // Populate the labels as checkbox options
         var labelsContainer = document.getElementById('labels-container');
@@ -105,10 +109,11 @@
             });
 
             var formData = {
-                hubspotId: document.getElementById('hubspot-id').value,
+                hubspotId: hubspotId,
                 selectedLabels: selectedLabels,
-                cardTitle: cardTitle, // Include the card title in the form data
-                userName: userName  // Include the user name in the form data
+                cardTitle: cardTitle,
+                userName: userName,
+                orgNo: orgNo
             };
 
             console.log("Form Data being sent:", formData);
@@ -125,6 +130,10 @@
             .then(data => {
                 if (data.success) {
                     alert('Klarmarkering skickades till säljaren!');
+                    if (data.youniumData) {
+                        document.getElementById('account-name').textContent = data.youniumData.name;
+                        document.getElementById('account-number').textContent = data.youniumData.accountNumber;
+                    }
                 } else {
                     alert('Fel när klarmarkeringen skulle skickas, kontakta systemadministratör');
                 }
