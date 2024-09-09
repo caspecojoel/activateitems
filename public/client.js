@@ -13,7 +13,7 @@ var onBtnClick = function(t, opts) {
 
       // Get the user information
       return t.member('fullName').then(function(member) {
-        const userName = member.fullName;  // Get the full name of the current user
+        const userName = member.fullName;
 
         // Find the custom field with the specific ID for HubSpot Deal ID
         const hubspotCustomField = card.customFieldItems.find(field => field.idCustomField === '66d715a7584d0c33d06ab06f');
@@ -61,7 +61,7 @@ var onBtnClick = function(t, opts) {
               height: 800,
               width: 1000
             });
-          })          
+          })
           .then(() => {
             console.log('Popup displayed successfully with all data');
           })

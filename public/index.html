@@ -166,10 +166,6 @@
             .then(data => {
                 if (data.success) {
                     alert('Klarmarkering skickades till säljaren!');
-                    if (data.youniumData) {
-                        document.getElementById('account-name').textContent = data.youniumData.name;
-                        document.getElementById('account-number').textContent = data.youniumData.accountNumber;
-                    }
                 } else {
                     alert('Fel när klarmarkeringen skulle skickas, kontakta systemadministratör');
                 }
