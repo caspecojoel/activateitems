@@ -120,6 +120,25 @@ const onBtnClick = (t, opts) => {
 // Initialize Trello Power-Up with dynamic card-detail-badge
 TrelloPowerUp.initialize({
   'card-detail-badges': (t, options) => {
+    // Show the loading badge immediately
+    const loadingBadge = [{
+      text: 'Loading Younium status...',
+      color: 'yellow',
+      icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+    }];
+    
+    // Return the loading badge while fetching data
+    t.card('all').then(card => {
+      const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
+      const hubspotId = getCustomFieldValue(card.customFieldItems, '66d715a7584d0c33d06ab06f');
+
+      console.log('Card data:', { orgNo, hubspotId });
+
+      // Immediately show the loading badge
+      return loadingBadge;
+    });
+
+    // Fetch Younium data and update the badge
     return t.card('all')
       .then(card => {
         const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
@@ -129,7 +148,7 @@ TrelloPowerUp.initialize({
 
         return fetchYouniumData(orgNo, hubspotId)
           .then(youniumData => {
-            if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
+            if (!youniumData || youniumData.name === 'Invalid ID') {
               return [{
                 text: 'Invalid ID',
                 color: 'red',
