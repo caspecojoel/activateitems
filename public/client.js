@@ -52,8 +52,8 @@ var onBtnClick = function(t, opts) {
           .then(youniumData => {
             console.log('Younium data:', youniumData);
           
-            // Build URL for popup with all Younium data
-            const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(youniumData))}`;
+            // Build URL for popup with all Younium data + HubSpot ID and Org Number
+            const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(youniumData))}&hubspotId=${encodeURIComponent(hubspotId)}&orgNo=${encodeURIComponent(orgNo)}`;
           
             return t.popup({
               title: 'Klarmarkering',
@@ -61,7 +61,7 @@ var onBtnClick = function(t, opts) {
               height: 800,
               width: 1000
             });
-          })
+          })          
           .then(() => {
             console.log('Popup displayed successfully with all data');
           })
