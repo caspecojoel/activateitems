@@ -6,12 +6,21 @@ const getCustomFieldValue = (fields, fieldId) => {
 
 // Function to get activation status
 const getActivationStatus = (youniumData) => {
-  if (!youniumData || !youniumData.charges) {
+  console.log('getActivationStatus received:', youniumData);
+  if (!youniumData) {
+    console.log('youniumData is null or undefined');
     return { status: 'error', text: 'No data available' };
+  }
+  if (!youniumData.charges) {
+    console.log('youniumData.charges is undefined');
+    return { status: 'error', text: 'No charges data available' };
   }
 
   const totalCharges = youniumData.charges.length;
   const activatedCharges = youniumData.charges.filter(charge => charge.isready4invoicing).length;
+
+  console.log('Total charges:', totalCharges);
+  console.log('Activated charges:', activatedCharges);
 
   if (activatedCharges === totalCharges && totalCharges > 0) {
     return { status: 'all', text: 'All products activated', color: 'green' };
@@ -24,8 +33,16 @@ const getActivationStatus = (youniumData) => {
 
 // Function to fetch Younium data
 const fetchYouniumData = (orgNo, hubspotId) => {
+  console.log('Fetching Younium data for:', { orgNo, hubspotId });
   return fetch(`/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`)
-    .then(response => response.json())
+    .then(response => {
+      console.log('Younium API response status:', response.status);
+      return response.json();
+    })
+    .then(data => {
+      console.log('Younium API response data:', data);
+      return data;
+    })
     .catch(err => {
       console.error('Error fetching Younium data:', err);
       return null;
@@ -89,9 +106,13 @@ TrelloPowerUp.initialize({
         const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
         const hubspotId = getCustomFieldValue(card.customFieldItems, '66d715a7584d0c33d06ab06f');
 
+        console.log('Card data:', { orgNo, hubspotId });
+
         return fetchYouniumData(orgNo, hubspotId)
           .then(youniumData => {
+            console.log('Younium data before getActivationStatus:', youniumData);
             const status = getActivationStatus(youniumData);
+            console.log('Activation status:', status);
             return [{
               text: status.text,
               icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
