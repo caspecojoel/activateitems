@@ -4,43 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Test Iframe</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .container {
-            flex: 1;
-            padding: 20px;
-            box-sizing: border-box;
-            overflow-y: auto;
-        }
-
-        .form-section {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        #save {
-            margin-top: 10px;
-            align-self: flex-start;
-        }
-
-        .younium-details h2 {
-            margin: 10px 0;
-        }
-    </style>
+    <!-- Link to the external CSS file -->
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
@@ -60,7 +25,7 @@
                 <div class="form-group">
                     Start Date: <span id="order-start-date"></span>
                 </div>
-    
+
                 <!-- Section for products and charges -->
                 <div class="form-group product-selection">
                     <h3>Products & Charges</h3>
@@ -69,46 +34,58 @@
             </div>
 
             <!-- Small text area for displaying IDs -->
-            <div class="id-info" style="font-size: 0.8em; color: #666; margin-top: 10px;">
+            <div class="id-info">
                 <p>HubSpot ID: <span id="hubspot-id"></span></p>
                 <p>Org Number: <span id="org-number"></span></p>
                 <p>Order ID: <span id="order-id"></span></p>
                 <p>Account Number: <span id="account-number"></span></p>
             </div>
         </div>
-    </div>    
+    </div>
 
     <script src="https://p.trellocdn.com/power-up.min.js"></script>
     <script>
         // Parse the URL and get Younium data
         const urlParams = new URLSearchParams(window.location.search);
-        const youniumData = JSON.parse(urlParams.get('youniumData'));  // Expecting the youniumData JSON to be passed
+        const youniumData = JSON.parse(urlParams.get('youniumData'));
+
+        // Map DOM elements for reusability
+        const domElements = {
+            hubspotId: document.getElementById('hubspot-id'),
+            orgNumber: document.getElementById('org-number'),
+            accountName: document.getElementById('account-name'),
+            accountNumber: document.getElementById('account-number'),
+            orderId: document.getElementById('order-id'),
+            orderStatus: document.getElementById('order-status'),
+            orderDescription: document.getElementById('order-description'),
+            orderStartDate: document.getElementById('order-start-date'),
+            productsContainer: document.getElementById('products-container')
+        };
 
         // Populate Younium Account and Order data
-        document.getElementById('hubspot-id').textContent = urlParams.get('hubspotId');
-        document.getElementById('org-number').textContent = urlParams.get('orgNo');
-        document.getElementById('account-name').textContent = youniumData.account.name;
-        document.getElementById('account-number').textContent = youniumData.account.accountNumber;
-        document.getElementById('order-id').textContent = youniumData.id;
-        document.getElementById('order-status').textContent = youniumData.status;
-        document.getElementById('order-description').textContent = youniumData.description;
-        document.getElementById('order-start-date').textContent = youniumData.effectiveStartDate;
+        domElements.hubspotId.textContent = urlParams.get('hubspotId');
+        domElements.orgNumber.textContent = urlParams.get('orgNo');
+        domElements.accountName.textContent = youniumData.account.name;
+        domElements.accountNumber.textContent = youniumData.account.accountNumber;
+        domElements.orderId.textContent = youniumData.id;
+        domElements.orderStatus.textContent = youniumData.status;
+        domElements.orderDescription.textContent = youniumData.description;
+        domElements.orderStartDate.textContent = youniumData.effectiveStartDate;
 
-        // Populate Products and Charges (only Product Name and isReady4Invoicing)
-        const productsContainer = document.getElementById('products-container');
-        youniumData.products.forEach(function(product) {
+        // Populate Products and Charges
+        youniumData.products.forEach(product => {
             const productElement = document.createElement('div');
             productElement.innerHTML = `<h4>${product.name}</h4>`;
-            
+
             const chargeList = document.createElement('ul');
-            product.charges.forEach(function(charge) {
+            product.charges.forEach(charge => {
                 const chargeItem = document.createElement('li');
                 chargeItem.innerHTML = `Ready for invoicing: ${charge.isReady4Invoicing}`;
                 chargeList.appendChild(chargeItem);
             });
-            
+
             productElement.appendChild(chargeList);
-            productsContainer.appendChild(productElement);
+            domElements.productsContainer.appendChild(productElement);
         });
     </script>
 
