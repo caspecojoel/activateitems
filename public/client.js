@@ -102,17 +102,19 @@ const fetchYouniumData = (orgNo, hubspotId) => {
 
   if (!orgNo || !hubspotId) {
     console.warn('Invalid hubspotId or orgNo');
-    return Promise.resolve({
-      name: 'Invalid hubspot or orgnummer',
-      accountNumber: null,
-    });
+    return Promise.resolve(null);  // Return null if the orgNo or hubspotId is invalid
   }
 
   return fetch(`/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`)
-    .then(response => response.json())
-    .then(data => {
-      console.log('Younium API response data:', data);
-      return data;
+    .then(response => {
+      if (response.ok) {
+        return response.json();
+      } else if (response.status === 404) {
+        // Handle case when no data is found
+        console.warn('No data found for the provided orgNo and hubspotId');
+        return null;
+      }
+      throw new Error('Failed to fetch Younium data');
     })
     .catch(err => {
       console.error('Error fetching Younium data:', err);
@@ -173,7 +175,8 @@ TrelloPowerUp.initialize({
 
         return fetchYouniumData(orgNo, hubspotId)
           .then(youniumData => {
-            if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
+            if (!youniumData) {
+              // If no data is found, return the "Invalid ID" badge
               return [{
                 text: 'Invalid ID',
                 color: 'red',
