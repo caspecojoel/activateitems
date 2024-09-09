@@ -76,7 +76,7 @@
         youniumData.products.forEach(product => {
             const productElement = document.createElement('div');
             productElement.classList.add('product');
-            productElement.innerHTML = `<h4>${product.name} (Product ID: ${product.productNumber})</h4>`;
+            productElement.innerHTML = `<h4>${product.name}</h4>`;
 
             const chargeList = document.createElement('ul');
             product.charges.forEach(charge => {
@@ -84,9 +84,9 @@
 
                 // Conditionally set the text and color based on isReady4Invoicing
                 if (charge.isReady4Invoicing === true) {
-                    chargeItem.innerHTML = `<strong>Charge Name:</strong> ${charge.name} <br> <strong>Status:</strong> <span style="color: green;">Activated for invoicing</span>`;
+                    chargeItem.innerHTML = `<span style="color: green;">Activated for invoicing</span>`;
                 } else {
-                    chargeItem.innerHTML = `<strong>Charge Name:</strong> ${charge.name} <br> <strong>Status:</strong> <span style="color: red;">Not activated for invoicing</span>`;
+                    chargeItem.innerHTML = `<span style="color: red;">Not activated for invoicing</span>`;
                 }
 
                 chargeList.appendChild(chargeItem);
