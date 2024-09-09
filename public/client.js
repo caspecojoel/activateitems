@@ -47,49 +47,65 @@ const onBtnClick = (t, opts) => {
 // Initialize Trello Power-Up with badge color based on activation status
 TrelloPowerUp.initialize({
   'card-detail-badges': async (t, options) => {
-    // Fetch the Younium data
-    const card = await t.card('all');
-    const hubspotId = card.customFieldItems.find(field => field.idCustomField === '66d715a7584d0c33d06ab06f').value.text;
-    const orgNo = card.customFieldItems.find(field => field.idCustomField === '66deaa1c355f14009a688b5d').value.text;
+    try {
+      // Fetch the Younium data
+      const card = await t.card('all');
+      const hubspotId = card.customFieldItems?.find(field => field.idCustomField === '66d715a7584d0c33d06ab06f')?.value?.text;
+      const orgNo = card.customFieldItems?.find(field => field.idCustomField === '66deaa1c355f14009a688b5d')?.value?.text;
 
-    // Get data from API
-    const youniumData = await fetch(`/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`)
-      .then(response => response.json());
+      // Return if we can't find the HubSpot ID or Org Number
+      if (!hubspotId || !orgNo) {
+        throw new Error('Missing HubSpot ID or Org Number.');
+      }
 
-    // Count total charges and activated charges
-    let totalCharges = 0;
-    let activatedCharges = 0;
+      // Get data from API
+      const youniumData = await fetch(`/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`)
+        .then(response => response.json());
 
-    youniumData.products.forEach(product => {
-      product.charges.forEach(charge => {
-        totalCharges++;
-        if (charge.isReady4Invoicing === true || charge.isReady4Invoicing === "True") {
-          activatedCharges++;
+      if (!youniumData || !youniumData.products) {
+        throw new Error('No products found in Younium data.');
+      }
+
+      // Count total charges and activated charges
+      let totalCharges = 0;
+      let activatedCharges = 0;
+
+      youniumData.products.forEach(product => {
+        if (product.charges) {
+          product.charges.forEach(charge => {
+            totalCharges++;
+            if (charge.isReady4Invoicing === true || charge.isReady4Invoicing === "True") {
+              activatedCharges++;
+            }
+          });
         }
       });
-    });
 
-    let badgeText = '';
-    let badgeColor = '';
+      let badgeText = '';
+      let badgeColor = '';
 
-    // Set the badge text and color based on the number of activated charges
-    if (activatedCharges === 0) {
-      badgeText = 'No products activated';
-      badgeColor = 'red';
-    } else if (activatedCharges === totalCharges) {
-      badgeText = 'All products activated';
-      badgeColor = 'green';
-    } else {
-      badgeText = `${activatedCharges}/${totalCharges} products activated`;
-      badgeColor = 'lightgreen';
+      // Set the badge text and color based on the number of activated charges
+      if (activatedCharges === 0) {
+        badgeText = 'No products activated';
+        badgeColor = 'red';
+      } else if (activatedCharges === totalCharges) {
+        badgeText = 'All products activated';
+        badgeColor = 'green';
+      } else {
+        badgeText = `${activatedCharges}/${totalCharges} products activated`;
+        badgeColor = 'lightgreen';
+      }
+
+      // Return the badge
+      return [{
+        text: badgeText,
+        color: badgeColor,  // Set the badge color dynamically
+        icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+        callback: onBtnClick
+      }];
+    } catch (error) {
+      console.error('Error in card-detail-badges:', error);
+      return [];  // Return an empty badge in case of error
     }
-
-    // Return the badge
-    return [{
-      text: badgeText,
-      color: badgeColor,  // Set the badge color dynamically
-      icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-      callback: onBtnClick
-    }];
   }
 });
