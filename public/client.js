@@ -121,24 +121,15 @@ const onBtnClick = (t, opts) => {
 TrelloPowerUp.initialize({
   'card-detail-badges': (t, options) => {
     // Show the loading badge immediately
-    const loadingBadge = [{
+    return [{
       text: 'Loading Younium status...',
       color: 'yellow',
       icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-    }];
-    
-    // Return the loading badge while fetching data
-    t.card('all').then(card => {
-      const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
-      const hubspotId = getCustomFieldValue(card.customFieldItems, '66d715a7584d0c33d06ab06f');
+    }]; // This ensures the loading badge is displayed instantly
 
-      console.log('Card data:', { orgNo, hubspotId });
-
-      // Immediately show the loading badge
-      return loadingBadge;
-    });
-
-    // Fetch Younium data and update the badge
+  },
+  'card-detail-badges:dynamic': (t, options) => {
+    // Fetch the data asynchronously and update the badge
     return t.card('all')
       .then(card => {
         const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
@@ -153,7 +144,6 @@ TrelloPowerUp.initialize({
                 text: 'Invalid ID',
                 color: 'red',
                 icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-                callback: onBtnClick
               }];
             }
 
@@ -164,7 +154,6 @@ TrelloPowerUp.initialize({
               text: status.text,
               color: status.color,
               icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-              callback: onBtnClick
             }];
           })
           .catch(err => {
@@ -173,9 +162,9 @@ TrelloPowerUp.initialize({
               text: 'Error loading status',
               color: 'red',
               icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-              callback: onBtnClick
             }];
           });
       });
   }
 });
+
