@@ -80,7 +80,14 @@
             const chargeList = document.createElement('ul');
             product.charges.forEach(charge => {
                 const chargeItem = document.createElement('li');
-                chargeItem.innerHTML = `Ready for invoicing: ${charge.isReady4Invoicing}`;
+                
+                // Conditionally set the text and color based on isReady4Invoicing
+                if (charge.isReady4Invoicing) {
+                    chargeItem.innerHTML = `<span style="color: green;">Activated for invoicing</span>`;
+                } else {
+                    chargeItem.innerHTML = `<span style="color: red;">Not activated for invoicing</span>`;
+                }
+
                 chargeList.appendChild(chargeItem);
             });
 
