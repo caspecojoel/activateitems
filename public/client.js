@@ -131,7 +131,7 @@ TrelloPowerUp.initialize({
           .then(youniumData => {
             if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
               return [{
-                text: 'Invalid hubspot or orgnummer',
+                text: 'Invalid ID',
                 color: 'red',
                 icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
                 callback: onBtnClick
