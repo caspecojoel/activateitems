@@ -40,7 +40,6 @@ const getActivationStatus = (youniumData) => {
   }
 };
 
-// Function to handle button click and toggle invoicing status
 // Function to handle button click and toggle invoicing status with confirmation
 const handleToggleButtonClick = (chargeId, currentStatus, productName) => {
   const action = currentStatus ? 'inactivate' : 'activate';
@@ -61,18 +60,21 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName) => {
   .then(response => {
     if (response.ok) {
       console.log(`Charge ${chargeId} status updated successfully`);
-      // Update the UI to reflect the new status
+
+      // Get the button and status text elements
       const button = document.querySelector(`[data-charge-id="${chargeId}"]`);
-      const statusSpan = button.previousElementSibling;
+      const statusText = document.getElementById(`status-${chargeId}`);
 
       if (newStatus) {
         button.textContent = "Deactivate";
         button.style.backgroundColor = "green";
-        statusSpan.textContent = "Activated for invoicing";
+        statusText.textContent = "Activated for invoicing";
+        statusText.style.color = "green";
       } else {
         button.textContent = "Activate";
         button.style.backgroundColor = "red";
-        statusSpan.textContent = "Not activated for invoicing";
+        statusText.textContent = "Not activated for invoicing";
+        statusText.style.color = "red";
       }
     } else {
       console.error('Failed to update the charge status');
