@@ -23,20 +23,10 @@ body {
     margin: 10px 0;
 }
 
-/* Divider style */
-hr {
-    border: none;
-    height: 1px;
-    background-color: #ccc; /* Light gray divider */
-    margin-top: 20px;
-    margin-bottom: 20px;
-}
-
-/* Add margin to separate the ID info section */
 .id-info {
-    margin-top: 20px;
-    padding-top: 10px;
-    border-top: 1px solid #ddd; /* Optional: Another subtle divider */
+    font-size: 0.8em;
+    color: #666;
+    margin-top: 10px;
 }
 
 #save {
