@@ -40,35 +40,45 @@ const getActivationStatus = (youniumData) => {
   }
 };
 
-// Function to handle button click and trigger API to toggle invoicing status
-const handleActivateButtonClick = (chargeId) => {
-  console.log(`Activating charge: ${chargeId}`);
-  
-  // Simulate an API call (you need to replace this with the actual API call logic)
-  fetch(`/activate-invoicing?chargeId=${chargeId}`, {
+// Function to handle button click and toggle invoicing status
+const handleToggleButtonClick = (chargeId, currentStatus) => {
+  console.log(`Toggling charge: ${chargeId}`);
+
+  // Simulate an API call (replace with actual API logic)
+  const newStatus = !currentStatus;
+
+  fetch(`/toggle-invoicing?chargeId=${chargeId}&status=${newStatus}`, {
     method: 'POST',
   })
   .then(response => {
     if (response.ok) {
-      console.log(`Charge ${chargeId} activated successfully`);
-      // Update the UI to show the activation
+      console.log(`Charge ${chargeId} status updated successfully`);
+      // Update the UI to reflect the new status
       const button = document.querySelector(`[data-charge-id="${chargeId}"]`);
-      button.textContent = "Activated";
-      button.disabled = true;
-      button.previousElementSibling.textContent = "Activated for invoicing";
-      button.previousElementSibling.style.color = "green";
+      const statusSpan = button.previousElementSibling;
+
+      if (newStatus) {
+        button.textContent = "Deactivate";
+        button.style.backgroundColor = "green";
+        statusSpan.textContent = "Activated for invoicing";
+      } else {
+        button.textContent = "Activate";
+        button.style.backgroundColor = "red";
+        statusSpan.textContent = "Not activated for invoicing";
+      }
     } else {
-      console.error('Failed to activate the charge');
+      console.error('Failed to update the charge status');
     }
   })
-  .catch(error => console.error('Error activating the charge:', error));
+  .catch(error => console.error('Error updating the charge status:', error));
 };
 
-// Add event listener for "Activate" buttons
+// Add event listener for toggle buttons
 document.addEventListener('click', function (event) {
-  if (event.target && event.target.classList.contains('activate-button')) {
+  if (event.target && event.target.classList.contains('toggle-button')) {
     const chargeId = event.target.getAttribute('data-charge-id');
-    handleActivateButtonClick(chargeId);
+    const currentStatus = event.target.textContent.trim() === "Deactivate"; // Determine current status based on the button text
+    handleToggleButtonClick(chargeId, currentStatus);
   }
 });
 

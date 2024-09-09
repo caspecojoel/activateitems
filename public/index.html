@@ -88,16 +88,20 @@
             const chargeList = document.createElement('ul');
             product.charges.forEach(charge => {
                 const chargeItem = document.createElement('li');
-                
-                // Display charge details and status
+
+                // Display button with status and style based on isReady4Invoicing
                 if (charge.isReady4Invoicing === true) {
-                    chargeItem.innerHTML = `<span style="color: green;">Activated for invoicing</span>`;
+                    chargeItem.innerHTML = `
+                        <span>Activated for invoicing</span>
+                        <button class="toggle-button" data-charge-id="${charge.id}" style="background-color:green;">Deactivate</button>
+                    `;
                 } else {
                     chargeItem.innerHTML = `
-                        <span style="color: red;">Not activated for invoicing</span>
-                        <button class="activate-button" data-charge-id="${charge.id}">Activate</button>
+                        <span>Not activated for invoicing</span>
+                        <button class="toggle-button" data-charge-id="${charge.id}" style="background-color:red;">Activate</button>
                     `;
                 }
+
                 chargeList.appendChild(chargeItem);
             });
 
