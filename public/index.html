@@ -110,7 +110,7 @@
             const chargeList = document.createElement('ul');
             product.charges.forEach(function(charge) {
                 const chargeItem = document.createElement('li');
-                chargeItem.innerHTML = `isReady4Invoicing: ${charge.isReady4Invoicing}`;
+                chargeItem.innerHTML = `Ready for invoicing: ${charge.isReady4Invoicing}`;
                 chargeList.appendChild(chargeItem);
             });
             
