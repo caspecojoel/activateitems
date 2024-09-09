@@ -47,6 +47,10 @@
             margin-top: 10px;
             align-self: flex-start;
         }
+
+        .account-info {
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -60,6 +64,13 @@
             <div class="form-group product-selection">
                 <h3>Välj produkter</h3>
                 <div id="labels-container"></div>
+            </div>
+
+            <!-- New fields for Account Name and Account Number -->
+            <div class="form-group account-info">
+                <h3>Account Information</h3>
+                <p><strong>Account Name:</strong> <span id="account-name">Not available</span></p>
+                <p><strong>Account Number:</strong> <span id="account-number">Not available</span></p>
             </div>
 
             <button id="save">Skicka</button>
@@ -90,6 +101,12 @@
             labelElement.innerHTML = `<input type="checkbox" name="product" value="${label}"> ${label}`;
             labelsContainer.appendChild(labelElement);
         });
+
+        // Function to update account information fields
+        function updateAccountInfo(accountName, accountNumber) {
+            document.getElementById('account-name').textContent = accountName || 'Not available';
+            document.getElementById('account-number').textContent = accountNumber || 'Not available';
+        }
 
         // Handle form submission
         document.getElementById('save').addEventListener('click', function() {
@@ -129,6 +146,20 @@
                 alert('Fel när klarmarkeringen skulle skickas, kontakta systemadministratör');
             });
         });
+
+        // Example to fetch the account data and display it (could be fetched when loading the page)
+        fetch(`/your-api-endpoint?hubspotId=${hubspotId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.length > 0) {
+                    const account = data[0].account;
+                    updateAccountInfo(account.name, account.accountNumber);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching account info:', error);
+                updateAccountInfo(null, null);  // Reset account info in case of an error
+            });
     </script>
     
     <script src="/client.js"></script>
