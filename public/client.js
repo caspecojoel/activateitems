@@ -34,7 +34,8 @@ const onBtnClick = (t, opts) => {
             title: 'Klarmarkering',
             url: externalUrl,
             height: 800,
-            width: 1000
+            width: 1000,
+            mouseEvent: opts.mouseEvent // Pass mouseEvent for proper popup placement
           });
         })
         .then(() => console.log('Popup displayed successfully with all data'))
@@ -46,9 +47,9 @@ const onBtnClick = (t, opts) => {
 // Initialize Trello Power-Up with only the card-detail-badge
 TrelloPowerUp.initialize({
   'card-detail-badges': (t, options) => [{
-    text: 'Power-Up Badge',
+    text: 'Activate for invoicing',
     icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-    color: 'green',  // Can set color based on status
+    color: 'green',
     callback: onBtnClick
   }]
 });
