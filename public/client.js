@@ -41,7 +41,15 @@ const getActivationStatus = (youniumData) => {
 };
 
 // Function to handle button click and toggle invoicing status
-const handleToggleButtonClick = (chargeId, currentStatus) => {
+// Function to handle button click and toggle invoicing status with confirmation
+const handleToggleButtonClick = (chargeId, currentStatus, productName) => {
+  const action = currentStatus ? 'inactivate' : 'activate';
+  const confirmationMessage = `Are you sure you want to ${action} ${productName}?`;
+  
+  if (!confirm(confirmationMessage)) {
+    return; // Exit if the user cancels the action
+  }
+
   console.log(`Toggling charge: ${chargeId}`);
 
   // Simulate an API call (replace with actual API logic)
@@ -77,8 +85,9 @@ const handleToggleButtonClick = (chargeId, currentStatus) => {
 document.addEventListener('click', function (event) {
   if (event.target && event.target.classList.contains('toggle-button')) {
     const chargeId = event.target.getAttribute('data-charge-id');
+    const productName = event.target.getAttribute('data-product-name');
     const currentStatus = event.target.textContent.trim() === "Deactivate"; // Determine current status based on the button text
-    handleToggleButtonClick(chargeId, currentStatus);
+    handleToggleButtonClick(chargeId, currentStatus, productName);
   }
 });
 

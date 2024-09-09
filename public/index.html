@@ -93,12 +93,12 @@
                 if (charge.isReady4Invoicing === true) {
                     chargeItem.innerHTML = `
                         <span>Activated for invoicing</span>
-                        <button class="toggle-button" data-charge-id="${charge.id}" style="background-color:green;">Deactivate</button>
+                        <button class="toggle-button" data-charge-id="${charge.id}" data-product-name="${product.name}" style="background-color:green;">Deactivate</button>
                     `;
                 } else {
                     chargeItem.innerHTML = `
                         <span>Not activated for invoicing</span>
-                        <button class="toggle-button" data-charge-id="${charge.id}" style="background-color:red;">Activate</button>
+                        <button class="toggle-button" data-charge-id="${charge.id}" data-product-name="${product.name}" style="background-color:red;">Activate</button>
                     `;
                 }
 
