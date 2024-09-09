@@ -43,6 +43,16 @@ const getActivationStatus = (youniumData) => {
 // Function to fetch Younium data
 const fetchYouniumData = (orgNo, hubspotId) => {
   console.log('Fetching Younium data for:', { orgNo, hubspotId });
+
+  // Check if either orgNo or hubspotId is missing
+  if (!orgNo || !hubspotId) {
+    console.warn('Invalid hubspotId or orgNo');
+    return Promise.resolve({
+      name: 'Invalid hubspot or orgnummer',
+      accountNumber: null,
+    });
+  }
+
   return fetch(`/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`)
     .then(response => {
       console.log('Younium API response status:', response.status);
@@ -119,13 +129,22 @@ TrelloPowerUp.initialize({
 
         return fetchYouniumData(orgNo, hubspotId)
           .then(youniumData => {
+            if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
+              return [{
+                text: 'Invalid hubspot or orgnummer',
+                color: 'red',
+                icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+                callback: onBtnClick
+              }];
+            }
+
             console.log('Younium data before getActivationStatus:', youniumData);
             const status = getActivationStatus(youniumData);
             console.log('Activation status:', status);
             return [{
               text: status.text,
-              icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
               color: status.color,
+              icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
               callback: onBtnClick
             }];
           })
@@ -133,8 +152,8 @@ TrelloPowerUp.initialize({
             console.error('Error processing Younium data:', err);
             return [{
               text: 'Error loading status',
-              icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
               color: 'red',
+              icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
               callback: onBtnClick
             }];
           });

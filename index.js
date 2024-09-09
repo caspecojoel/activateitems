@@ -70,8 +70,13 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
 app.get('/get-younium-data', async (req, res) => {
   const { orgNo, hubspotId } = req.query;
   try {
+    if (!orgNo || !hubspotId) {
+      // Return invalid badge data if no orgNo or hubspotId
+      return res.json({ name: "Invalid hubspot id or orgnummer", accountNumber: null });
+    }
+
     const youniumData = await getYouniumOrderData(orgNo, hubspotId);
-    res.json(youniumData || { name: null, accountNumber: null });
+    res.json(youniumData || { name: "Invalid hubspot or orgnummer", accountNumber: null });
   } catch (error) {
     console.error('Error in /get-younium-data:', error);
     res.status(500).json({ error: 'Failed to fetch Younium data' });
