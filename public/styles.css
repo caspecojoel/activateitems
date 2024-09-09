@@ -34,3 +34,16 @@ body {
     margin-top: 10px;
     align-self: flex-start;
 }
+
+.activate-button {
+    background-color: green;
+    color: white;
+    padding: 8px 12px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.activate-button:hover {
+    background-color: darkgreen;
+}

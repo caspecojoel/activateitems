@@ -9,6 +9,7 @@
 </head>
 <body>
     <div class="container">
+        <div id="loading-spinner" style="display: none;">Loading...</div>
         <div class="form-section">
             <!-- Section to display Younium details -->
             <div class="younium-details">
@@ -62,6 +63,9 @@
             productsContainer: document.getElementById('products-container')
         };
 
+        // Show loading spinner while fetching data
+        document.getElementById('loading-spinner').style.display = 'block';
+
         // Populate Younium Account and Order data
         domElements.hubspotId.textContent = urlParams.get('hubspotId');
         domElements.orgNumber.textContent = urlParams.get('orgNo');
@@ -72,6 +76,9 @@
         domElements.orderDescription.textContent = youniumData.description;
         domElements.orderStartDate.textContent = youniumData.effectiveStartDate;
 
+        // Hide loading spinner once data is loaded
+        document.getElementById('loading-spinner').style.display = 'none';
+
         // Populate Products and Charges
         youniumData.products.forEach(product => {
             const productElement = document.createElement('div');
@@ -81,14 +88,11 @@
             const chargeList = document.createElement('ul');
             product.charges.forEach(charge => {
                 const chargeItem = document.createElement('li');
-
-                // Conditionally set the text and color based on isReady4Invoicing
                 if (charge.isReady4Invoicing === true) {
                     chargeItem.innerHTML = `<span style="color: green;">Activated for invoicing</span>`;
                 } else {
                     chargeItem.innerHTML = `<span style="color: red;">Not activated for invoicing</span>`;
                 }
-
                 chargeList.appendChild(chargeItem);
             });
 
