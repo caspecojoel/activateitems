@@ -42,12 +42,20 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
   }
 }
 
-app.post('/submit-form', async (req, res) => {
-  const { hubspotId, selectedLabels, userName, cardTitle, orgNo } = req.body;
+// New endpoint to get Younium data
+app.get('/get-younium-data', async (req, res) => {
+  const { orgNo, hubspotId } = req.query;
+  try {
+    const youniumData = await getYouniumOrderData(orgNo, hubspotId);
+    res.json(youniumData || { name: null, accountNumber: null });
+  } catch (error) {
+    console.error('Error in /get-younium-data:', error);
+    res.status(500).json({ error: 'Failed to fetch Younium data' });
+  }
+});
 
-  // Fetch Younium order data
-  const youniumData = await getYouniumOrderData(orgNo, hubspotId);
-  console.log('Younium data:', youniumData);
+app.post('/submit-form', async (req, res) => {
+  const { hubspotId, selectedLabels, userName, cardTitle, orgNo, accountName, accountNumber } = req.body;
 
   let transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -71,13 +79,11 @@ app.post('/submit-form', async (req, res) => {
             ${generateProductListHtml(selectedLabels)}
           </ul>
           <p>Formuläret skickades av: <strong>${userName}</strong>.</p>
-          ${youniumData ? `
           <p>Younium Order Information:</p>
           <ul>
-            <li>Name: ${youniumData.name}</li>
-            <li>Account Number: ${youniumData.accountNumber}</li>
+            <li>Name: ${accountName}</li>
+            <li>Account Number: ${accountNumber}</li>
           </ul>
-          ` : ''}
           <p>Tveka inte att kontakta oss om du har några frågor eller behöver ytterligare hjälp.</p>
           <div style="margin-top: 30px; font-size: 14px; color: #777;">
             <p>Med vänliga hälsningar,<br>Operations Teamet</p>
@@ -93,7 +99,7 @@ app.post('/submit-form', async (req, res) => {
       return res.json({ success: false, message: 'Error sending email' });
     }
     console.log('Message sent: %s', info.messageId);
-    res.json({ success: true, message: 'Email sent successfully', youniumData });
+    res.json({ success: true, message: 'Email sent successfully' });
   });
 });
 

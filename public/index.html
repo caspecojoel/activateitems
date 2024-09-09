@@ -85,6 +85,10 @@
         document.getElementById('hubspot-id').textContent = urlParams.get('hubspotId');
         document.getElementById('org-number').textContent = urlParams.get('orgNo');
 
+        // Populate the new Younium fields
+        document.getElementById('account-name').textContent = urlParams.get('accountName');  // Younium Account Name
+        document.getElementById('account-number').textContent = urlParams.get('accountNumber');  // Younium Account Number
+
         // Get HubSpot ID, labels, card title, and user name from the URL
         var hubspotId = getUrlParameter('hubspotId');
         var labels = getUrlParameter('labels').split(',');

@@ -46,19 +46,28 @@ var onBtnClick = function(t, opts) {
         // Get labels from the card
         const labels = card.labels.map(label => label.name).join(',');
 
-        // URL of the page you want to display in the popup, including cardTitle, userName, and orgNo
-        var externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?hubspotId=${hubspotId}&labels=${encodeURIComponent(labels)}&cardTitle=${encodeURIComponent(cardTitle)}&userName=${encodeURIComponent(userName)}&orgNo=${encodeURIComponent(orgNo)}`;
+        // Fetch Younium data before opening the popup
+        return fetch(`/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`)
+          .then(response => response.json())
+          .then(youniumData => {
+            console.log('Younium data:', youniumData);
 
-        return t.popup({
-          title: 'Klarmarkering',
-          url: externalUrl,
-          height: 800,
-          width: 1000
-        }).then(() => {
-          console.log('Popup displayed successfully with HubSpot ID, labels, card title, user name, and org number:', hubspotId, labels, cardTitle, userName, orgNo);
-        }).catch(err => {
-          console.error('Error displaying popup:', err);
-        });
+            // URL of the page you want to display in the popup, including all data
+            var externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?hubspotId=${encodeURIComponent(hubspotId)}&labels=${encodeURIComponent(labels)}&cardTitle=${encodeURIComponent(cardTitle)}&userName=${encodeURIComponent(userName)}&orgNo=${encodeURIComponent(orgNo)}&accountName=${encodeURIComponent(youniumData.name || '')}&accountNumber=${encodeURIComponent(youniumData.accountNumber || '')}`;
+
+            return t.popup({
+              title: 'Klarmarkering',
+              url: externalUrl,
+              height: 800,
+              width: 1000
+            });
+          })
+          .then(() => {
+            console.log('Popup displayed successfully with all data');
+          })
+          .catch(err => {
+            console.error('Error fetching Younium data or displaying popup:', err);
+          });
       });
     });
 };
