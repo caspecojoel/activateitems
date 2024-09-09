@@ -5,17 +5,28 @@ const morgan = require('morgan');
 const nodemailer = require('nodemailer');
 const app = express();
 
+// Load environment variables (e.g., credentials) using process.env
+require('dotenv').config();
+
 app.use(morgan('combined'));
 app.use(express.static('public'));
 app.use(express.json()); // För att kunna parsa JSON-begäran
 app.use(cors({ origin: 'https://trello.com' }));
 
+// Endpoint to return credentials securely
+app.get('/auth-credentials', (req, res) => {
+    res.json({
+        username: process.env.AUTH_USERNAME,
+        password: process.env.AUTH_PASSWORD
+    });
+});
+
 app.get('/manifest.json', (req, res) => {
-  res.sendFile(path.join(__dirname, 'manifest.json'));
+    res.sendFile(path.join(__dirname, 'manifest.json'));
 });
 
 app.get('/client.js', (req, res) => {
-  res.sendFile(path.join(__dirname, 'client.js'));
+    res.sendFile(path.join(__dirname, 'client.js'));
 });
 
 // Funktion för att generera HTML-lista av valda produkter
@@ -32,7 +43,7 @@ app.post('/submit-form', (req, res) => {
     service: 'gmail',
     auth: {
       user: 'caspeco.oncall@gmail.com',  // din email
-      pass: 'ddpqsicrbtrlmpap'  // din genererade app-lösenord utan mellanslag
+      pass: process.env.GMAIL_APP_PASSWORD  // use environment variable for email password
     }
   });
 

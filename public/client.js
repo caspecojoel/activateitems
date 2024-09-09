@@ -1,6 +1,15 @@
 // Define the name of your Power-Up
 var POWER_UP_NAME = 'Custom Button Power-Up';
 
+// Helper function to fetch credentials from your server
+function getCredentials() {
+    return fetch('/auth-credentials')
+        .then(response => response.json())
+        .catch(error => {
+            console.error('Error fetching credentials:', error);
+        });
+}
+
 var onBtnClick = function(t, opts) {
     console.log('Button clicked on card:', opts);
 
@@ -41,12 +50,22 @@ var onBtnClick = function(t, opts) {
 
                 // Construct the correct API URL
                 const apiUrl = `https://cas-test.loveyourq.se/dev/GetYouniumOrders?OrgNo=${orgNum}&HubspotDealId=${hubspotId}`;
-                
+
                 // Log the API URL being used
                 console.log(`Fetching data from API: ${apiUrl}`);
 
-                // Make API call directly to the correct endpoint
-                fetch(apiUrl)
+                // Fetch credentials from the server, then make the API call
+                return getCredentials().then(credentials => {
+                    const authHeader = 'Basic ' + btoa(`${credentials.username}:${credentials.password}`);
+
+                    // Make API call directly to the correct endpoint
+                    fetch(apiUrl, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': authHeader,
+                            'Content-Type': 'application/json'
+                        }
+                    })
                     .then(response => {
                         console.log('API response:', response);
                         return response.json();
@@ -70,16 +89,6 @@ var onBtnClick = function(t, opts) {
                         console.error('Error fetching API data:', error);
                         alert('Error fetching API data.');
                     });
-
-                return t.popup({
-                    title: 'Klarmarkering',
-                    url: externalUrl,
-                    height: 800,
-                    width: 1000
-                }).then(() => {
-                    console.log('Popup displayed successfully with HubSpot ID, labels, card title, and user name:', hubspotId, labels, cardTitle, userName);
-                }).catch(err => {
-                    console.error('Error displaying popup:', err);
                 });
             });
         });
