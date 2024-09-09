@@ -40,11 +40,39 @@ const getActivationStatus = (youniumData) => {
   }
 };
 
+// Function to handle button click and trigger API to toggle invoicing status
+const handleActivateButtonClick = (chargeId) => {
+  console.log(`Activating charge: ${chargeId}`);
+  
+  // Simulate an API call (you need to replace this with the actual API call logic)
+  fetch(`/activate-invoicing?chargeId=${chargeId}`, {
+    method: 'POST',
+  })
+  .then(response => {
+    if (response.ok) {
+      console.log(`Charge ${chargeId} activated successfully`);
+      // Update the UI to show the activation
+      document.querySelector(`[data-charge-id="${chargeId}"]`).textContent = "Activated";
+      document.querySelector(`[data-charge-id="${chargeId}"]`).disabled = true;
+    } else {
+      console.error('Failed to activate the charge');
+    }
+  })
+  .catch(error => console.error('Error activating the charge:', error));
+};
+
+// Add event listener for "Activate" buttons
+document.addEventListener('click', function (event) {
+  if (event.target && event.target.classList.contains('activate-button')) {
+    const chargeId = event.target.getAttribute('data-charge-id');
+    handleActivateButtonClick(chargeId);
+  }
+});
+
 // Function to fetch Younium data
 const fetchYouniumData = (orgNo, hubspotId) => {
   console.log('Fetching Younium data for:', { orgNo, hubspotId });
 
-  // Check if either orgNo or hubspotId is missing
   if (!orgNo || !hubspotId) {
     console.warn('Invalid hubspotId or orgNo');
     return Promise.resolve({
@@ -54,10 +82,7 @@ const fetchYouniumData = (orgNo, hubspotId) => {
   }
 
   return fetch(`/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`)
-    .then(response => {
-      console.log('Younium API response status:', response.status);
-      return response.json();
-    })
+    .then(response => response.json())
     .then(data => {
       console.log('Younium API response data:', data);
       return data;
@@ -75,8 +100,6 @@ const onBtnClick = (t, opts) => {
   return t.card('all').then(card => {
     console.log('Card data:', card);
 
-    const cardTitle = card.name;
-
     const hubspotId = getCustomFieldValue(card.customFieldItems, '66d715a7584d0c33d06ab06f');
     const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
     console.log('HubSpot ID:', hubspotId);
@@ -84,13 +107,10 @@ const onBtnClick = (t, opts) => {
 
     return t.member('fullName').then(member => {
       const userName = member.fullName;
-      const labels = card.labels.map(label => label.name).join(',');
 
       // Fetch Younium data and display in popup
       return fetchYouniumData(orgNo, hubspotId)
         .then(youniumData => {
-          console.log('Younium data:', youniumData);
-
           if (!youniumData) {
             throw new Error('Failed to fetch Younium data');
           }
@@ -102,10 +122,9 @@ const onBtnClick = (t, opts) => {
             url: externalUrl,
             height: 800,
             width: 1000,
-            mouseEvent: opts.mouseEvent // Pass mouseEvent for proper popup placement
+            mouseEvent: opts.mouseEvent
           });
         })
-        .then(() => console.log('Popup displayed successfully with all data'))
         .catch(err => {
           console.error('Error fetching Younium data or displaying popup:', err);
           return t.alert({
@@ -125,8 +144,6 @@ TrelloPowerUp.initialize({
         const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
         const hubspotId = getCustomFieldValue(card.customFieldItems, '66d715a7584d0c33d06ab06f');
 
-        console.log('Card data:', { orgNo, hubspotId });
-
         return fetchYouniumData(orgNo, hubspotId)
           .then(youniumData => {
             if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
@@ -138,9 +155,7 @@ TrelloPowerUp.initialize({
               }];
             }
 
-            console.log('Younium data before getActivationStatus:', youniumData);
             const status = getActivationStatus(youniumData);
-            console.log('Activation status:', status);
             return [{
               text: status.text,
               color: status.color,
