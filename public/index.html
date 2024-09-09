@@ -3,38 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Iframe</title>
-    <!-- Link to the external CSS file -->
+    <title>Younium Order Details</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- Add a modern CSS framework for better styling and responsiveness -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-    <div class="container">
-        <div class="form-section">
-            <!-- Section to display Younium details -->
-            <div class="younium-details">
-                <h2>Order Details</h2>
-                <div class="form-group">
-                    Name: <span id="account-name"></span>
+<body class="bg-gray-100">
+    <div class="container mx-auto p-4">
+        <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+            <h1 class="text-2xl font-bold mb-4">Order Details</h1>
+            
+            <!-- Order summary section -->
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                    <p><strong>Account:</strong> <span id="account-name"></span></p>
+                    <p><strong>Status:</strong> <span id="order-status"></span></p>
                 </div>
-                <div class="form-group">
-                    Status: <span id="order-status"></span>
-                </div>
-                <div class="form-group">
-                    Description: <span id="order-description"></span>
-                </div>
-                <div class="form-group">
-                    Start Date: <span id="order-start-date"></span>
-                </div>
-
-                <!-- Section for products and charges -->
-                <div class="form-group product-selection">
-                    <h3>Products & Charges</h3>
-                    <div id="products-container"></div>
+                <div>
+                    <p><strong>Description:</strong> <span id="order-description"></span></p>
+                    <p><strong>Start Date:</strong> <span id="order-start-date"></span></p>
                 </div>
             </div>
 
-            <!-- Small text area for displaying IDs -->
-            <div class="id-info">
+            <!-- Products and Charges section -->
+            <div class="mb-6">
+                <h2 class="text-xl font-semibold mb-2">Products & Charges</h2>
+                <div id="products-container"></div>
+            </div>
+
+            <!-- ID information section -->
+            <div class="text-sm text-gray-600">
                 <p>HubSpot ID: <span id="hubspot-id"></span></p>
                 <p>Org Number: <span id="org-number"></span></p>
                 <p>Order ID: <span id="order-id"></span></p>
@@ -63,37 +61,57 @@
         };
 
         // Populate Younium Account and Order data
+        Object.keys(domElements).forEach(key => {
+            if (key in youniumData) {
+                domElements[key].textContent = youniumData[key];
+            }
+        });
         domElements.hubspotId.textContent = urlParams.get('hubspotId');
         domElements.orgNumber.textContent = urlParams.get('orgNo');
         domElements.accountName.textContent = youniumData.account.name;
         domElements.accountNumber.textContent = youniumData.account.accountNumber;
-        domElements.orderId.textContent = youniumData.id;
-        domElements.orderStatus.textContent = youniumData.status;
-        domElements.orderDescription.textContent = youniumData.description;
-        domElements.orderStartDate.textContent = youniumData.effectiveStartDate;
 
         // Populate Products and Charges
         youniumData.products.forEach(product => {
             const productElement = document.createElement('div');
-            productElement.classList.add('product');
-            productElement.innerHTML = `<h4>${product.name}</h4>`;
+            productElement.className = 'bg-gray-50 p-4 rounded mb-4';
+            productElement.innerHTML = `<h3 class="text-lg font-semibold mb-2">${product.name}</h3>`;
 
             const chargeList = document.createElement('ul');
+            chargeList.className = 'space-y-2';
             product.charges.forEach(charge => {
                 const chargeItem = document.createElement('li');
-
-                // Conditionally set the text and color based on isReady4Invoicing
-                if (charge.isReady4Invoicing === true) {
-                    chargeItem.innerHTML = `<span style="color: green;">Activated for invoicing</span>`;
-                } else {
-                    chargeItem.innerHTML = `<span style="color: red;">Not activated for invoicing</span>`;
-                }
-
+                chargeItem.className = 'flex items-center justify-between';
+                const status = charge.isReady4Invoicing ? 'Activated' : 'Not activated';
+                const statusColor = charge.isReady4Invoicing ? 'text-green-600' : 'text-red-600';
+                
+                chargeItem.innerHTML = `
+                    <span>${charge.name || 'Unnamed Charge'}</span>
+                    <span class="${statusColor}">${status}</span>
+                    <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-sm toggle-activation" data-charge-id="${charge.id}">
+                        ${charge.isReady4Invoicing ? 'Deactivate' : 'Activate'}
+                    </button>
+                `;
                 chargeList.appendChild(chargeItem);
             });
 
             productElement.appendChild(chargeList);
             domElements.productsContainer.appendChild(productElement);
+        });
+
+        // Add event listener for activation toggle buttons
+        document.addEventListener('click', function(e) {
+            if (e.target && e.target.classList.contains('toggle-activation')) {
+                const chargeId = e.target.getAttribute('data-charge-id');
+                // TODO: Implement API call to Younium to toggle activation status
+                console.log(`Toggle activation for charge ID: ${chargeId}`);
+                // Update UI after successful API call
+                const statusSpan = e.target.previousElementSibling;
+                const newStatus = statusSpan.textContent === 'Activated' ? 'Not activated' : 'Activated';
+                statusSpan.textContent = newStatus;
+                statusSpan.className = newStatus === 'Activated' ? 'text-green-600' : 'text-red-600';
+                e.target.textContent = newStatus === 'Activated' ? 'Deactivate' : 'Activate';
+            }
         });
     </script>
 
