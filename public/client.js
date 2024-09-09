@@ -1,106 +1,61 @@
 // Define the name of your Power-Up
 var POWER_UP_NAME = 'Custom Button Power-Up';
 
-// Helper function to fetch credentials from your server
-function getCredentials() {
-    return fetch('/auth-credentials')
-        .then(response => response.json())
-        .catch(error => {
-            console.error('Error fetching credentials:', error);
-        });
-}
-
 var onBtnClick = function(t, opts) {
-    console.log('Button clicked on card:', opts);
+  console.log('Button clicked on card:', opts);
 
-    return t.card('all')
-        .then(function(card) {
-            console.log('Card data:', card);
+  return t.card('all')
+    .then(function(card) {
+      console.log('Card data:', card);
 
-            // Get the card title
-            const cardTitle = card.name;
+      // Get the card title
+      const cardTitle = card.name;
 
-            // Find the custom fields with specific IDs
-            const orgNumField = card.customFieldItems.find(field => field.idCustomField === '66deaa1c355f14009a688b5d');
-            const hubspotIdField = card.customFieldItems.find(field => field.idCustomField === '66d715a7584d0c33d06ab06f');
+      // Get the user information
+      return t.member('fullName').then(function(member) {
+        const userName = member.fullName;  // Get the full name of the current user
 
-            let orgNum = '';
-            let hubspotId = '';
+        // Find the custom field with the specific ID
+        const customField = card.customFieldItems.find(field => field.idCustomField === '66d715a7584d0c33d06ab06f');
+        console.log('Found custom field:', customField);
 
-            // Extract values from custom fields
-            if (orgNumField && orgNumField.value) {
-                orgNum = orgNumField.value.text || '';
-            }
-            if (hubspotIdField && hubspotIdField.value) {
-                hubspotId = hubspotIdField.value.text || hubspotIdField.value.number || '';
-            }
+        let hubspotId = '';
+        if (customField && customField.value) {
+          if (customField.value.text) {
+            hubspotId = customField.value.text;
+          } else if (customField.value.number) {
+            hubspotId = customField.value.number;
+          }
+        }
+        console.log('HubSpot ID:', hubspotId);
 
-            console.log('OrgNum:', orgNum);
-            console.log('HubSpot ID:', hubspotId);
+        // Get labels from the card
+        const labels = card.labels.map(label => label.name).join(',');
 
-            // Get the user information
-            return t.member('fullName').then(function(member) {
-                const userName = member.fullName;  // Get the full name of the current user
+        // URL of the page you want to display in the popup, including cardTitle and userName
+        var externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?hubspotId=${hubspotId}&labels=${encodeURIComponent(labels)}&cardTitle=${encodeURIComponent(cardTitle)}&userName=${encodeURIComponent(userName)}`;
 
-                // Get labels from the card
-                const labels = card.labels.map(label => label.name).join(',');
-
-                // URL of the page you want to display in the popup, including cardTitle and userName
-                var externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?hubspotId=${hubspotId}&labels=${encodeURIComponent(labels)}&cardTitle=${encodeURIComponent(cardTitle)}&userName=${encodeURIComponent(userName)}`;
-
-                // Construct the correct API URL
-                const apiUrl = `https://cas-test.loveyourq.se/dev/GetYouniumOrders?OrgNo=${orgNum}&HubspotDealId=${hubspotId}`;
-
-                // Log the API URL being used
-                console.log(`Fetching data from API: ${apiUrl}`);
-
-                // Fetch credentials from the server, then make the API call
-                return getCredentials().then(credentials => {
-                    const authHeader = 'Basic ' + btoa(`${credentials.username}:${credentials.password}`);
-
-                    // Make API call directly to the correct endpoint
-                    fetch(apiUrl, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': authHeader,
-                            'Content-Type': 'application/json'
-                        }
-                    })
-                    .then(response => {
-                        console.log('API response:', response);
-                        return response.json();
-                    })
-                    .then(data => {
-                        console.log('Parsed API Response:', data);
-
-                        // Extract account information
-                        if (data && data.length > 0) {
-                            const accountInfo = data[0].account;
-                            const accountName = accountInfo.name;
-                            const accountNumber = accountInfo.accountNumber;
-
-                            // Display the account information in the popup
-                            alert(`Account Name: ${accountName}\nAccount Number: ${accountNumber}`);
-                        } else {
-                            alert('No data found for this OrgNo and HubSpot ID.');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error fetching API data:', error);
-                        alert('Error fetching API data.');
-                    });
-                });
-            });
+        return t.popup({
+          title: 'Klarmarkering',
+          url: externalUrl,
+          height: 800,
+          width: 1000
+        }).then(() => {
+          console.log('Popup displayed successfully with HubSpot ID, labels, card title, and user name:', hubspotId, labels, cardTitle, userName);
+        }).catch(err => {
+          console.error('Error displaying popup:', err);
         });
+      });
+    });
 };
 
 TrelloPowerUp.initialize({
-    'card-buttons': function(t, options) {
-        console.log('Initializing card-buttons capability');
-        return [{
-            icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-            text: 'Klarmarkering',
-            callback: onBtnClick
-        }];
-    }
+  'card-buttons': function(t, options) {
+    console.log('Initializing card-buttons capability');
+    return [{
+      icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+      text: 'Klarmarkering',
+      callback: onBtnClick
+    }];
+  }
 });

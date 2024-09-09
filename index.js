@@ -3,57 +3,19 @@ const cors = require('cors');
 const path = require('path');
 const morgan = require('morgan');
 const nodemailer = require('nodemailer');
-const fetch = require('node-fetch'); // Make sure node-fetch is installed
 const app = express();
-
-// Load environment variables (e.g., credentials) using process.env
-require('dotenv').config();
 
 app.use(morgan('combined'));
 app.use(express.static('public'));
 app.use(express.json()); // För att kunna parsa JSON-begäran
 app.use(cors({ origin: 'https://trello.com' }));
 
-// Proxy route to avoid CORS issues
-app.post('/proxy-younium-orders', async (req, res) => {
-    const { OrgNo, HubspotDealId } = req.body;
-    
-    const apiUrl = `https://cas-test.loveyourq.se/dev/GetYouniumOrders?OrgNo=${OrgNo}&HubspotDealId=${HubspotDealId}`;
-    
-    try {
-        const response = await fetch(apiUrl, {
-            method: 'GET',
-            headers: {
-                'Authorization': 'Basic ' + Buffer.from(`${process.env.AUTH_USERNAME}:${process.env.AUTH_PASSWORD}`).toString('base64')
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`API call failed with status ${response.status}`);
-        }
-
-        const data = await response.json();
-        res.json(data); // Return the API response to the frontend
-    } catch (error) {
-        console.error('Error fetching API:', error);
-        res.status(500).json({ error: 'Error fetching API' });
-    }
-});
-
-// Endpoint to return credentials securely
-app.get('/auth-credentials', (req, res) => {
-    res.json({
-        username: process.env.AUTH_USERNAME,
-        password: process.env.AUTH_PASSWORD
-    });
-});
-
 app.get('/manifest.json', (req, res) => {
-    res.sendFile(path.join(__dirname, 'manifest.json'));
+  res.sendFile(path.join(__dirname, 'manifest.json'));
 });
 
 app.get('/client.js', (req, res) => {
-    res.sendFile(path.join(__dirname, 'client.js'));
+  res.sendFile(path.join(__dirname, 'client.js'));
 });
 
 // Funktion för att generera HTML-lista av valda produkter
@@ -70,7 +32,7 @@ app.post('/submit-form', (req, res) => {
     service: 'gmail',
     auth: {
       user: 'caspeco.oncall@gmail.com',  // din email
-      pass: process.env.GMAIL_APP_PASSWORD  // use environment variable for email password
+      pass: 'ddpqsicrbtrlmpap'  // din genererade app-lösenord utan mellanslag
     }
   });
 
