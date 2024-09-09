@@ -1,6 +1,15 @@
 // Define the name of your Power-Up
 var POWER_UP_NAME = 'Custom Button Power-Up';
 
+// Helper function to fetch credentials from your server
+function getCredentials() {
+    return fetch('/auth-credentials')
+        .then(response => response.json())
+        .catch(error => {
+            console.error('Error fetching credentials:', error);
+        });
+}
+
 var onBtnClick = function(t, opts) {
     console.log('Button clicked on card:', opts);
 
@@ -39,44 +48,47 @@ var onBtnClick = function(t, opts) {
                 // URL of the page you want to display in the popup, including cardTitle and userName
                 var externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?hubspotId=${hubspotId}&labels=${encodeURIComponent(labels)}&cardTitle=${encodeURIComponent(cardTitle)}&userName=${encodeURIComponent(userName)}`;
 
-                // Send request to your server-side proxy
-                fetch('/proxy-younium-orders', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ OrgNo: orgNum, HubspotDealId: hubspotId })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Parsed API Response:', data);
+                // Construct the correct API URL
+                const apiUrl = `https://cas-test.loveyourq.se/dev/GetYouniumOrders?OrgNo=${orgNum}&HubspotDealId=${hubspotId}`;
 
-                    // Extract account information
-                    if (data && data.length > 0) {
-                        const accountInfo = data[0].account;
-                        const accountName = accountInfo.name;
-                        const accountNumber = accountInfo.accountNumber;
+                // Log the API URL being used
+                console.log(`Fetching data from API: ${apiUrl}`);
 
-                        // Display the account information in the popup
-                        alert(`Account Name: ${accountName}\nAccount Number: ${accountNumber}`);
-                    } else {
-                        alert('No data found for this OrgNo and HubSpot ID.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching API data:', error);
-                    alert('Error fetching API data.');
-                });
+                // Fetch credentials from the server, then make the API call
+                return getCredentials().then(credentials => {
+                    const authHeader = 'Basic ' + btoa(`${credentials.username}:${credentials.password}`);
 
-                return t.popup({
-                    title: 'Klarmarkering',
-                    url: externalUrl,
-                    height: 800,
-                    width: 1000
-                }).then(() => {
-                    console.log('Popup displayed successfully with HubSpot ID, labels, card title, and user name:', hubspotId, labels, cardTitle, userName);
-                }).catch(err => {
-                    console.error('Error displaying popup:', err);
+                    // Make API call directly to the correct endpoint
+                    fetch(apiUrl, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': authHeader,
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        console.log('API response:', response);
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Parsed API Response:', data);
+
+                        // Extract account information
+                        if (data && data.length > 0) {
+                            const accountInfo = data[0].account;
+                            const accountName = accountInfo.name;
+                            const accountNumber = accountInfo.accountNumber;
+
+                            // Display the account information in the popup
+                            alert(`Account Name: ${accountName}\nAccount Number: ${accountNumber}`);
+                        } else {
+                            alert('No data found for this OrgNo and HubSpot ID.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching API data:', error);
+                        alert('Error fetching API data.');
+                    });
                 });
             });
         });
