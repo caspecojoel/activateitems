@@ -84,7 +84,7 @@
                 console.log('isReady4Invoicing value:', charge.isReady4Invoicing);
 
                 // Conditionally set the text and color based on isReady4Invoicing
-                if (Boolean(charge.isReady4Invoicing)) {
+                if (charge.isReady4Invoicing === true) {  // Strict comparison to boolean true
                     chargeItem.innerHTML = `<span style="color: green;">Activated for invoicing</span>`;
                 } else {
                     chargeItem.innerHTML = `<span style="color: red;">Not activated for invoicing</span>`;
