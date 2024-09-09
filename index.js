@@ -27,8 +27,10 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
   try {
     console.log(`Fetching Younium data for OrgNo: ${orgNo}, HubspotDealId: ${hubspotDealId}`);
     const response = await axios.get(`https://cas-test.loveyourq.se/dev/GetYouniumOrders?OrgNo=${orgNo}&HubspotDealId=${hubspotDealId}`);
-    console.log('Younium API Response:', JSON.stringify(response.data, null, 2));
+    console.log('Full Younium API Response:', response.data);
+
     if (response.data && response.data.length > 0) {
+      console.log('Response Data:', response.data[0]);
       const account = response.data[0].account;
       return {
         name: account.name,
