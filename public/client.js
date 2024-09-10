@@ -165,6 +165,23 @@ const onBtnClick = (t, opts) => {
   });
 };
 
+// Function to inject CSS for disabling custom fields
+const injectDisableCustomFieldsCSS = () => {
+  const style = document.createElement('style');
+  style.innerHTML = `
+    /* Disable the custom fields for Hubspot ID and Organisationsnummer */
+    input[data-custom-field-name="Hubspot ID"],
+    input[data-custom-field-name="Organisationsnummer"] {
+      pointer-events: none;  /* Disable interaction */
+      opacity: 0.5;          /* Make the field look greyed out */
+    }
+  `;
+  document.head.appendChild(style);
+};
+
+// Call this function to inject the CSS when the Power-Up is initialized
+injectDisableCustomFieldsCSS();
+
 // Initialize Trello Power-Up with dynamic card-detail-badge
 TrelloPowerUp.initialize({
   'card-detail-badges': (t, options) => {
@@ -205,3 +222,4 @@ TrelloPowerUp.initialize({
       });
   }
 });
+
