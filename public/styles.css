@@ -23,7 +23,8 @@ body {
 }
 
 .product-selection h3 {
-    margin: 10px 0;
+    margin: 10px 0; /* Adjust vertical margin */
+    padding-top: 10px; /* Add space between the border and the heading */
     border-top: 1px solid #ddd;
 }
 
