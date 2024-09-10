@@ -57,6 +57,13 @@
             productsContainer: document.getElementById('products-container')
         };
 
+        // Ensure all DOM elements exist
+        Object.keys(domElements).forEach(key => {
+            if (!domElements[key]) {
+                console.error(`Element with ID '${key}' is missing from the HTML.`);
+            }
+        });
+
         // Show loading spinner while fetching data
         document.getElementById('loading-spinner').style.display = 'block';
 
@@ -84,7 +91,7 @@
                 const chargeItem = document.createElement('li');
 
                 // Convert string "True" or "False" to a boolean
-                const isActivated = charge.isReady4Invoicing === "True"; // Check explicitly if the value is "True"
+                const isActivated = charge.isReady4Invoicing === "True";
 
                 // Set button class and text based on the current status
                 const buttonClass = isActivated ? 'inactivate-button' : 'activate-button';
