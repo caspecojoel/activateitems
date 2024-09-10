@@ -57,10 +57,3 @@ body {
 .inactivate-button:hover {
     background-color: darkred;
 }
-
-/* Disable input fields for Hubspot ID and Organisationsnummer */
-input[data-custom-field-name="Hubspot ID"],
-input[data-custom-field-name="Organisationsnummer"] {
-    pointer-events: none; /* Disable interaction */
-    opacity: 0.5;         /* Make the field look greyed out */
-}

@@ -22,7 +22,7 @@ const getActivationStatus = (youniumData) => {
   youniumData.products.forEach(product => {
     if (product.charges && Array.isArray(product.charges)) {
       totalCharges += product.charges.length;
-      activatedCharges += product.charges.filter(charge => charge.isReady4Invoicing === "True").length; // Check if isReady4Invoicing is "True" as a string
+      activatedCharges += product.charges.filter(charge => charge.isready4invoicing).length;
     }
   });
 
@@ -73,17 +73,10 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName) => {
         button.className = "activate-button";
       }
     } else {
-      // Handle the error
-      return response.json().then(errorData => {
-        console.error('Failed to update the charge status:', errorData);
-        alert(`Error: Failed to update the status for ${productName}. Please try again. \nError Details: ${errorData.message || "Unknown error"}`);
-      });
+      console.error('Failed to update the charge status');
     }
   })
-  .catch(error => {
-    console.error('Error updating the charge status:', error);
-    alert(`An error occurred while updating the status for ${productName}. Please try again. \nError: ${error.message || "Unknown error"}`);
-  });
+  .catch(error => console.error('Error updating the charge status:', error));
 };
 
 // Add event listener for toggle buttons
@@ -102,19 +95,17 @@ const fetchYouniumData = (orgNo, hubspotId) => {
 
   if (!orgNo || !hubspotId) {
     console.warn('Invalid hubspotId or orgNo');
-    return Promise.resolve(null);  // Return null if the orgNo or hubspotId is invalid
+    return Promise.resolve({
+      name: 'Invalid hubspot or orgnummer',
+      accountNumber: null,
+    });
   }
 
   return fetch(`/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`)
-    .then(response => {
-      if (response.ok) {
-        return response.json();
-      } else if (response.status === 404) {
-        // Handle case when no data is found
-        console.warn('No data found for the provided orgNo and hubspotId');
-        return null;
-      }
-      throw new Error('Failed to fetch Younium data');
+    .then(response => response.json())
+    .then(data => {
+      console.log('Younium API response data:', data);
+      return data;
     })
     .catch(err => {
       console.error('Error fetching Younium data:', err);
@@ -165,36 +156,17 @@ const onBtnClick = (t, opts) => {
   });
 };
 
-// Function to inject CSS for disabling custom fields
-const injectDisableCustomFieldsCSS = () => {
-  const style = document.createElement('style');
-  style.innerHTML = `
-    /* Disable the custom fields for Hubspot ID and Organisationsnummer */
-    input[data-custom-field-name="Hubspot ID"],
-    input[data-custom-field-name="Organisationsnummer"] {
-      pointer-events: none;  /* Disable interaction */
-      opacity: 0.5;          /* Make the field look greyed out */
-    }
-  `;
-  document.head.appendChild(style);
-};
-
-// Call this function to inject the CSS when the Power-Up is initialized
-injectDisableCustomFieldsCSS();
-
 // Initialize Trello Power-Up with dynamic card-detail-badge
 TrelloPowerUp.initialize({
   'card-detail-badges': (t, options) => {
     return t.card('all')
       .then(card => {
-        injectDisableCustomFieldsCSS();
         const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
         const hubspotId = getCustomFieldValue(card.customFieldItems, '66d715a7584d0c33d06ab06f');
 
         return fetchYouniumData(orgNo, hubspotId)
           .then(youniumData => {
-            if (!youniumData) {
-              // If no data is found, return the "Invalid ID" badge
+            if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
               return [{
                 text: 'Invalid ID',
                 color: 'red',
@@ -223,4 +195,3 @@ TrelloPowerUp.initialize({
       });
   }
 });
-
