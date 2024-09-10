@@ -67,15 +67,14 @@
         // Show loading spinner while fetching data
         document.getElementById('loading-spinner').style.display = 'block';
 
-        // Populate Younium Account and Order data
-        domElements.hubspotId.textContent = urlParams.get('hubspotId');
-        domElements.orgNumber.textContent = urlParams.get('orgNo');
-        domElements.accountName.textContent = youniumData.account.name;
-        domElements.accountNumber.textContent = youniumData.account.accountNumber;
-        domElements.orderId.textContent = youniumData.id;
-        domElements.orderStatus.textContent = youniumData.status;
-        domElements.orderDescription.textContent = youniumData.description;
-        domElements.orderStartDate.textContent = youniumData.effectiveStartDate;
+        // Populate Younium Account and Order data if the elements exist
+        if (domElements.hubspotId) domElements.hubspotId.textContent = urlParams.get('hubspotId');
+        if (domElements.orgNumber) domElements.orgNumber.textContent = urlParams.get('orgNo');
+        if (domElements.accountName) domElements.accountName.textContent = youniumData.account.name;
+        if (domElements.accountNumber) domElements.accountNumber.textContent = youniumData.account.accountNumber;
+        if (domElements.orderId) domElements.orderId.textContent = youniumData.id;
+        if (domElements.orderStatus) domElements.orderStatus.textContent = youniumData.status;
+        if (domElements.orderDescription) domElements.orderDescription.textContent = youniumData.description;
 
         // Hide loading spinner once data is loaded
         document.getElementById('loading-spinner').style.display = 'none';

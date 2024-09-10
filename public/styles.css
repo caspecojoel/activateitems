@@ -18,9 +18,13 @@ body {
     margin-bottom: 15px;
 }
 
-.younium-details h2, 
+.younium-details h2 {
+    margin: 10px 0;
+}
+
 .product-selection h3 {
     margin: 10px 0;
+    border-top: 1px solid #ddd;
 }
 
 .id-info {
