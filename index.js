@@ -41,7 +41,6 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
         id: youniumOrder.id,
         status: youniumOrder.status,
         description: youniumOrder.description,
-        effectiveStartDate: youniumOrder.effectiveStartDate,
         account: {
           name: youniumOrder.account.name,
           accountNumber: youniumOrder.account.accountNumber
