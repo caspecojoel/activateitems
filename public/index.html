@@ -20,8 +20,6 @@
                 <div class="form-group">
                     Status: <span id="order-status"></span>
                 </div>
-                <!-- Removed the order-description from here -->
-                <!-- Removed Start Date: <span id="order-start-date"></span> -->
                 <!-- Section for products and charges -->
                 <div class="form-group product-selection">
                     <h3>Products & Charges</h3>
@@ -56,7 +54,6 @@
             orderId: document.getElementById('order-id'),
             orderStatus: document.getElementById('order-status'),
             orderDescription: document.getElementById('order-description'),
-            orderStartDate: document.getElementById('order-start-date'),
             productsContainer: document.getElementById('products-container')
         };
 
@@ -108,7 +105,7 @@
         });
     </script>
 
-    <!-- Import client.js for Trello Power-Up functionality -->
+    <script src="https://p.trellocdn.com/power-up.min.js"></script>
     <script src="/client.js"></script>
 </body>
 </html>
