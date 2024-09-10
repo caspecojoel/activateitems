@@ -57,3 +57,11 @@ body {
 .inactivate-button:hover {
     background-color: darkred;
 }
+
+.card-detail-badge {
+  cursor: pointer;
+}
+
+.card-detail-badge:hover {
+  text-decoration: underline;
+}

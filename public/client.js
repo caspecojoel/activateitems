@@ -158,6 +158,21 @@ const onBtnClick = (t, opts) => {
 
 // Initialize Trello Power-Up with dynamic card-detail-badge
 TrelloPowerUp.initialize({
+  'card-badges': function(t, options) {
+    return t.card('all')
+      .then(function(card) {
+        const hubspotId = getCustomFieldValue(card.customFieldItems, '66d715a7584d0c33d06ab06f');
+        const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
+        
+        return [{
+          text: `HubSpot: ${hubspotId}`,
+          color: 'blue'
+        }, {
+          text: `Org #: ${orgNo}`,
+          color: 'green'
+        }];
+      });
+  },
   'card-detail-badges': (t, options) => {
     return t.card('all')
       .then(card => {
@@ -168,30 +183,57 @@ TrelloPowerUp.initialize({
           .then(youniumData => {
             if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
               return [{
+                title: 'Company Info',
                 text: 'Invalid ID',
                 color: 'red',
-                icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-                callback: onBtnClick
+                callback: (t) => {
+                  return t.popup({
+                    title: "Company Information",
+                    url: './company-info.html',
+                    height: 200
+                  });
+                }
               }];
             }
 
             const status = getActivationStatus(youniumData);
             return [{
+              title: 'Activation Status',
               text: status.text,
               color: status.color,
-              icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
               callback: onBtnClick
+            }, {
+              title: 'Company Info',
+              text: 'View Details',
+              callback: (t) => {
+                return t.popup({
+                  title: "Company Information",
+                  url: './company-info.html',
+                  height: 200
+                });
+              }
             }];
           })
           .catch(err => {
             console.error('Error processing Younium data:', err);
             return [{
+              title: 'Error',
               text: 'Error loading status',
               color: 'red',
-              icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
               callback: onBtnClick
             }];
           });
       });
+  },
+  'card-back-section': function(t, options) {
+    return {
+      title: 'Company Information',
+      icon: './images/icon.svg', // Replace with your icon
+      content: {
+        type: 'iframe',
+        url: t.signUrl('./company-info.html'),
+        height: 200
+      }
+    };
   }
 });
