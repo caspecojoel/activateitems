@@ -20,11 +20,12 @@ body {
 
 .younium-details h2 {
     margin: 10px 0;
+    padding-bottom: 20px;
 }
 
 .product-selection h3 {
     margin: 10px 0; /* Adjust vertical margin */
-    padding-top: 10px; /* Add space between the border and the heading */
+    padding-top: 20px; /* Add space between the border and the heading */
     border-top: 1px solid #ddd;
 }
 
