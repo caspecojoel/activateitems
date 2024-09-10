@@ -187,6 +187,7 @@ TrelloPowerUp.initialize({
   'card-detail-badges': (t, options) => {
     return t.card('all')
       .then(card => {
+        injectDisableCustomFieldsCSS();
         const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
         const hubspotId = getCustomFieldValue(card.customFieldItems, '66d715a7584d0c33d06ab06f');
 
