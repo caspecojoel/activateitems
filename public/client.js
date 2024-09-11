@@ -138,11 +138,14 @@ const onBtnClick = (t, opts) => {
           const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(youniumData))}&hubspotId=${encodeURIComponent(hubspotId)}&orgNo=${encodeURIComponent(orgNo)}`;
 
           return t.modal({
-            title: 'Mark products as ready for invoicing',
+            title: 'Ready for Invoicing',
             url: externalUrl,
-            fullscreen: false,  // or set custom height and width if you prefer
+            height: 1000,  // Set the height (1000px in this case)
+            width: 1000,   // You can also set the width as needed
+            fullscreen: false, // Set to true if you want the modal to take up the full screen
             mouseEvent: opts.mouseEvent
-          });          
+          });
+                  
         })
         .catch(err => {
           console.error('Error fetching Younium data or displaying popup:', err);
