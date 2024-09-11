@@ -75,11 +75,11 @@ h2 {
     align-items: center !important;
     justify-content: center !important;
     transition: background-color 0.3s ease;
-    width: 170px; /* Set a fixed width */
-    height: 45px; /* Set a fixed height */
+    width: 110px; /* Set a fixed width */
+    height: 30px; /* Set a fixed height */
     text-align: center !important; /* Ensure the text is centered */
     white-space: nowrap; /* Prevents the text from breaking into multiple lines */
-    font-size: 1em; /* Ensure text size is readable */
+    font-size: 0.8em; /* Ensure text size is readable */
     cursor: pointer; /* Show pointer on hover */
 }
 
