@@ -138,7 +138,7 @@ const onBtnClick = (t, opts) => {
           const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(youniumData))}&hubspotId=${encodeURIComponent(hubspotId)}&orgNo=${encodeURIComponent(orgNo)}`;
 
           return t.modal({
-            title: 'Ready for Invoicing',
+            title: 'Ready for invoicing',
             url: externalUrl,
             height: 1000,  // Set the height (1000px in this case)
             width: 1000,   // You can also set the width as needed

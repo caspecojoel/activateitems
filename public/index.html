@@ -6,6 +6,28 @@
     <title>Ready for Invoicing</title>
     <!-- Link to the external CSS file -->
     <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Additional styling for the table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .button-container {
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -27,10 +49,20 @@
                 </div>
             </div>
 
-            <!-- Section for products and charges -->
+            <!-- Section for products and charges in a table -->
             <div class="form-group product-selection">
                 <h3>Products & Charges</h3>
-                <div id="products-container"></div>
+                <table id="products-table">
+                    <thead>
+                        <tr>
+                            <th>Product Name</th>
+                            <th>Charge</th>
+                            <th>Activation Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="products-container"></tbody>
+                </table>
             </div>
 
             <!-- IDs and Order Information -->
@@ -84,35 +116,26 @@
         // Hide loading spinner once data is loaded
         document.getElementById('loading-spinner').style.display = 'none';
 
-        // Populate Products and Charges
+        // Populate Products and Charges in a table
         youniumData.products.forEach(product => {
-            const productElement = document.createElement('div');
-            productElement.classList.add('product');
-            productElement.innerHTML = `<h4>${product.name}</h4>`;
-
-            const chargeList = document.createElement('ul');
             product.charges.forEach(charge => {
-                const chargeItem = document.createElement('li');
-
-                // Convert string "True" or "False" to a boolean
                 const isActivated = charge.isReady4Invoicing === "True";
-
-                // Set button class and text based on the current status
                 const buttonClass = isActivated ? 'inactivate-button' : 'activate-button';
                 const buttonText = isActivated ? 'Mark as not ready' : 'Mark as ready';
 
-                // Add button to the charge item
-                chargeItem.innerHTML = `
-                    <button class="${buttonClass}" data-charge-id="${charge.id}" data-product-name="${product.name}">
-                        ${buttonText}
-                    </button>
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${product.name}</td>
+                    <td>${charge.name}</td>
+                    <td>${isActivated ? 'Activated' : 'Not Activated'}</td>
+                    <td class="button-container">
+                        <button class="${buttonClass}" data-charge-id="${charge.id}" data-product-name="${product.name}">
+                            ${buttonText}
+                        </button>
+                    </td>
                 `;
-
-                chargeList.appendChild(chargeItem);
+                domElements.productsContainer.appendChild(row);
             });
-
-            productElement.appendChild(chargeList);
-            domElements.productsContainer.appendChild(productElement);
         });
     </script>
 
