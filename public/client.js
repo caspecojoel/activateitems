@@ -32,11 +32,11 @@ const getActivationStatus = (youniumData) => {
   if (totalCharges === 0) {
     return { status: 'none', text: 'No charges found', color: 'yellow' };
   } else if (activatedCharges === totalCharges) {
-    return { status: 'all', text: 'All products activated', color: 'green' };
+    return { status: 'all', text: 'All products ready', color: 'green' };
   } else if (activatedCharges > 0) {
-    return { status: 'partial', text: `${activatedCharges}/${totalCharges} products activated`, color: 'lime' };
+    return { status: 'partial', text: `${activatedCharges}/${totalCharges} products ready`, color: 'lime' };
   } else {
-    return { status: 'none', text: 'No products activated', color: 'red' };
+    return { status: 'none', text: 'No products ready', color: 'red' };
   }
 };
 

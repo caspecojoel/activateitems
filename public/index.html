@@ -34,6 +34,7 @@
                         <tr>
                             <th>Product</th>
                             <th>Charge</th>
+                            <th>Start Date</th>
                             <th>Status</th>
                             <th>Action</th>
                         </tr>
@@ -100,10 +101,14 @@
                 const buttonClass = isActivated ? 'inactivate-button' : 'activate-button';
                 const buttonText = isActivated ? 'Mark as not ready' : 'Mark as ready';
 
+                // Format the effective start date (if available)
+                const effectiveStartDate = new Date(charge.effectiveStartDate).toLocaleDateString();
+
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${product.name}</td>
                     <td>${charge.name}</td>
+                    <td>${effectiveStartDate || 'N/A'}</td> <!-- Display effective start date or 'N/A' -->
                     <td>${isActivated ? 'Ready for invoicing' : 'Not ready for invoicing'}</td>
                     <td class="button-container">
                         <button class="${buttonClass}" data-charge-id="${charge.id}" data-product-name="${product.name}">
