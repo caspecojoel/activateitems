@@ -148,10 +148,3 @@ th {
 .button-container {
     text-align: center;
 }
-
-/* Styling for the smaller description */
-.description {
-    font-size: 0.9em; /* Make the text smaller */
-    color: #555; /* Softer text color */
-    margin-bottom: 10px; /* Reduce the margin */
-}
