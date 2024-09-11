@@ -14,7 +14,6 @@ body {
     box-sizing: border-box;
     background-color: white; /* White background for the container */
     max-width: 800px; /* Limit the width of the container */
-    margin: 20px auto; /* Center the container */
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for better visual separation */
     border-radius: 8px; /* Rounded corners for the container */
     overflow-y: auto;
@@ -147,4 +146,10 @@ th {
 
 .button-container {
     text-align: center;
+}
+
+.plugin-chrome-title {
+    color: black !important;
+    font-size: 18px !important; 
+    font-weight: 700 !important;
 }
