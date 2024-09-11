@@ -3,37 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Iframe</title>
+    <title>Ready for Invoicing</title>
     <!-- Link to the external CSS file -->
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <div id="loading-spinner" style="display: none;">Loading...</div>
+        <h2>Ready for Invoicing</h2>
+        <p class="description">
+            This modal allows you to review the products associated with this order. Clicking the "Activate" button will send a "Ready for Invoicing" signal to our economy department, preparing the order for invoicing.
+        </p>
+
+        <div id="loading-spinner" class="loading" style="display: none;">Loading order details...</div>
+
         <div class="form-section">
             <!-- Section to display Younium details -->
             <div class="younium-details">
                 <div class="form-group">
-                    <strong>Name:</strong> <span id="account-name"></span>
+                    <strong>Account Name:</strong> <span id="account-name"></span>
                 </div>
                 <div class="form-group">
-                    <strong>Status:</strong> <span id="order-status"></span>
-                </div>
-                <!-- Section for products and charges -->
-                <div class="form-group product-selection">
-                    <h3>Products & Charges</h3>
-                    <div id="products-container"></div>
+                    <strong>Order Status:</strong> <span id="order-status"></span>
                 </div>
             </div>
 
-            <!-- Small text area for displaying IDs -->
+            <!-- Section for products and charges -->
+            <div class="form-group product-selection">
+                <h3>Products & Charges</h3>
+                <div id="products-container"></div>
+            </div>
+
+            <!-- IDs and Order Information -->
             <div class="id-info">
-                <p>HubSpot ID: <span id="hubspot-id"></span></p>
-                <p>Org Number: <span id="org-number"></span></p>
-                <p>Order ID: <span id="order-id"></span></p>
-                <p>Account Number: <span id="account-number"></span></p>
-                <!-- Added Order Description here -->
-                <p>Order Description: <span id="order-description"></span></p>
+                <p><strong>HubSpot ID:</strong> <span id="hubspot-id"></span></p>
+                <p><strong>Org Number:</strong> <span id="org-number"></span></p>
+                <p><strong>Order ID:</strong> <span id="order-id"></span></p>
+                <p><strong>Account Number:</strong> <span id="account-number"></span></p>
+                <p><strong>Order Description:</strong> <span id="order-description"></span></p>
             </div>
         </div>
     </div>

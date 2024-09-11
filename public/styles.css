@@ -5,56 +5,125 @@ body {
     height: 100vh;
     display: flex;
     flex-direction: column;
+    background-color: #f4f4f4; /* Light background color for better contrast */
 }
 
 .container {
     flex: 1;
     padding: 20px;
     box-sizing: border-box;
+    background-color: white; /* White background for the container */
+    max-width: 800px; /* Limit the width of the container */
+    margin: 20px auto; /* Center the container */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for better visual separation */
+    border-radius: 8px; /* Rounded corners for the container */
     overflow-y: auto;
 }
 
+h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px; /* Space below the title */
+}
+
+.description {
+    font-size: 1.1em;
+    text-align: center;
+    margin-bottom: 20px;
+    color: #555;
+}
+
 .form-group {
-    margin-bottom: 15px;
+    margin-bottom: 20px;
+    color: #333; /* Text color for form group */
+}
+
+.form-group strong {
+    font-weight: bold;
 }
 
 .product-selection h3 {
     margin: 10px 0; /* Adjust vertical margin */
     padding-top: 20px; /* Add space between the border and the heading */
     border-top: 1px solid #ddd;
+    color: #444; /* A little darker heading color */
 }
 
 .id-info {
-    font-size: 0.8em;
+    font-size: 0.9em;
     color: #666;
-    margin-top: 50px;
+    margin-top: 30px;
+    padding-top: 20px; /* Extra padding to create separation from content */
     border-top: 1px solid #ddd;
+}
+
+.loading {
+    font-size: 1.2em;
+    color: #777;
+    text-align: center;
+    margin: 30px 0;
 }
 
 /* Activate Button */
 .activate-button {
-    background-color: green;
-    color: white;
-    padding: 8px 12px;
-    border: none;
-    cursor: pointer;
-    border-radius: 5px;
+    background-color: #2497A8 !important;
+    color: white !important; /* Ensure text color is always visible */
+    border: none !important;
+    padding: 0.5rem 1.6rem !important;
+    border-radius: 5rem !important; /* Rounded corners */
+    display: flex;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: background-color 0.3s ease;
+    width: 170px; /* Set a fixed width */
+    height: 45px; /* Set a fixed height */
+    text-align: center !important; /* Ensure the text is centered */
+    white-space: nowrap; /* Prevents the text from breaking into multiple lines */
+    font-size: 1em; /* Ensure text size is readable */
+    cursor: pointer; /* Show pointer on hover */
 }
 
 .activate-button:hover {
-    background-color: darkgreen;
+    background-color: #1b6f75; /* Slightly darker hover effect */
 }
 
 /* Inactivate Button */
 .inactivate-button {
-    background-color: red;
+    background-color: #f44336;
     color: white;
-    padding: 8px 12px;
+    padding: 0.5rem 1.6rem;
     border: none;
     cursor: pointer;
-    border-radius: 5px;
+    border-radius: 5rem; /* Make the inactivate button match activate */
+    transition: background-color 0.3s ease;
+    width: 170px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .inactivate-button:hover {
-    background-color: darkred;
+    background-color: #c23628; /* Slightly darker red on hover */
+}
+
+/* Styling for product list */
+.product {
+    margin-bottom: 15px;
+}
+
+.product h4 {
+    margin-bottom: 8px;
+    font-size: 1.1em;
+    color: #333;
+}
+
+ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+ul li {
+    margin: 5px 0;
+    font-size: 1em;
 }

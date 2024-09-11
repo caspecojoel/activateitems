@@ -138,7 +138,7 @@ const onBtnClick = (t, opts) => {
           const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(youniumData))}&hubspotId=${encodeURIComponent(hubspotId)}&orgNo=${encodeURIComponent(orgNo)}`;
 
           return t.modal({
-            title: 'Klarmarkering',
+            title: 'Mark products as ready for invoicing',
             url: externalUrl,
             fullscreen: false,  // or set custom height and width if you prefer
             mouseEvent: opts.mouseEvent
