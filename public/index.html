@@ -31,7 +31,6 @@
 </head>
 <body>
     <div class="container">
-        <h2>Ready for Invoicing</h2>
         <p class="description">
             This modal allows you to review the products associated with this order. Clicking the "Activate" button will send a "Ready for Invoicing" signal to our economy department, preparing the order for invoicing.
         </p>
@@ -55,9 +54,9 @@
                 <table id="products-table">
                     <thead>
                         <tr>
-                            <th>Product Name</th>
+                            <th>Product</th>
                             <th>Charge</th>
-                            <th>Activation Status</th>
+                            <th>Status</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -127,7 +126,7 @@
                 row.innerHTML = `
                     <td>${product.name}</td>
                     <td>${charge.name}</td>
-                    <td>${isActivated ? 'Activated' : 'Not Activated'}</td>
+                    <td>${isActivated ? 'Ready for invoicing' : 'Not ready for invoicing'}</td>
                     <td class="button-container">
                         <button class="${buttonClass}" data-charge-id="${charge.id}" data-product-name="${product.name}">
                             ${buttonText}
