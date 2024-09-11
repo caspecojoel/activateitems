@@ -137,13 +137,12 @@ const onBtnClick = (t, opts) => {
 
           const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(youniumData))}&hubspotId=${encodeURIComponent(hubspotId)}&orgNo=${encodeURIComponent(orgNo)}`;
 
-          return t.popup({
+          return t.modal({
             title: 'Klarmarkering',
             url: externalUrl,
-            height: 800,
-            width: 1000,
+            fullscreen: false,  // or set custom height and width if you prefer
             mouseEvent: opts.mouseEvent
-          });
+          });          
         })
         .catch(err => {
           console.error('Error fetching Younium data or displaying popup:', err);
