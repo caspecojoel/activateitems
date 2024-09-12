@@ -164,7 +164,7 @@ TrelloPowerUp.initialize({
     return t.card('all')
       .then(card => {
         const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
-        const hubspotId = getCustomFieldValue(card.customFieldItems, '66d715a7584d0c33d06ab06f');
+        const hubspotId = getCustomFieldValue(card.customFieldItems, '66e2a183ccc0da772098ab1e');
 
         return fetchYouniumData(orgNo, hubspotId)
           .then(youniumData => {
