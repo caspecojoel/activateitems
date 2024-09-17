@@ -113,48 +113,60 @@ const fetchYouniumData = (orgNo, hubspotId) => {
     });
 };
 
-// Define the Power-Up
+// Function to handle button click and display based on order type
 const onBtnClick = (t, opts) => {
   console.log('Button clicked on card:', opts);
 
   return t.card('all').then(card => {
     console.log('Card data:', card);
 
-    const hubspotId = getCustomFieldValue(card.customFieldItems, '66e2a183ccc0da772098ab1e');
-    const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
+    const hubspotId = getCustomFieldValue(card.customFieldItems, '66e2a183ccc0da772098ab1e');  // ID for Hubspot field
+    const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');     // ID for Org Number field
+    const typeOfOrder = getCustomFieldValue(card.customFieldItems, '66cef3839acf9961edb8f5ed');  // ID for "Type of order" field
     console.log('HubSpot ID:', hubspotId);
     console.log('Org Number:', orgNo);
+    console.log('Type of Order:', typeOfOrder);
 
-    return t.member('fullName').then(member => {
-      const userName = member.fullName;
+    // Check if the Type of Order is either "New customer" or "New location in existing company"
+    if (typeOfOrder === "New customer" || typeOfOrder === "New location in existing company") {
+      console.log('Order type is valid for activation');
 
-      // Fetch Younium data and display in popup
-      return fetchYouniumData(orgNo, hubspotId)
-        .then(youniumData => {
-          if (!youniumData) {
-            throw new Error('Failed to fetch Younium data');
-          }
+      return t.member('fullName').then(member => {
+        const userName = member.fullName;
 
-          const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(youniumData))}&hubspotId=${encodeURIComponent(hubspotId)}&orgNo=${encodeURIComponent(orgNo)}`;
+        // Fetch Younium data and display in popup
+        return fetchYouniumData(orgNo, hubspotId)
+          .then(youniumData => {
+            if (!youniumData) {
+              throw new Error('Failed to fetch Younium data');
+            }
 
-          return t.modal({
-            title: 'Ready for invoicing',
-            url: externalUrl,
-            height: 1000,  // Set the height (1000px in this case)
-            width: 1000,   // You can also set the width as needed
-            fullscreen: false, // Set to true if you want the modal to take up the full screen
-            mouseEvent: opts.mouseEvent
+            const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(youniumData))}&hubspotId=${encodeURIComponent(hubspotId)}&orgNo=${encodeURIComponent(orgNo)}`;
+
+            return t.modal({
+              title: 'Ready for invoicing',
+              url: externalUrl,
+              height: 1000,  // Set the height (1000px in this case)
+              width: 1000,   // You can also set the width as needed
+              fullscreen: false, // Set to true if you want the modal to take up the full screen
+              mouseEvent: opts.mouseEvent
+            });
+          })
+          .catch(err => {
+            console.error('Error fetching Younium data or displaying popup:', err);
+            return t.alert({
+              message: 'Failed to load Younium data. Please try again later.',
+              duration: 5
+            });
           });
-                  
-        })
-        .catch(err => {
-          console.error('Error fetching Younium data or displaying popup:', err);
-          return t.alert({
-            message: 'Failed to load Younium data. Please try again later.',
-            duration: 5
-          });
-        });
-    });
+      });
+    } else {
+      console.log('Order type is not valid for activation');
+      return t.alert({
+        message: 'Activate button is only available for New Customer or New Location in Existing Company.',
+        duration: 5
+      });
+    }
   });
 };
 
