@@ -137,18 +137,17 @@ app.post('/trello-webhook', async (req, res) => {
 
   if (action && action.type === 'createCard') {
     const cardId = action.data.card.id;
-    const description = action.data.card.desc;
+    const description = action.data.card.desc || '';  // Safely handle undefined desc
 
     console.log(`New card created with ID: ${cardId}`);
+    console.log(`Card description: ${description}`);
 
-    // Check if description exists before proceeding
     if (description) {
-      console.log(`Card description: ${description}`);
-
       // Extract the full PDF URL from the description
       const urlMatch = description.match(/(https:\/\/eu\.jotform\.com\/server\.php\?action=getSubmissionPDF&[^\s]+)/);
+
       if (urlMatch) {
-        const pdfUrl = urlMatch[0]; // Get the first match, as match returns an array
+        const pdfUrl = urlMatch[1];
 
         console.log(`PDF URL found: ${pdfUrl}`);
 
@@ -183,14 +182,15 @@ app.post('/trello-webhook', async (req, res) => {
         res.status(400).send('No valid PDF URL found in card description');
       }
     } else {
-      console.log('Card description is undefined.');
-      res.status(400).send('Card description is undefined');
+      console.log('Card description is empty or missing.');
+      res.status(400).send('Card description is empty or missing');
     }
   } else {
     console.log('No relevant action found in the webhook payload.');
     res.status(200).send('No relevant action');
   }
 });
+
 
 // Register Trello Webhook on startup
 registerTrelloWebhook();
