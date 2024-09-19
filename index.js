@@ -151,7 +151,7 @@ app.post('/trello-webhook', async (req, res) => {
     console.log(`New card created with ID: ${cardId}`);
 
     try {
-      // Fetch the card details from Trello to ensure we get the description
+      // Fetch the card details from Trello to get the description and title (name)
       const TRELLO_KEY = process.env.TRELLO_KEY;
       const TRELLO_TOKEN = process.env.TRELLO_TOKEN;
       const cardDetailsUrl = `https://api.trello.com/1/cards/${cardId}`;
@@ -165,9 +165,11 @@ app.post('/trello-webhook', async (req, res) => {
 
       const card = cardResponse.data;
       const description = card.desc;
+      const cardTitle = card.name;  // Get the card title
 
       if (description) {
         console.log(`Card description: ${description}`);
+        console.log(`Card title: ${cardTitle}`);
 
         // Extract the full PDF URL from the description
         const urlMatch = description.match(/(https:\/\/eu\.jotform\.com\/server\.php\?action=getSubmissionPDF&[^\s]+)/);
@@ -183,10 +185,14 @@ app.post('/trello-webhook', async (req, res) => {
 
             console.log('PDF downloaded successfully. Preparing to attach to Trello card...');
 
-            // Attach the PDF to the Trello card
+            // Attach the PDF to the Trello card with the card title as the filename
             const trelloAttachmentUrl = `https://api.trello.com/1/cards/${cardId}/attachments`;
             const form = new FormData();
-            form.append('file', pdfResponse.data, 'submission.pdf');
+
+            // Replace spaces in the card title with underscores and append ".pdf" to it
+            const fileName = `${cardTitle.replace(/\s+/g, '_')}.pdf`;
+
+            form.append('file', pdfResponse.data, fileName);
 
             await axios.post(trelloAttachmentUrl, form, {
               params: {
@@ -196,7 +202,7 @@ app.post('/trello-webhook', async (req, res) => {
               headers: form.getHeaders(),
             });
 
-            console.log('PDF attached successfully to the card.');
+            console.log(`PDF attached successfully to the card with filename: ${fileName}`);
 
             // Now remove the URL from the card description
             const updatedDescription = description.replace(urlMatch[0], '').trim(); // Remove the URL and trim the result
@@ -233,7 +239,6 @@ app.post('/trello-webhook', async (req, res) => {
     res.status(200).send('No relevant action');
   }
 });
-
 
 // Register Trello Webhook on startup
 registerTrelloWebhook();
