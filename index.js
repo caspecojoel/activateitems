@@ -26,7 +26,7 @@ app.head('/trello-webhook', (req, res) => {
 async function registerTrelloWebhook() {
   const TRELLO_KEY = process.env.TRELLO_KEY;
   const TRELLO_TOKEN = process.env.TRELLO_TOKEN;
-  const BOARD_ID = 'QHmfuZZw';  // Replace with your Trello board ID
+  const BOARD_ID = '66cef36d9acf9961edb72775';  // Replace with your Trello board ID
   const CALLBACK_URL = 'https://activateitems-d22e28f2e719.herokuapp.com/trello-webhook';  // Replace with your Heroku app URL
 
   // Log the parameters being sent
