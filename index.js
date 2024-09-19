@@ -140,44 +140,51 @@ app.post('/trello-webhook', async (req, res) => {
     const description = action.data.card.desc;
 
     console.log(`New card created with ID: ${cardId}`);
-    console.log(`Card description: ${description}`);
 
-    // Extract the full PDF URL from the description
-    const urlMatch = description.match(/(https:\/\/eu\.jotform\.com\/server\.php\?action=getSubmissionPDF&[^\s]+)/);
-    if (urlMatch) {
-      const pdfUrl = urlMatch[1];
+    // Check if description exists before proceeding
+    if (description) {
+      console.log(`Card description: ${description}`);
 
-      console.log(`PDF URL found: ${pdfUrl}`);
+      // Extract the full PDF URL from the description
+      const urlMatch = description.match(/(https:\/\/eu\.jotform\.com\/server\.php\?action=getSubmissionPDF&[^\s]+)/);
+      if (urlMatch) {
+        const pdfUrl = urlMatch[0]; // Get the first match, as match returns an array
 
-      try {
-        console.log('Attempting to download the PDF...');
-        // Download the PDF
-        const pdfResponse = await axios.get(pdfUrl, { responseType: 'arraybuffer' });
+        console.log(`PDF URL found: ${pdfUrl}`);
 
-        console.log('PDF downloaded successfully. Preparing to attach to Trello card...');
+        try {
+          console.log('Attempting to download the PDF...');
+          // Download the PDF
+          const pdfResponse = await axios.get(pdfUrl, { responseType: 'arraybuffer' });
 
-        // Attach the PDF to the Trello card
-        const trelloAttachmentUrl = `https://api.trello.com/1/cards/${cardId}/attachments`;
-        const form = new FormData();
-        form.append('file', pdfResponse.data, 'submission.pdf');
+          console.log('PDF downloaded successfully. Preparing to attach to Trello card...');
 
-        await axios.post(trelloAttachmentUrl, form, {
-          params: {
-            key: process.env.TRELLO_KEY,
-            token: process.env.TRELLO_TOKEN,
-          },
-          headers: form.getHeaders(),
-        });
+          // Attach the PDF to the Trello card
+          const trelloAttachmentUrl = `https://api.trello.com/1/cards/${cardId}/attachments`;
+          const form = new FormData();
+          form.append('file', pdfResponse.data, 'submission.pdf');
 
-        console.log('PDF attached successfully to the card.');
-        res.status(200).send('PDF attached successfully');
-      } catch (error) {
-        console.error('Error attaching PDF to Trello card:', error.message);
-        res.status(500).send('Failed to attach PDF');
+          await axios.post(trelloAttachmentUrl, form, {
+            params: {
+              key: process.env.TRELLO_KEY,
+              token: process.env.TRELLO_TOKEN,
+            },
+            headers: form.getHeaders(),
+          });
+
+          console.log('PDF attached successfully to the card.');
+          res.status(200).send('PDF attached successfully');
+        } catch (error) {
+          console.error('Error attaching PDF to Trello card:', error.message);
+          res.status(500).send('Failed to attach PDF');
+        }
+      } else {
+        console.log('No valid PDF URL found in card description.');
+        res.status(400).send('No valid PDF URL found in card description');
       }
     } else {
-      console.log('No valid PDF URL found in card description.');
-      res.status(400).send('No valid PDF URL found in card description');
+      console.log('Card description is undefined.');
+      res.status(400).send('Card description is undefined');
     }
   } else {
     console.log('No relevant action found in the webhook payload.');
