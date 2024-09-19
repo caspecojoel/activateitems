@@ -197,7 +197,21 @@ app.post('/trello-webhook', async (req, res) => {
             });
 
             console.log('PDF attached successfully to the card.');
-            res.status(200).send('PDF attached successfully');
+
+            // Now remove the URL from the card description
+            const updatedDescription = description.replace(urlMatch[0], '').trim(); // Remove the URL and trim the result
+
+            await axios.put(cardDetailsUrl, {
+              desc: updatedDescription,
+            }, {
+              params: {
+                key: TRELLO_KEY,
+                token: TRELLO_TOKEN,
+              },
+            });
+
+            console.log('Card description updated successfully.');
+            res.status(200).send('PDF attached and card description updated successfully');
           } catch (error) {
             console.error('Error attaching PDF to Trello card:', error.message);
             res.status(500).send('Failed to attach PDF');
