@@ -30,15 +30,10 @@ async function registerTrelloWebhook() {
   const CALLBACK_URL = 'https://activateitems-d22e28f2e719.herokuapp.com/trello-webhook';  // Replace with your Heroku app URL
 
   try {
-    // Step 1: List existing webhooks
     const { data: webhooks } = await axios.get('https://api.trello.com/1/tokens/' + TRELLO_TOKEN + '/webhooks', {
-      params: {
-        key: TRELLO_KEY,
-        token: TRELLO_TOKEN,
-      },
+      params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
     });
 
-    // Step 2: Check if the webhook already exists
     const existingWebhook = webhooks.find(
       (webhook) => webhook.callbackURL === CALLBACK_URL && webhook.idModel === BOARD_ID
     );
@@ -48,30 +43,18 @@ async function registerTrelloWebhook() {
       return;
     }
 
-    // Step 3: Register the webhook if it doesn't exist
     console.log('Registering new Trello webhook...');
-
-    const response = await axios.post('https://api.trello.com/1/webhooks', {
+    await axios.post('https://api.trello.com/1/webhooks', {
       description: 'Webhook for new card creation',
       callbackURL: CALLBACK_URL,
-      idModel: BOARD_ID
+      idModel: BOARD_ID,
     }, {
-      params: {
-        key: TRELLO_KEY,
-        token: TRELLO_TOKEN
-      }
+      params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
     });
 
-    console.log('Webhook registered successfully:', response.data);
+    console.log('Webhook registered successfully.');
   } catch (error) {
-    console.error('Error registering Trello webhook:');
-    if (error.response) {
-      console.error('Response data:', error.response.data);
-      console.error('Response status:', error.response.status);
-      console.error('Response headers:', error.response.headers);
-    } else {
-      console.error('Error message:', error.message);
-    }
+    console.error('Error registering Trello webhook:', error.message);
   }
 }
 
@@ -139,15 +122,12 @@ app.get('/get-younium-data', async (req, res) => {
   }
 });
 
+// Trello Webhook endpoint to handle new card creation
 app.post('/trello-webhook', async (req, res) => {
   const { action } = req.body;
 
-  console.log('Received Trello Webhook:', action);
-
   if (action && action.type === 'createCard') {
     const cardId = action.data.card.id;
-
-    console.log(`New card created with ID: ${cardId}`);
 
     try {
       const TRELLO_KEY = process.env.TRELLO_KEY;
@@ -156,10 +136,7 @@ app.post('/trello-webhook', async (req, res) => {
 
       // Fetch the card details from Trello to get the description and title (name)
       const cardResponse = await axios.get(cardDetailsUrl, {
-        params: {
-          key: TRELLO_KEY,
-          token: TRELLO_TOKEN,
-        },
+        params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
       });
 
       const card = cardResponse.data;
@@ -167,83 +144,56 @@ app.post('/trello-webhook', async (req, res) => {
       const cardTitle = card.name;
 
       if (description) {
-        console.log(`Card description: ${description}`);
-        console.log(`Card title: ${cardTitle}`);
-
         const urlMatch = description.match(/(https:\/\/eu\.jotform\.com\/server\.php\?action=getSubmissionPDF&[^\s]+)/);
         if (urlMatch) {
           const pdfUrl = urlMatch[1];
-          console.log(`PDF URL found: ${pdfUrl}`);
 
           try {
-            // Check if the attachment already exists on the card
             const attachmentsResponse = await axios.get(`${cardDetailsUrl}/attachments`, {
-              params: {
-                key: TRELLO_KEY,
-                token: TRELLO_TOKEN,
-              },
+              params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
             });
 
             const attachments = attachmentsResponse.data;
             const fileName = `${cardTitle.replace(/[^a-zA-Z0-9]/g, '')}.pdf`;
 
-            // If an attachment with the same filename already exists, skip attaching
             const alreadyAttached = attachments.some(attachment => attachment.name === fileName);
             if (alreadyAttached) {
-              console.log(`PDF with filename ${fileName} is already attached to the card. Skipping...`);
               return res.status(200).send('PDF already attached');
             }
 
-            console.log('Attempting to download the PDF...');
             const pdfResponse = await axios.get(pdfUrl, { responseType: 'arraybuffer' });
-
-            console.log('PDF downloaded successfully. Preparing to attach to Trello card...');
-
-            // Attach the PDF to the Trello card with the card title as the filename
             const trelloAttachmentUrl = `https://api.trello.com/1/cards/${cardId}/attachments`;
             const form = new FormData();
             form.append('file', pdfResponse.data, fileName);
 
             await axios.post(trelloAttachmentUrl, form, {
-              params: {
-                key: TRELLO_KEY,
-                token: TRELLO_TOKEN,
-              },
+              params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
               headers: form.getHeaders(),
             });
 
-            console.log(`PDF attached successfully to the card with filename: ${fileName}`);
+            console.log(`PDF attached successfully as ${fileName}`);
 
-            // Now remove the URL from the card description
             const updatedDescription = description.replace(urlMatch[0], '').trim();
-
             await axios.put(cardDetailsUrl, { desc: updatedDescription }, {
-              params: {
-                key: TRELLO_KEY,
-                token: TRELLO_TOKEN,
-              },
+              params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
             });
 
-            console.log('Card description updated successfully.');
-            return res.status(200).send('PDF attached and card description updated successfully');
+            return res.status(200).send('PDF attached and card description updated');
           } catch (error) {
             console.error('Error attaching PDF to Trello card:', error.message);
             return res.status(500).send('Failed to attach PDF');
           }
         } else {
-          console.log('No valid PDF URL found in card description.');
-          return res.status(400).send('No valid PDF URL found in card description');
+          return res.status(400).send('No valid PDF URL found in description');
         }
       } else {
-        console.log('Card description is empty or missing.');
-        return res.status(400).send('Card description is empty or missing');
+        return res.status(400).send('Description is empty or missing');
       }
     } catch (error) {
       console.error('Error fetching card details:', error.message);
       return res.status(500).send('Failed to fetch card details');
     }
   } else {
-    console.log('No relevant action found in the webhook payload.');
     return res.status(200).send('No relevant action');
   }
 });
