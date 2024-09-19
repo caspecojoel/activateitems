@@ -17,6 +17,11 @@ app.get('/client.js', (req, res) => {
   res.sendFile(path.join(__dirname, 'client.js'));
 });
 
+// Handle HEAD requests for webhook verification
+app.head('/trello-webhook', (req, res) => {
+  res.sendStatus(200);  // Respond with 200 OK to verify the webhook URL
+});
+
 // Function to register Trello Webhook
 async function registerTrelloWebhook() {
   const TRELLO_KEY = process.env.TRELLO_KEY;
