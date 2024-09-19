@@ -22,25 +22,35 @@ app.head('/trello-webhook', (req, res) => {
   res.sendStatus(200);  // Respond with 200 OK to verify the webhook URL
 });
 
-// Function to register Trello Webhook
+// Function to register Trello Webhook if not already registered
 async function registerTrelloWebhook() {
   const TRELLO_KEY = process.env.TRELLO_KEY;
   const TRELLO_TOKEN = process.env.TRELLO_TOKEN;
   const BOARD_ID = '66cef36d9acf9961edb72775';  // Replace with your Trello board ID
   const CALLBACK_URL = 'https://activateitems-d22e28f2e719.herokuapp.com/trello-webhook';  // Replace with your Heroku app URL
 
-  // Log the parameters being sent
-  console.log('Attempting to register Trello webhook with the following parameters:');
-  console.log({
-    description: 'Webhook for new card creation',
-    callbackURL: CALLBACK_URL,
-    idModel: BOARD_ID,
-    key: TRELLO_KEY,
-    token: TRELLO_TOKEN,
-  });
-
   try {
-    // Make sure key and token are in the query parameters
+    // Step 1: List existing webhooks
+    const { data: webhooks } = await axios.get('https://api.trello.com/1/tokens/' + TRELLO_TOKEN + '/webhooks', {
+      params: {
+        key: TRELLO_KEY,
+        token: TRELLO_TOKEN,
+      },
+    });
+
+    // Step 2: Check if the webhook already exists
+    const existingWebhook = webhooks.find(
+      (webhook) => webhook.callbackURL === CALLBACK_URL && webhook.idModel === BOARD_ID
+    );
+
+    if (existingWebhook) {
+      console.log('Webhook already exists. No need to register.');
+      return;
+    }
+
+    // Step 3: Register the webhook if it doesn't exist
+    console.log('Registering new Trello webhook...');
+
     const response = await axios.post('https://api.trello.com/1/webhooks', {
       description: 'Webhook for new card creation',
       callbackURL: CALLBACK_URL,
