@@ -35,11 +35,11 @@ async function registerTrelloWebhook() {
   });
 
   try {
-    // Log the actual API request being made
-    const response = await axios.post('https://api.trello.com/1/webhooks/', {
+    // Make sure key and token are in the query parameters
+    const response = await axios.post('https://api.trello.com/1/webhooks', {
       description: 'Webhook for new card creation',
       callbackURL: CALLBACK_URL,
-      idModel: BOARD_ID,
+      idModel: BOARD_ID
     }, {
       params: {
         key: TRELLO_KEY,
