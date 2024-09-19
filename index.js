@@ -122,12 +122,20 @@ app.get('/get-younium-data', async (req, res) => {
   }
 });
 
-// Trello Webhook endpoint to handle new card creation
+// Set to keep track of processed card IDs
+const processedCards = new Set();
+
 app.post('/trello-webhook', async (req, res) => {
   const { action } = req.body;
 
   if (action && action.type === 'createCard') {
     const cardId = action.data.card.id;
+
+    // Check if this card has already been processed
+    if (processedCards.has(cardId)) {
+      console.log(`Card ${cardId} has already been processed. Ignoring this webhook.`);
+      return res.status(200).send('Card already processed');
+    }
 
     try {
       const TRELLO_KEY = process.env.TRELLO_KEY;
@@ -149,7 +157,7 @@ app.post('/trello-webhook', async (req, res) => {
           const pdfUrl = urlMatch[1];
 
           try {
-            // Ensure attachment only happens if the file is not already attached
+            // Check if the attachment already exists on the card
             const attachmentsResponse = await axios.get(`${cardDetailsUrl}/attachments`, {
               params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
             });
@@ -160,11 +168,9 @@ app.post('/trello-webhook', async (req, res) => {
             // If an attachment with the same filename already exists, skip attaching
             const alreadyAttached = attachments.some(attachment => attachment.name === fileName);
             if (alreadyAttached) {
-              console.log(`PDF with filename ${fileName} is already attached to the card. Skipping...`);
               return res.status(200).send('PDF already attached');
             }
 
-            // Download the PDF and attach it to Trello
             const pdfResponse = await axios.get(pdfUrl, { responseType: 'arraybuffer' });
             const trelloAttachmentUrl = `https://api.trello.com/1/cards/${cardId}/attachments`;
             const form = new FormData();
@@ -182,6 +188,9 @@ app.post('/trello-webhook', async (req, res) => {
             await axios.put(cardDetailsUrl, { desc: updatedDescription }, {
               params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
             });
+
+            // Mark the card as processed
+            processedCards.add(cardId);
 
             return res.status(200).send('PDF attached and card description updated');
           } catch (error) {
