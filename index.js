@@ -24,18 +24,39 @@ async function registerTrelloWebhook() {
   const BOARD_ID = 'QHmfuZZw';  // Replace with your Trello board ID
   const CALLBACK_URL = 'https://activateitems-d22e28f2e719.herokuapp.com/trello-webhook';  // Replace with your Heroku app URL
 
+  // Log the parameters being sent
+  console.log('Attempting to register Trello webhook with the following parameters:');
+  console.log({
+    description: 'Webhook for new card creation',
+    callbackURL: CALLBACK_URL,
+    idModel: BOARD_ID,
+    key: TRELLO_KEY,
+    token: TRELLO_TOKEN,
+  });
+
   try {
+    // Log the actual API request being made
     const response = await axios.post('https://api.trello.com/1/webhooks/', {
       description: 'Webhook for new card creation',
       callbackURL: CALLBACK_URL,
       idModel: BOARD_ID,
-      key: TRELLO_KEY,
-      token: TRELLO_TOKEN,
+    }, {
+      params: {
+        key: TRELLO_KEY,
+        token: TRELLO_TOKEN
+      }
     });
 
-    console.log('Webhook registered:', response.data);
+    console.log('Webhook registered successfully:', response.data);
   } catch (error) {
-    console.error('Error registering Trello webhook:', error.response ? error.response.data : error.message);
+    console.error('Error registering Trello webhook:');
+    if (error.response) {
+      console.error('Response data:', error.response.data);
+      console.error('Response status:', error.response.status);
+      console.error('Response headers:', error.response.headers);
+    } else {
+      console.error('Error message:', error.message);
+    }
   }
 }
 
