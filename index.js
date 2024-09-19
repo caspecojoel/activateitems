@@ -122,23 +122,11 @@ app.get('/get-younium-data', async (req, res) => {
   }
 });
 
-// Set to keep track of processed card IDs
-const processedCards = new Set();
-
 app.post('/trello-webhook', async (req, res) => {
   const { action } = req.body;
 
   if (action && action.type === 'createCard') {
     const cardId = action.data.card.id;
-
-    // Check if this card has already been processed
-    if (processedCards.has(cardId)) {
-      console.log(`Card ${cardId} has already been processed. Ignoring this webhook.`);
-      return res.status(200).send('Card already processed');
-    }
-
-    // Mark the card as processed before proceeding
-    processedCards.add(cardId);
 
     try {
       const TRELLO_KEY = process.env.TRELLO_KEY;
@@ -214,6 +202,7 @@ app.post('/trello-webhook', async (req, res) => {
     return res.status(200).send('No relevant action');
   }
 });
+
 
 // Register Trello Webhook on startup
 registerTrelloWebhook();
