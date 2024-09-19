@@ -107,18 +107,28 @@ app.get('/get-younium-data', async (req, res) => {
 app.post('/trello-webhook', async (req, res) => {
   const { action } = req.body;
 
+  console.log('Received Trello Webhook:', action);
+
   if (action && action.type === 'createCard') {
     const cardId = action.data.card.id;
     const description = action.data.card.desc;
+
+    console.log(`New card created with ID: ${cardId}`);
+    console.log(`Card description: ${description}`);
 
     // Extract the full PDF URL from the description
     const urlMatch = description.match(/(https:\/\/eu\.jotform\.com\/server\.php\?action=getSubmissionPDF&[^\s]+)/);
     if (urlMatch) {
       const pdfUrl = urlMatch[1];
 
+      console.log(`PDF URL found: ${pdfUrl}`);
+
       try {
+        console.log('Attempting to download the PDF...');
         // Download the PDF
         const pdfResponse = await axios.get(pdfUrl, { responseType: 'arraybuffer' });
+
+        console.log('PDF downloaded successfully. Preparing to attach to Trello card...');
 
         // Attach the PDF to the Trello card
         const trelloAttachmentUrl = `https://api.trello.com/1/cards/${cardId}/attachments`;
@@ -133,15 +143,18 @@ app.post('/trello-webhook', async (req, res) => {
           headers: form.getHeaders(),
         });
 
+        console.log('PDF attached successfully to the card.');
         res.status(200).send('PDF attached successfully');
       } catch (error) {
-        console.error('Error attaching PDF:', error);
+        console.error('Error attaching PDF to Trello card:', error.message);
         res.status(500).send('Failed to attach PDF');
       }
     } else {
+      console.log('No valid PDF URL found in card description.');
       res.status(400).send('No valid PDF URL found in card description');
     }
   } else {
+    console.log('No relevant action found in the webhook payload.');
     res.status(200).send('No relevant action');
   }
 });
