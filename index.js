@@ -189,8 +189,9 @@ app.post('/trello-webhook', async (req, res) => {
             const trelloAttachmentUrl = `https://api.trello.com/1/cards/${cardId}/attachments`;
             const form = new FormData();
 
-            // Replace spaces in the card title with underscores and append ".pdf" to it
-            const fileName = `${cardTitle.replace(/\s+/g, '_')}.pdf`;
+            // Remove all spaces, underscores, and special characters in the card title and append ".pdf" to it
+            const fileName = `${cardTitle.replace(/[^a-zA-Z0-9]/g, '')}.pdf`;
+
 
             form.append('file', pdfResponse.data, fileName);
 
