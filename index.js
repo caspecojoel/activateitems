@@ -149,6 +149,7 @@ app.post('/trello-webhook', async (req, res) => {
           const pdfUrl = urlMatch[1];
 
           try {
+            // Ensure attachment only happens if the file is not already attached
             const attachmentsResponse = await axios.get(`${cardDetailsUrl}/attachments`, {
               params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
             });
@@ -156,11 +157,14 @@ app.post('/trello-webhook', async (req, res) => {
             const attachments = attachmentsResponse.data;
             const fileName = `${cardTitle.replace(/[^a-zA-Z0-9]/g, '')}.pdf`;
 
+            // If an attachment with the same filename already exists, skip attaching
             const alreadyAttached = attachments.some(attachment => attachment.name === fileName);
             if (alreadyAttached) {
+              console.log(`PDF with filename ${fileName} is already attached to the card. Skipping...`);
               return res.status(200).send('PDF already attached');
             }
 
+            // Download the PDF and attach it to Trello
             const pdfResponse = await axios.get(pdfUrl, { responseType: 'arraybuffer' });
             const trelloAttachmentUrl = `https://api.trello.com/1/cards/${cardId}/attachments`;
             const form = new FormData();
@@ -173,6 +177,7 @@ app.post('/trello-webhook', async (req, res) => {
 
             console.log(`PDF attached successfully as ${fileName}`);
 
+            // Now remove the URL from the card description
             const updatedDescription = description.replace(urlMatch[0], '').trim();
             await axios.put(cardDetailsUrl, { desc: updatedDescription }, {
               params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
