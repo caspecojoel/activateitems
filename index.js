@@ -185,42 +185,58 @@ app.post('/trello-webhook', async (req, res) => {
 
             // Attach labels for each product found
             for (const product of productList) {
-              // Fetch all labels on the board
-              const labelsResponse = await axios.get(`https://api.trello.com/1/boards/${action.data.board.id}/labels`, {
-                params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
-              });
-              const labels = labelsResponse.data;
-
-              // Check if the label already exists on the board
-              let label = labels.find(l => l.name.toLowerCase() === product.toLowerCase());
-
-              // If label doesn't exist, create a new one
-              if (!label) {
-                const createLabelResponse = await axios.post(`https://api.trello.com/1/labels`, null, {
-                  params: {
-                    key: TRELLO_KEY,
-                    token: TRELLO_TOKEN,
-                    name: product,
-                    idBoard: action.data.board.id,
-                    color: 'blue', // you can choose the color here
-                  },
+              try {
+                // Fetch all labels on the board
+                const labelsResponse = await axios.get(`https://api.trello.com/1/boards/${action.data.board.id}/labels`, {
+                  params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
                 });
-                label = createLabelResponse.data;
-              }
+                const labels = labelsResponse.data;
 
-              // Attach the label to the card
-              await axios.post(`https://api.trello.com/1/cards/${cardId}/idLabels`, null, {
-                params: {
-                  key: TRELLO_KEY,
-                  token: TRELLO_TOKEN,
-                  value: label.id,
-                },
-              });
+                // Check if the label already exists on the board
+                let label = labels.find(l => l.name.toLowerCase() === product.toLowerCase());
+
+                // If label doesn't exist, create a new one
+                if (!label) {
+                  const createLabelResponse = await axios.post(`https://api.trello.com/1/labels`, null, {
+                    params: {
+                      key: TRELLO_KEY,
+                      token: TRELLO_TOKEN,
+                      name: product,
+                      idBoard: action.data.board.id,
+                      color: 'blue', // you can choose the color here
+                    },
+                  });
+                  label = createLabelResponse.data;
+                }
+
+                // Check if the label is already attached to the card
+                const cardLabelsResponse = await axios.get(`${cardDetailsUrl}/idLabels`, {
+                  params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
+                });
+
+                const cardLabels = cardLabelsResponse.data;
+                const isLabelAttached = cardLabels.includes(label.id);
+
+                // If the label is not already attached, attach it
+                if (!isLabelAttached) {
+                  await axios.post(`https://api.trello.com/1/cards/${cardId}/idLabels`, null, {
+                    params: {
+                      key: TRELLO_KEY,
+                      token: TRELLO_TOKEN,
+                      value: label.id,
+                    },
+                  });
+                } else {
+                  console.log(`Label "${product}" is already attached. Skipping...`);
+                }
+              } catch (error) {
+                console.error(`Error handling label for product "${product}":`, error.message, error.response?.data || '');
+              }
             }
 
-            // Clear the card description by setting it to a space (Trello might not accept an empty string)
+            // Clear the card description by setting it to an empty string (or a space if empty string fails)
             console.log('Clearing card description...');
-            await axios.put(cardDetailsUrl, { desc: ' ' }, {
+            await axios.put(cardDetailsUrl, { desc: '' }, {
               params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
             });
 
