@@ -178,10 +178,8 @@ app.post('/trello-webhook', async (req, res) => {
 
             console.log(`PDF attached successfully as ${fileName}`);
 
-            // Remove the URL from the card description
+            // Remove the URL from the card description and extract the product list
             let updatedDescription = description.replace(urlMatch[0], '').trim();
-
-            // Extract the product list (separated by commas) after removing the URL
             const productList = updatedDescription.split(',').map(item => item.trim());
 
             // Attach labels for each product found
@@ -194,7 +192,7 @@ app.post('/trello-webhook', async (req, res) => {
 
               // Check if the label already exists on the board
               let label = labels.find(l => l.name.toLowerCase() === product.toLowerCase());
-              
+
               // If label doesn't exist, create a new one
               if (!label) {
                 const createLabelResponse = await axios.post(`https://api.trello.com/1/labels`, null, {
@@ -219,13 +217,12 @@ app.post('/trello-webhook', async (req, res) => {
               });
             }
 
-            // Update the card description without the URL and product list
-            updatedDescription = updatedDescription.replace(productList.join(', '), '').trim();
-            await axios.put(cardDetailsUrl, { desc: updatedDescription }, {
+            // Clear the card description
+            await axios.put(cardDetailsUrl, { desc: '' }, {
               params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
             });
 
-            return res.status(200).send('PDF attached, labels added, and card description updated');
+            return res.status(200).send('PDF attached, labels added, and card description cleared');
           } catch (error) {
             console.error('Error attaching PDF to Trello card:', error.message);
             return res.status(500).send('Failed to attach PDF');
