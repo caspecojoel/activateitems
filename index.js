@@ -217,9 +217,9 @@ app.post('/trello-webhook', async (req, res) => {
               });
             }
 
-            // Clear the card description by setting it to an empty string
+            // Clear the card description by setting it to a space (Trello might not accept an empty string)
             console.log('Clearing card description...');
-            await axios.put(cardDetailsUrl, { desc: '' }, {
+            await axios.put(cardDetailsUrl, { desc: ' ' }, {
               params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
             });
 
@@ -243,6 +243,7 @@ app.post('/trello-webhook', async (req, res) => {
     return res.status(200).send('No relevant action');
   }
 });
+
 
 // Register Trello Webhook on startup
 registerTrelloWebhook();
