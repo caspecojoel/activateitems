@@ -217,11 +217,13 @@ app.post('/trello-webhook', async (req, res) => {
               });
             }
 
-            // Clear the card description
+            // Clear the card description by setting it to an empty string
+            console.log('Clearing card description...');
             await axios.put(cardDetailsUrl, { desc: '' }, {
               params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
             });
 
+            console.log('Description cleared successfully.');
             return res.status(200).send('PDF attached, labels added, and card description cleared');
           } catch (error) {
             console.error('Error attaching PDF to Trello card:', error.message);
