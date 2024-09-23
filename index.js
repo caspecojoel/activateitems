@@ -142,27 +142,25 @@ app.post('/trello-webhook', async (req, res) => {
       const description = card.desc;
       const cardTitle = card.name;
 
-      if (description) {
-        const urlMatch = description.match(/(https:\/\/eu\.jotform\.com\/server\.php\?action=getSubmissionPDF&[^\s]+)/);
-        if (urlMatch) {
-          const pdfUrl = urlMatch[1];
+      let updatedDescription = description; // This will be used to update the card description later
 
-          try {
-            // Check if the attachment already exists on the card
-            const attachmentsResponse = await axios.get(`${cardDetailsUrl}/attachments`, {
-              params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
-            });
+      // 1. Check for the PDF URL in the description
+      const urlMatch = description.match(/(https:\/\/eu\.jotform\.com\/server\.php\?action=getSubmissionPDF&[^\s]+)/);
+      if (urlMatch) {
+        const pdfUrl = urlMatch[1];
 
-            const attachments = attachmentsResponse.data;
-            const fileName = `${cardTitle.replace(/[^a-zA-Z0-9]/g, '')}.pdf`;
+        try {
+          // Check if the attachment already exists on the card
+          const attachmentsResponse = await axios.get(`${cardDetailsUrl}/attachments`, {
+            params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
+          });
 
-            // If an attachment with the same filename already exists, skip attaching
-            const alreadyAttached = attachments.some(attachment => attachment.name === fileName);
-            if (alreadyAttached) {
-              console.log(`PDF with filename ${fileName} is already attached. Skipping...`);
-              return res.status(200).send('PDF already attached');
-            }
+          const attachments = attachmentsResponse.data;
+          const fileName = `${cardTitle.replace(/[^a-zA-Z0-9]/g, '')}.pdf`;
 
+          // If an attachment with the same filename already exists, skip attaching
+          const alreadyAttached = attachments.some(attachment => attachment.name === fileName);
+          if (!alreadyAttached) {
             // Download the PDF
             const pdfResponse = await axios.get(pdfUrl, { responseType: 'arraybuffer' });
             const trelloAttachmentUrl = `https://api.trello.com/1/cards/${cardId}/attachments`;
@@ -176,24 +174,55 @@ app.post('/trello-webhook', async (req, res) => {
             });
 
             console.log(`PDF attached successfully as ${fileName}`);
-
-            // Now remove the URL from the card description
-            const updatedDescription = description.replace(urlMatch[0], '').trim();
-            await axios.put(cardDetailsUrl, { desc: updatedDescription }, {
-              params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
-            });
-
-            return res.status(200).send('PDF attached and card description updated');
-          } catch (error) {
-            console.error('Error attaching PDF to Trello card:', error.message);
-            return res.status(500).send('Failed to attach PDF');
           }
-        } else {
-          return res.status(400).send('No valid PDF URL found in description');
+
+          // Remove the PDF URL from the description
+          updatedDescription = updatedDescription.replace(urlMatch[0], '').trim();
+
+        } catch (error) {
+          console.error('Error attaching PDF to Trello card:', error.message);
+          return res.status(500).send('Failed to attach PDF');
         }
-      } else {
-        return res.status(400).send('Description is empty or missing');
       }
+
+      // 2. Check for product names in the description
+      const products = ['Product A', 'Product B', 'Product C']; // Replace with actual product names or patterns
+      const foundProducts = products.filter(product => description.includes(product));
+
+      if (foundProducts.length > 0) {
+        // Add labels for found products
+        for (const product of foundProducts) {
+          try {
+            // You may need to create the label if it doesn’t already exist
+            const labelResponse = await axios.post(`https://api.trello.com/1/cards/${cardId}/idLabels`, null, {
+              params: {
+                key: TRELLO_KEY,
+                token: TRELLO_TOKEN,
+                name: product,  // Label name is the product name
+                color: 'green',  // Set the label color if needed
+              },
+            });
+            console.log(`Label for product ${product} added successfully`);
+          } catch (error) {
+            console.error(`Error adding label for product ${product}:`, error.message);
+          }
+        }
+
+        // Remove product names from the description
+        foundProducts.forEach(product => {
+          updatedDescription = updatedDescription.replace(product, '').trim();
+        });
+      }
+
+      // Update the card description if changes were made
+      if (updatedDescription !== description) {
+        await axios.put(cardDetailsUrl, { desc: updatedDescription }, {
+          params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
+        });
+        console.log('Card description updated successfully');
+      }
+
+      return res.status(200).send('PDF and product labels processed successfully');
     } catch (error) {
       console.error('Error fetching card details:', error.message);
       return res.status(500).send('Failed to fetch card details');
@@ -202,7 +231,6 @@ app.post('/trello-webhook', async (req, res) => {
     return res.status(200).send('No relevant action');
   }
 });
-
 
 // Register Trello Webhook on startup
 registerTrelloWebhook();
