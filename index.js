@@ -122,7 +122,7 @@ app.get('/get-younium-data', async (req, res) => {
   }
 });
 
-app.post('/trello-webhook', async (req, res) => { 
+app.post('/trello-webhook', async (req, res) => {
   const { action } = req.body;
 
   if (action && action.type === 'createCard') {
@@ -166,19 +166,20 @@ app.post('/trello-webhook', async (req, res) => {
 
             // Download the PDF
             const pdfResponse = await axios.get(pdfUrl, { responseType: 'arraybuffer' });
+
             const trelloAttachmentUrl = `https://api.trello.com/1/cards/${cardId}/attachments`;
             const form = new FormData();
             form.append('file', pdfResponse.data, fileName);
 
             // Attach the PDF to the card
-            await axios.post(trelloAttachmentUrl, form, {
+            const attachResponse = await axios.post(trelloAttachmentUrl, form, {
               params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
               headers: form.getHeaders(),
             });
 
-            console.log(`PDF attached successfully as ${fileName}`);
+            console.log(`PDF attached successfully as ${fileName}`, attachResponse.data);
 
-            // Remove the URL from the card description and extract the product list
+            // Now remove the URL from the card description
             let updatedDescription = description.replace(urlMatch[0], '').trim();
             const productList = updatedDescription.split(',').map(item => item.trim());
 
@@ -226,7 +227,7 @@ app.post('/trello-webhook', async (req, res) => {
             console.log('Description cleared successfully.');
             return res.status(200).send('PDF attached, labels added, and card description cleared');
           } catch (error) {
-            console.error('Error attaching PDF to Trello card:', error.message);
+            console.error('Error attaching PDF to Trello card:', error.message, error.response?.data || '');
             return res.status(500).send('Failed to attach PDF');
           }
         } else {
@@ -243,7 +244,6 @@ app.post('/trello-webhook', async (req, res) => {
     return res.status(200).send('No relevant action');
   }
 });
-
 
 // Register Trello Webhook on startup
 registerTrelloWebhook();
