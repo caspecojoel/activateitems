@@ -40,15 +40,19 @@ const getActivationStatus = (youniumData) => {
   }
 };
 
+// Function to handle button click and toggle invoicing status with confirmation
 const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumData) => {
   const action = currentStatus ? 'inactivate' : 'activate';
   const confirmationMessage = `Are you sure you want to ${action} ${productName}?`;
   
+  console.log(`Button clicked to ${action} product: ${productName}, Charge ID: ${chargeId}, Current status: ${currentStatus}`);
+  
   if (!confirm(confirmationMessage)) {
+    console.log(`User cancelled the ${action} action.`);
     return; // Exit if the user cancels the action
   }
 
-  console.log(`Toggling charge: ${chargeId}`);
+  console.log(`Proceeding to ${action} charge: ${chargeId}`);
 
   // Construct the activation URL with necessary parameters
   const orderId = youniumData.id;
@@ -61,11 +65,13 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumDa
 
   const activationUrl = `https://cas-test.loveyourq.se/dev/UpdateReady4Invoicing?OrderId=${orderId}&AccountId=${accountId}&InvoiceAccountId=${invoiceAccountId}&ProductId=${productId}&ChargePlanId=${chargePlanId}&ChargeId=${chargeId}&LegalEntity=Caspeco%20AB&IsReady4Invoicing=${isReadyForInvoicing}`;
 
+  console.log(`Generated activation URL: ${activationUrl}`);
+
   // Send the activation request
   fetch(activationUrl, { method: 'POST' })
     .then(response => {
       if (response.ok) {
-        console.log(`Charge ${chargeId} status updated successfully`);
+        console.log(`Successfully updated Charge ${chargeId} status to ${isReadyForInvoicing ? 'Ready' : 'Not Ready'} for invoicing`);
 
         // Get the button element
         const button = document.querySelector(`[data-charge-id="${chargeId}"]`);
@@ -85,13 +91,15 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumDa
     .catch(error => console.error('Error updating the charge status:', error));
 };
 
-
 // Add event listener for toggle buttons
 document.addEventListener('click', function (event) {
   if (event.target && event.target.tagName === 'BUTTON') {
     const chargeId = event.target.getAttribute('data-charge-id');
     const productName = event.target.getAttribute('data-product-name');
     const currentStatus = event.target.textContent.trim() === "Mark as not ready"; // Determine current status based on the button text
+
+    console.log(`Button clicked for product: ${productName}, Charge ID: ${chargeId}, Current Status: ${currentStatus}`);
+
     handleToggleButtonClick(chargeId, currentStatus, productName, youniumData);
   }
 });

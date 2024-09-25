@@ -61,6 +61,8 @@ async function registerTrelloWebhook() {
 // Function to get Younium order data
 async function getYouniumOrderData(orgNo, hubspotDealId) {
   try {
+    console.log(`Fetching Younium order data for OrgNo: ${orgNo}, HubspotDealId: ${hubspotDealId}`);
+
     const response = await axios.get(`https://cas-test.loveyourq.se/dev/GetYouniumOrders`, {
       params: {
         OrgNo: orgNo,
@@ -72,30 +74,44 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
       }
     });
 
+    console.log('Received response from Younium API:', response.data);
+
     if (response.data && response.data.length > 0) {
       const youniumOrder = response.data[0];
+      console.log('Processing Younium order:', youniumOrder);
 
-      return {
-        id: youniumOrder.id,
+      const processedOrder = {
+        id: youniumOrder.id, // OrderId
         status: youniumOrder.status,
         description: youniumOrder.description,
         account: {
+          id: youniumOrder.account.id, // AccountId
           name: youniumOrder.account.name,
           accountNumber: youniumOrder.account.accountNumber
         },
+        invoiceAccount: {
+          id: youniumOrder.invoiceAccount.id, // InvoiceAccountId
+          name: youniumOrder.invoiceAccount.name,
+          accountNumber: youniumOrder.invoiceAccount.accountNumber
+        },
         products: youniumOrder.products.map(product => ({
-          productNumber: product.productNumber,
+          productId: product.productId, // ProductId
+          chargePlanId: product.chargePlanId, // ChargePlanId
           name: product.name,
           charges: product.charges.map(charge => ({
-            id: charge.id,
+            id: charge.id, // ChargeId
             name: charge.name,
             effectiveStartDate: charge.effectiveStartDate,
             isReady4Invoicing: charge.customFields.isReady4Invoicing
           }))
         }))
       };
+
+      console.log('Processed Younium order data:', processedOrder);
+      return processedOrder;
     }
 
+    console.log('No Younium data found for the provided OrgNo and HubspotDealId.');
     return null;
   } catch (error) {
     console.error('Error fetching Younium data:', error.response ? error.response.data : error.message);
@@ -106,21 +122,28 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
 // New endpoint to get Younium data
 app.get('/get-younium-data', async (req, res) => {
   const { orgNo, hubspotId } = req.query;
+  console.log(`Received request for Younium data with OrgNo: ${orgNo}, HubspotId: ${hubspotId}`);
+
   try {
     if (!orgNo || !hubspotId) {
+      console.log('Missing required OrgNo or HubspotId.');
       return res.status(400).json({ error: "Missing required orgNo or hubspotId" });
     }
 
     const youniumData = await getYouniumOrderData(orgNo, hubspotId);
     if (!youniumData) {
+      console.log('No Younium data found for the provided parameters.');
       return res.status(404).json({ error: 'No data found for the provided parameters' });
     }
+
+    console.log('Successfully fetched Younium data:', youniumData);
     res.json(youniumData);
   } catch (error) {
     console.error('Error fetching Younium data:', error.message);
     res.status(500).json({ error: 'Failed to fetch Younium data' });
   }
 });
+
 
 app.post('/trello-webhook', async (req, res) => {
   const { action } = req.body;
