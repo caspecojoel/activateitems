@@ -14,19 +14,8 @@ app.get('/manifest.json', (req, res) => {
 });
 
 app.get('/client.js', (req, res) => {
-  const clientJsContent = `
-    // Injected environment variables from the backend
-    const AUTH_USERNAME = "${process.env.AUTH_USERNAME}";
-    const AUTH_PASSWORD = "${process.env.AUTH_PASSWORD}";
-
-    // The rest of your client.js file will be included as-is
-    // The function handleToggleButtonClick and other frontend logic remain unchanged
-  `;
-
-  res.setHeader('Content-Type', 'application/javascript');
-  res.send(clientJsContent);
+  res.sendFile(path.join(__dirname, 'client.js'));
 });
-
 
 // Handle HEAD requests for webhook verification
 app.head('/trello-webhook', (req, res) => {
@@ -297,6 +286,33 @@ app.post('/trello-webhook', async (req, res) => {
 
 // Register Trello Webhook on startup
 registerTrelloWebhook();
+
+app.post('/toggle-invoicing-status', async (req, res) => {
+  const { chargeId, orderId, accountId, invoiceAccountId, productId, chargePlanId, isReadyForInvoicing } = req.body;
+
+  const activationUrl = `https://cas-test.loveyourq.se/dev/UpdateReady4Invoicing?OrderId=${orderId}&AccountId=${accountId}&InvoiceAccountId=${invoiceAccountId}&ProductId=${productId}&ChargePlanId=${chargePlanId}&ChargeId=${chargeId}&LegalEntity=Caspeco%20AB&IsReady4Invoicing=${isReadyForInvoicing}`;
+
+  try {
+    const response = await axios.post(activationUrl, null, {
+      auth: {
+        username: process.env.AUTH_USERNAME,
+        password: process.env.AUTH_PASSWORD
+      },
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (response.status === 200) {
+      res.json({ success: true, message: 'Status updated successfully' });
+    } else {
+      res.status(response.status).json({ success: false, message: 'Failed to update status' });
+    }
+  } catch (error) {
+    console.error('Error updating the charge status:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
 
 // Error handling
 app.use((req, res, next) => {

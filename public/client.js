@@ -40,7 +40,6 @@ const getActivationStatus = (youniumData) => {
   }
 };
 
-// Function to handle button click and toggle invoicing status with confirmation
 const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumData) => {
   const action = currentStatus ? 'inactivate' : 'activate';
   const confirmationMessage = `Are you sure you want to ${action} ${productName}?`;
@@ -49,40 +48,41 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumDa
   
   if (!confirm(confirmationMessage)) {
     console.log(`User cancelled the ${action} action.`);
-    return; // Exit if the user cancels the action
+    return;
   }
 
   console.log(`Proceeding to ${action} charge: ${chargeId}`);
 
-  // Construct the activation URL with necessary parameters
   const orderId = youniumData.id;
   const accountId = youniumData.account.id;
   const invoiceAccountId = youniumData.invoiceAccount.id;
   const product = youniumData.products.find(p => p.charges.some(c => c.id === chargeId));
   const productId = product.productId;
   const chargePlanId = product.chargePlanId;
-  const isReadyForInvoicing = currentStatus ? 0 : 1; // Toggle status
+  const isReadyForInvoicing = currentStatus ? 0 : 1;
 
-  const activationUrl = `https://cas-test.loveyourq.se/dev/UpdateReady4Invoicing?OrderId=${orderId}&AccountId=${accountId}&InvoiceAccountId=${invoiceAccountId}&ProductId=${productId}&ChargePlanId=${chargePlanId}&ChargeId=${chargeId}&LegalEntity=Caspeco%20AB&IsReady4Invoicing=${isReadyForInvoicing}`;
-
-  console.log(`Generated activation URL: ${activationUrl}`);
-
-  // Use the injected credentials
-  fetch(activationUrl, {
+  fetch('/toggle-invoicing-status', {
     method: 'POST',
     headers: {
-      'Authorization': 'Basic ' + btoa(AUTH_USERNAME + ':' + AUTH_PASSWORD), // Using the injected credentials
       'Content-Type': 'application/json',
     },
+    body: JSON.stringify({
+      chargeId,
+      orderId,
+      accountId,
+      invoiceAccountId,
+      productId,
+      chargePlanId,
+      isReadyForInvoicing
+    }),
   })
-    .then(response => {
-      if (response.ok) {
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
         console.log(`Successfully updated Charge ${chargeId} status to ${isReadyForInvoicing ? 'Ready' : 'Not Ready'} for invoicing`);
 
-        // Get the button element
         const button = document.querySelector(`[data-charge-id="${chargeId}"]`);
 
-        // Toggle the button class and text based on the new status
         if (isReadyForInvoicing) {
           button.textContent = "Mark as not ready";
           button.className = "inactivate-button";
