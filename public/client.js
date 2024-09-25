@@ -67,10 +67,6 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumDa
 
   console.log(`Generated activation URL: ${activationUrl}`);
 
-  // Fetch credentials injected from the backend
-  const authUsername = AUTH_USERNAME; // This should come from the backend
-  const authPassword = AUTH_PASSWORD; // This should come from the backend
-
   // Use the injected credentials
   fetch(activationUrl, {
     method: 'POST',
