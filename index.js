@@ -288,11 +288,15 @@ app.post('/trello-webhook', async (req, res) => {
 registerTrelloWebhook();
 
 app.post('/toggle-invoicing-status', async (req, res) => {
+  console.log('Received request to toggle invoicing status:', req.body);
   const { chargeId, orderId, accountId, invoiceAccountId, productId, chargePlanId, isReadyForInvoicing } = req.body;
 
   const activationUrl = `https://cas-test.loveyourq.se/dev/UpdateReady4Invoicing?OrderId=${orderId}&AccountId=${accountId}&InvoiceAccountId=${invoiceAccountId}&ProductId=${productId}&ChargePlanId=${chargePlanId}&ChargeId=${chargeId}&LegalEntity=Caspeco%20AB&IsReady4Invoicing=${isReadyForInvoicing}`;
 
+  console.log('Constructed activation URL:', activationUrl);
+
   try {
+    console.log('Sending request to Younium API...');
     const response = await axios.post(activationUrl, null, {
       auth: {
         username: process.env.AUTH_USERNAME,
@@ -303,14 +307,38 @@ app.post('/toggle-invoicing-status', async (req, res) => {
       },
     });
 
+    console.log('Received response from Younium API:', response.status, response.data);
+
     if (response.status === 200) {
       res.json({ success: true, message: 'Status updated successfully' });
     } else {
-      res.status(response.status).json({ success: false, message: 'Failed to update status' });
+      console.error('Unexpected response status:', response.status);
+      res.status(response.status).json({ success: false, message: 'Failed to update status', details: response.data });
     }
   } catch (error) {
     console.error('Error updating the charge status:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
+    if (error.response) {
+      console.error('Error response from Younium API:', error.response.status, error.response.data);
+      res.status(error.response.status).json({ 
+        success: false, 
+        message: 'Error from Younium API', 
+        details: error.response.data 
+      });
+    } else if (error.request) {
+      console.error('No response received from Younium API');
+      res.status(500).json({ 
+        success: false, 
+        message: 'No response from Younium API', 
+        details: 'The request was made but no response was received' 
+      });
+    } else {
+      console.error('Error setting up the request:', error.message);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Internal server error', 
+        details: error.message 
+      });
+    }
   }
 });
 

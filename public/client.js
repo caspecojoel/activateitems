@@ -61,23 +61,36 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumDa
   const chargePlanId = product.chargePlanId;
   const isReadyForInvoicing = currentStatus ? 0 : 1;
 
+  const requestBody = {
+    chargeId,
+    orderId,
+    accountId,
+    invoiceAccountId,
+    productId,
+    chargePlanId,
+    isReadyForInvoicing
+  };
+
+  console.log('Sending request to toggle invoicing status:', requestBody);
+
   fetch('/toggle-invoicing-status', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      chargeId,
-      orderId,
-      accountId,
-      invoiceAccountId,
-      productId,
-      chargePlanId,
-      isReadyForInvoicing
-    }),
+    body: JSON.stringify(requestBody),
   })
-    .then(response => response.json())
+    .then(response => {
+      console.log('Received response:', response.status);
+      if (!response.ok) {
+        return response.json().then(errorData => {
+          throw new Error(`HTTP error! status: ${response.status}, message: ${JSON.stringify(errorData)}`);
+        });
+      }
+      return response.json();
+    })
     .then(data => {
+      console.log('Parsed response data:', data);
       if (data.success) {
         console.log(`Successfully updated Charge ${chargeId} status to ${isReadyForInvoicing ? 'Ready' : 'Not Ready'} for invoicing`);
 
@@ -91,10 +104,14 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumDa
           button.className = "activate-button";
         }
       } else {
-        console.error('Failed to update the charge status');
+        console.error('Failed to update the charge status:', data.message, data.details);
+        alert(`Failed to update status: ${data.message}`);
       }
     })
-    .catch(error => console.error('Error updating the charge status:', error));
+    .catch(error => {
+      console.error('Error updating the charge status:', error);
+      alert(`Error updating status: ${error.message}`);
+    });
 };
 
 // Add event listener for toggle buttons
