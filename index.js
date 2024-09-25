@@ -14,8 +14,19 @@ app.get('/manifest.json', (req, res) => {
 });
 
 app.get('/client.js', (req, res) => {
-  res.sendFile(path.join(__dirname, 'client.js'));
+  const clientJsContent = `
+    // Injected environment variables from the backend
+    const AUTH_USERNAME = "${process.env.AUTH_USERNAME}";
+    const AUTH_PASSWORD = "${process.env.AUTH_PASSWORD}";
+
+    // The rest of your client.js file will be included as-is
+    // The function handleToggleButtonClick and other frontend logic remain unchanged
+  `;
+
+  res.setHeader('Content-Type', 'application/javascript');
+  res.send(clientJsContent);
 });
+
 
 // Handle HEAD requests for webhook verification
 app.head('/trello-webhook', (req, res) => {

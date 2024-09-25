@@ -71,12 +71,12 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumDa
   const authUsername = AUTH_USERNAME; // This should come from the backend
   const authPassword = AUTH_PASSWORD; // This should come from the backend
 
-  // Send the activation request with Basic Authentication
+  // Use the injected credentials
   fetch(activationUrl, {
     method: 'POST',
     headers: {
-      'Authorization': 'Basic ' + btoa(authUsername + ':' + authPassword), // Basic auth with username and password
-      'Content-Type': 'application/json'
+      'Authorization': 'Basic ' + btoa(AUTH_USERNAME + ':' + AUTH_PASSWORD), // Using the injected credentials
+      'Content-Type': 'application/json',
     },
   })
     .then(response => {
