@@ -67,8 +67,18 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumDa
 
   console.log(`Generated activation URL: ${activationUrl}`);
 
-  // Send the activation request
-  fetch(activationUrl, { method: 'POST' })
+  // Fetch credentials injected from the backend
+  const authUsername = AUTH_USERNAME; // This should come from the backend
+  const authPassword = AUTH_PASSWORD; // This should come from the backend
+
+  // Send the activation request with Basic Authentication
+  fetch(activationUrl, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Basic ' + btoa(authUsername + ':' + authPassword), // Basic auth with username and password
+      'Content-Type': 'application/json'
+    },
+  })
     .then(response => {
       if (response.ok) {
         console.log(`Successfully updated Charge ${chargeId} status to ${isReadyForInvoicing ? 'Ready' : 'Not Ready'} for invoicing`);
