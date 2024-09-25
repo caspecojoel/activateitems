@@ -1,127 +1,130 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ready for Invoicing</title>
-    <!-- Link to the external CSS file -->
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <div class="container">
-        <p class="description">
-            This modal allows you to review the products associated with this order. Clicking the "Mark as ready" button will send a "Ready for invoicing" signal to our economy department, preparing the order for invoicing.
-        </p>
+<div class="container">
+    <p class="description">
+        This modal allows you to review the products associated with this order. Clicking the "Mark as ready" button will send a "Ready for invoicing" signal to our economy department, preparing the order for invoicing.
+    </p>
 
-        <div id="loading-spinner" class="loading" style="display: none;">Loading order details...</div>
+    <div id="loading-spinner" class="loading" style="display: none;">Loading order details...</div>
 
-        <div class="form-section">
-            <!-- Section to display Younium details -->
-            <div class="younium-details">
-                <div class="form-group">
-                    <strong>Account Name:</strong> <span id="account-name"></span>
-                </div>
-                <div class="form-group">
-                    <strong>Order Status:</strong> <span id="order-status"></span>
-                </div>
+    <div class="form-section">
+        <!-- Section to display Younium details -->
+        <div class="younium-details">
+            <div class="form-group">
+                <strong>Account Name:</strong> <span id="account-name"></span>
             </div>
-
-            <!-- Section for products and charges in a table -->
-            <div class="form-group product-selection">
-                <h3>Products</h3>
-                <table id="products-table">
-                    <thead>
-                        <tr>
-                            <th>Product</th>
-                            <th>Charge</th>
-                            <th>Start Date</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="products-container"></tbody>
-                </table>
-            </div>
-
-            <!-- IDs and Order Information -->
-            <div class="id-info">
-                <p><strong>HubSpot ID:</strong> <span id="hubspot-id"></span></p>
-                <p><strong>Org Number:</strong> <span id="org-number"></span></p>
-                <p><strong>Order ID:</strong> <span id="order-id"></span></p>
-                <p><strong>Account Number:</strong> <span id="account-number"></span></p>
-                <p><strong>Order Description:</strong> <span id="order-description"></span></p>
+            <div class="form-group">
+                <strong>Order Status:</strong> <span id="order-status"></span>
             </div>
         </div>
+
+        <!-- Section for products and charges in a table -->
+        <div class="form-group product-selection">
+            <h3>Products</h3>
+            <table id="products-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Charge</th>
+                        <th>Start Date</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="products-container"></tbody>
+            </table>
+        </div>
+
+        <!-- IDs and Order Information -->
+        <div class="id-info">
+            <p><strong>HubSpot ID:</strong> <span id="hubspot-id"></span></p>
+            <p><strong>Org Number:</strong> <span id="org-number"></span></p>
+            <p><strong>Order ID:</strong> <span id="order-id"></span></p>
+            <p><strong>Account Number:</strong> <span id="account-number"></span></p>
+            <p><strong>Order Description:</strong> <span id="order-description"></span></p>
+            
+            <!-- Additional IDs -->
+            <div id="product-info"></div> <!-- For Product and Charge Plan IDs -->
+        </div>
     </div>
+</div>
 
-    <script src="https://p.trellocdn.com/power-up.min.js"></script>
-    <script>
-        // Parse the URL and get Younium data
-        const urlParams = new URLSearchParams(window.location.search);
-        const youniumData = JSON.parse(urlParams.get('youniumData'));
+<script src="https://p.trellocdn.com/power-up.min.js"></script>
+<script>
+    // Parse the URL and get Younium data
+    const urlParams = new URLSearchParams(window.location.search);
+    const youniumData = JSON.parse(urlParams.get('youniumData'));
 
-        // Map DOM elements for reusability
-        const domElements = {
-            hubspotId: document.getElementById('hubspot-id'),
-            orgNumber: document.getElementById('org-number'),
-            accountName: document.getElementById('account-name'),
-            accountNumber: document.getElementById('account-number'),
-            orderId: document.getElementById('order-id'),
-            orderStatus: document.getElementById('order-status'),
-            orderDescription: document.getElementById('order-description'),
-            productsContainer: document.getElementById('products-container')
-        };
+    // Map DOM elements for reusability
+    const domElements = {
+        hubspotId: document.getElementById('hubspot-id'),
+        orgNumber: document.getElementById('org-number'),
+        accountName: document.getElementById('account-name'),
+        accountNumber: document.getElementById('account-number'),
+        orderId: document.getElementById('order-id'),
+        orderStatus: document.getElementById('order-status'),
+        orderDescription: document.getElementById('order-description'),
+        productsContainer: document.getElementById('products-container'),
+        productInfo: document.getElementById('product-info') // New element for displaying Product IDs and ChargePlan IDs
+    };
 
-        // Ensure all DOM elements exist
-        Object.keys(domElements).forEach(key => {
-            if (!domElements[key]) {
-                console.error(`Element with ID '${key}' is missing from the HTML.`);
-            }
+    // Ensure all DOM elements exist
+    Object.keys(domElements).forEach(key => {
+        if (!domElements[key]) {
+            console.error(`Element with ID '${key}' is missing from the HTML.`);
+        }
+    });
+
+    // Show loading spinner while fetching data
+    document.getElementById('loading-spinner').style.display = 'block';
+
+    // Populate Younium Account and Order data if the elements exist
+    if (domElements.hubspotId) domElements.hubspotId.textContent = urlParams.get('hubspotId');
+    if (domElements.orgNumber) domElements.orgNumber.textContent = urlParams.get('orgNo');
+    if (domElements.accountName) domElements.accountName.textContent = youniumData.account.name;
+    if (domElements.accountNumber) domElements.accountNumber.textContent = youniumData.account.accountNumber;
+    if (domElements.orderId) domElements.orderId.textContent = youniumData.id;
+    if (domElements.orderStatus) domElements.orderStatus.textContent = youniumData.status;
+    if (domElements.orderDescription) domElements.orderDescription.textContent = youniumData.description;
+
+    // Hide loading spinner once data is loaded
+    document.getElementById('loading-spinner').style.display = 'none';
+
+    // Populate Products and Charges in a table
+    youniumData.products.forEach(product => {
+        product.charges.forEach(charge => {
+            const isActivated = charge.isReady4Invoicing === "True";
+            const buttonClass = isActivated ? 'inactivate-button' : 'activate-button';
+            const buttonText = isActivated ? 'Mark as not ready' : 'Mark as ready';
+
+            // Format the effective start date (if available)
+            const effectiveStartDate = new Date(charge.effectiveStartDate).toLocaleDateString();
+
+            // Populate the table row
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${product.name}</td>
+                <td>${charge.name}</td>
+                <td>${effectiveStartDate || 'N/A'}</td>
+                <td>${isActivated ? 'Ready for invoicing' : 'Not ready for invoicing'}</td>
+                <td class="button-container">
+                    <button class="${buttonClass}" data-charge-id="${charge.id}" data-product-name="${product.name}">
+                        ${buttonText}
+                    </button>
+                </td>
+            `;
+            domElements.productsContainer.appendChild(row);
+
+            // Display Product, ChargePlan, and Charge IDs in the ID info section
+            const productInfo = document.createElement('div');
+            productInfo.innerHTML = `
+                <p><strong>Product Name:</strong> ${product.name}</p>
+                <p><strong>Product ID:</strong> ${product.productId}</p>
+                <p><strong>Charge Plan ID:</strong> ${product.chargePlanId}</p>
+                <p><strong>Charge ID:</strong> ${charge.id}</p>
+            `;
+            domElements.productInfo.appendChild(productInfo);
         });
+    });
+</script>
 
-        // Show loading spinner while fetching data
-        document.getElementById('loading-spinner').style.display = 'block';
-
-        // Populate Younium Account and Order data if the elements exist
-        if (domElements.hubspotId) domElements.hubspotId.textContent = urlParams.get('hubspotId');
-        if (domElements.orgNumber) domElements.orgNumber.textContent = urlParams.get('orgNo');
-        if (domElements.accountName) domElements.accountName.textContent = youniumData.account.name;
-        if (domElements.accountNumber) domElements.accountNumber.textContent = youniumData.account.accountNumber;
-        if (domElements.orderId) domElements.orderId.textContent = youniumData.id;
-        if (domElements.orderStatus) domElements.orderStatus.textContent = youniumData.status;
-        if (domElements.orderDescription) domElements.orderDescription.textContent = youniumData.description;
-
-        // Hide loading spinner once data is loaded
-        document.getElementById('loading-spinner').style.display = 'none';
-
-        // Populate Products and Charges in a table
-        youniumData.products.forEach(product => {
-            product.charges.forEach(charge => {
-                const isActivated = charge.isReady4Invoicing === "True";
-                const buttonClass = isActivated ? 'inactivate-button' : 'activate-button';
-                const buttonText = isActivated ? 'Mark as not ready' : 'Mark as ready';
-
-                // Format the effective start date (if available)
-                const effectiveStartDate = new Date(charge.effectiveStartDate).toLocaleDateString();
-
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${product.name}</td>
-                    <td>${charge.name}</td>
-                    <td>${effectiveStartDate || 'N/A'}</td> <!-- Display effective start date or 'N/A' -->
-                    <td>${isActivated ? 'Ready for invoicing' : 'Not ready for invoicing'}</td>
-                    <td class="button-container">
-                        <button class="${buttonClass}" data-charge-id="${charge.id}" data-product-name="${product.name}">
-                            ${buttonText}
-                        </button>
-                    </td>
-                `;
-                domElements.productsContainer.appendChild(row);
-            });
-        });
-    </script>
-
-    <script src="https://p.trellocdn.com/power-up.min.js"></script>
-    <script src="/client.js"></script>
-</body>
-</html>
+<script src="https://p.trellocdn.com/power-up.min.js"></script>
+<script src="/client.js"></script>
