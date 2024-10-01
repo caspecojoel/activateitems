@@ -140,6 +140,11 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumDa
                 return;
               }
 
+              // Check if the latest version is retrieved
+              if (!updatedYouniumData.isLastVersion) {
+                console.warn('Fetched data is not the latest version. Consider increasing the delay or retrying.');
+              }
+
               // Update the modal with the new data
               updateModalWithYouniumData(updatedYouniumData);
             })
@@ -147,7 +152,7 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumDa
               console.error('Error fetching updated Younium data:', fetchError);
               alert('Error fetching updated data. Please try again later.');
             });
-        }, 1000); // Adjust delay as necessary
+        }, 2000); // Increased delay to 2000 ms to allow backend more time
       } else {
         console.error('Failed to update the charge status:', data.message, data.details);
         alert(`Failed to update status: ${data.message}`);
