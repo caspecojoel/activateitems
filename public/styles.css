@@ -94,8 +94,8 @@ h2 {
     cursor: pointer;
     border-radius: 5rem; /* Make the inactivate button match activate */
     transition: background-color 0.3s ease;
-    width: 170px;
-    height: 45px;
+    width: 110px; /* Set a fixed width */
+    height: 30px; /* Set a fixed height */
     display: flex;
     align-items: center;
     justify-content: center;
