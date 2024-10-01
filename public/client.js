@@ -99,6 +99,8 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumDa
   })
     .then(response => {
       console.log('Received response:', response.status);
+      console.log('Raw API Response:', response); // Log the raw response
+
       if (!response.ok) {
         return response.json().then(errorData => {
           throw new Error(`HTTP error! status: ${response.status}, message: ${JSON.stringify(errorData)}`);
