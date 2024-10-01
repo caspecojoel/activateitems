@@ -40,9 +40,6 @@ const getActivationStatus = (youniumData) => {
   }
 };
 
-let globalOrgNo = null;
-let globalHubspotId = null;
-
 const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumData) => {
   const action = currentStatus ? 'inactivate' : 'activate';
   const confirmationMessage = `Are you sure you want to ${action} ${productName}?`;
@@ -237,10 +234,6 @@ const onBtnClick = (t, opts) => {
     const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
     console.log('HubSpot ID:', hubspotId);
     console.log('Org Number:', orgNo);
-
-    // Store in global variables
-    globalOrgNo = orgNo;
-    globalHubspotId = hubspotId;
 
     return t.member('fullName').then(member => {
       const userName = member.fullName;
