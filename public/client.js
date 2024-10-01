@@ -130,42 +130,54 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumDa
     });
 };
 
-// Function to update the modal with the updated Younium data
 const updateModalWithYouniumData = (youniumData) => {
   console.log('Updating modal with updated Younium data:', youniumData);
 
+  // Validate that youniumData and required fields are present
+  if (!youniumData || !youniumData.account || !youniumData.products) {
+    console.error('Invalid Younium data provided to update modal:', youniumData);
+    alert('Failed to update the modal. Missing or invalid Younium data.');
+    return;
+  }
+
   // Update the modal elements with the new data
-  document.getElementById('account-name').textContent = youniumData.account.name;
-  document.getElementById('order-status').textContent = youniumData.status;
-  document.getElementById('order-description').textContent = youniumData.description;
+  document.getElementById('account-name').textContent = youniumData.account.name || 'N/A';
+  document.getElementById('order-status').textContent = youniumData.status || 'N/A';
+  document.getElementById('order-description').textContent = youniumData.description || 'N/A';
   document.getElementById('products-container').innerHTML = '';
 
+  // Iterate over the products to populate the table
   youniumData.products.forEach(product => {
-    product.charges.forEach(charge => {
-      const isActivated = charge.isReady4Invoicing === "True";
-      const buttonClass = isActivated ? 'inactivate-button' : 'activate-button';
-      const buttonText = isActivated ? 'Mark as not ready' : 'Mark as ready';
+    if (product.charges && Array.isArray(product.charges)) {
+      product.charges.forEach(charge => {
+        const isActivated = charge.isReady4Invoicing === "True";
+        const buttonClass = isActivated ? 'inactivate-button' : 'activate-button';
+        const buttonText = isActivated ? 'Mark as not ready' : 'Mark as ready';
 
-      // Format the effective start date (if available)
-      const effectiveStartDate = new Date(charge.effectiveStartDate).toLocaleDateString();
+        // Format the effective start date (if available)
+        const effectiveStartDate = charge.effectiveStartDate ? new Date(charge.effectiveStartDate).toLocaleDateString() : 'N/A';
 
-      // Populate the table row
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${product.name}</td>
-        <td>${charge.name}</td>
-        <td>${effectiveStartDate || 'N/A'}</td>
-        <td>${isActivated ? 'Ready for invoicing' : 'Not ready for invoicing'}</td>
-        <td class="button-container">
-          <button class="${buttonClass}" data-charge-id="${charge.id}" data-product-name="${product.name}">
-            ${buttonText}
-          </button>
-        </td>
-      `;
-      document.getElementById('products-container').appendChild(row);
-    });
+        // Populate the table row
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${product.name || 'N/A'}</td>
+          <td>${charge.name || 'N/A'}</td>
+          <td>${effectiveStartDate}</td>
+          <td>${isActivated ? 'Ready for invoicing' : 'Not ready for invoicing'}</td>
+          <td class="button-container">
+            <button class="${buttonClass}" data-charge-id="${charge.id}" data-product-name="${product.name || ''}">
+              ${buttonText}
+            </button>
+          </td>
+        `;
+        document.getElementById('products-container').appendChild(row);
+      });
+    } else {
+      console.error('Invalid charges data for product:', product);
+    }
   });
 };
+
 
 
 // Add event listener for toggle buttons
