@@ -85,35 +85,33 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
         return null;
       }
 
-      console.log(`Processing Younium order with version: ${youniumOrder.version}`);
+      console.log(`Processing Younium order with ID: ${youniumOrder.id}, Version: ${youniumOrder.version}`);
 
-      const processedOrder = {
+      // Processing the order
+      return {
         id: youniumOrder.id, // OrderId
-        status: youniumOrder.status, // Status
-        description: youniumOrder.description, // Description
+        status: youniumOrder.status,
+        description: youniumOrder.description,
         account: {
           accountNumber: youniumOrder.account.accountNumber, // AccountId
-          name: youniumOrder.account.name, // Account Name
+          name: youniumOrder.account.name,
         },
         invoiceAccount: {
           accountNumber: youniumOrder.invoiceAccount.accountNumber, // InvoiceAccountId
-          name: youniumOrder.invoiceAccount.name, // Invoice Account Name
+          name: youniumOrder.invoiceAccount.name,
         },
         products: youniumOrder.products.map(product => ({
           productNumber: product.productNumber, // ProductId
           chargePlanNumber: product.chargePlanNumber, // ChargePlanId
-          name: product.name, // Product Name
+          name: product.name,
           charges: product.charges.map(charge => ({
             id: charge.id, // ChargeId
-            name: charge.name, // Charge Name
+            name: charge.name,
             effectiveStartDate: charge.effectiveStartDate,
             isReady4Invoicing: charge.customFields.isReady4Invoicing
           }))
         }))
       };
-
-      console.log('Processed Younium order data:', processedOrder);
-      return processedOrder;
     }
 
     console.log('No Younium data found for the provided OrgNo and HubspotDealId.');
@@ -123,7 +121,6 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
     return null;
   }
 }
-
 
 // New endpoint to get Younium data
 app.get('/get-younium-data', async (req, res) => {

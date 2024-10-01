@@ -40,7 +40,7 @@ const getActivationStatus = (youniumData) => {
   }
 };
 
-const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumData) => {
+const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumData, orgNo, hubspotId) => {
   const action = currentStatus ? 'inactivate' : 'activate';
   const confirmationMessage = `Are you sure you want to ${action} ${productName}?`;
 
@@ -53,13 +53,29 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumDa
 
   console.log(`Proceeding to ${action} charge: ${chargeId}`);
 
+  // Extracting required data
   const orderId = youniumData.id;
   const accountId = youniumData.account.accountNumber; // Use accountNumber and send as AccountId
   const invoiceAccountId = youniumData.invoiceAccount.accountNumber; // Use accountNumber and send as InvoiceAccountId
   const product = youniumData.products.find(p => p.charges.some(c => c.id === chargeId));
+
+  // Validation checks
+  if (!product) {
+    console.error(`Error: No product found for Charge ID: ${chargeId}`);
+    alert(`Error: No product found for Charge ID: ${chargeId}`);
+    return;
+  }
+
   const productId = product.productNumber; // Use productNumber instead of productId
   const chargePlanId = product.chargePlanNumber; // Use chargePlanNumber instead of chargePlanId
   const isReadyForInvoicing = currentStatus ? 0 : 1;
+
+  // Further validation checks before making the request
+  if (!orderId || !accountId || !invoiceAccountId || !productId || !chargePlanId) {
+    console.error('Validation failed: Missing required information to proceed with the invoicing status update.');
+    alert('Validation failed: Missing required information to proceed with the invoicing status update.');
+    return;
+  }
 
   const requestBody = {
     chargeId,
@@ -94,15 +110,15 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumDa
       if (data.success) {
         console.log(`Successfully updated Charge ${chargeId} status to ${isReadyForInvoicing ? 'Ready' : 'Not Ready'} for invoicing`);
 
-        const button = document.querySelector(`[data-charge-id="${chargeId}"]`);
-
-        if (isReadyForInvoicing) {
-          button.textContent = "Mark as not ready";
-          button.className = "inactivate-button";
-        } else {
-          button.textContent = "Mark as ready";
-          button.className = "activate-button";
-        }
+        // Fetch the updated Younium data
+        return fetchYouniumData(orgNo, hubspotId)
+          .then(updatedYouniumData => {
+            if (!updatedYouniumData) {
+              throw new Error('Failed to fetch updated Younium data');
+            }
+            // Update the modal with the new data
+            updateModalWithYouniumData(updatedYouniumData);
+          });
       } else {
         console.error('Failed to update the charge status:', data.message, data.details);
         alert(`Failed to update status: ${data.message}`);
@@ -113,6 +129,44 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumDa
       alert(`Error updating status: ${error.message}`);
     });
 };
+
+// Function to update the modal with the updated Younium data
+const updateModalWithYouniumData = (youniumData) => {
+  console.log('Updating modal with updated Younium data:', youniumData);
+
+  // Update the modal elements with the new data
+  document.getElementById('account-name').textContent = youniumData.account.name;
+  document.getElementById('order-status').textContent = youniumData.status;
+  document.getElementById('order-description').textContent = youniumData.description;
+  document.getElementById('products-container').innerHTML = '';
+
+  youniumData.products.forEach(product => {
+    product.charges.forEach(charge => {
+      const isActivated = charge.isReady4Invoicing === "True";
+      const buttonClass = isActivated ? 'inactivate-button' : 'activate-button';
+      const buttonText = isActivated ? 'Mark as not ready' : 'Mark as ready';
+
+      // Format the effective start date (if available)
+      const effectiveStartDate = new Date(charge.effectiveStartDate).toLocaleDateString();
+
+      // Populate the table row
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${product.name}</td>
+        <td>${charge.name}</td>
+        <td>${effectiveStartDate || 'N/A'}</td>
+        <td>${isActivated ? 'Ready for invoicing' : 'Not ready for invoicing'}</td>
+        <td class="button-container">
+          <button class="${buttonClass}" data-charge-id="${charge.id}" data-product-name="${product.name}">
+            ${buttonText}
+          </button>
+        </td>
+      `;
+      document.getElementById('products-container').appendChild(row);
+    });
+  });
+};
+
 
 // Add event listener for toggle buttons
 document.addEventListener('click', function (event) {
