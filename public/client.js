@@ -113,8 +113,10 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumDa
         // Fetch the updated Younium data
         return fetchYouniumData(orgNo, hubspotId)
           .then(updatedYouniumData => {
-            if (!updatedYouniumData) {
-              throw new Error('Failed to fetch updated Younium data');
+            if (!updatedYouniumData || updatedYouniumData.name === 'Invalid hubspot or orgnummer') {
+              console.error('Failed to fetch valid updated Younium data:', updatedYouniumData);
+              alert('Failed to fetch valid updated data. Please verify Hubspot ID and Organization Number.');
+              return;
             }
             // Update the modal with the new data
             updateModalWithYouniumData(updatedYouniumData);
