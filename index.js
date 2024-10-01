@@ -77,7 +77,14 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
     console.log('Received response from Younium API:', response.data);
 
     if (response.data && response.data.length > 0) {
-      const youniumOrder = response.data[0];
+      // Find the order with isLastVersion true
+      const youniumOrder = response.data.find(order => order.isLastVersion === true);
+      
+      if (!youniumOrder) {
+        console.log('No latest version found for the provided OrgNo and HubspotDealId.');
+        return null;
+      }
+
       console.log('Processing Younium order:', youniumOrder);
 
       const processedOrder = {
@@ -118,6 +125,7 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
     return null;
   }
 }
+
 
 // New endpoint to get Younium data
 app.get('/get-younium-data', async (req, res) => {

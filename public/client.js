@@ -54,11 +54,11 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumDa
   console.log(`Proceeding to ${action} charge: ${chargeId}`);
 
   const orderId = youniumData.id;
-  const accountId = youniumData.account.id;
-  const invoiceAccountId = youniumData.invoiceAccount.id;
+  const accountId = youniumData.account.accountNumber; // Use accountNumber and send as AccountId
+  const invoiceAccountId = youniumData.invoiceAccount.accountNumber; // Use accountNumber and send as InvoiceAccountId
   const product = youniumData.products.find(p => p.charges.some(c => c.id === chargeId));
-  const productId = product.productId;
-  const chargePlanId = product.chargePlanId;
+  const productId = product.productNumber; // Use productNumber instead of productId
+  const chargePlanNumber = product.chargePlanNumber; // Use chargePlanNumber instead of chargePlanId
   const isReadyForInvoicing = currentStatus ? 0 : 1;
 
   const requestBody = {
