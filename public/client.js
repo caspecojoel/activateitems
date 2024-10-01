@@ -43,9 +43,9 @@ const getActivationStatus = (youniumData) => {
 const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumData) => {
   const action = currentStatus ? 'inactivate' : 'activate';
   const confirmationMessage = `Are you sure you want to ${action} ${productName}?`;
-  
+
   console.log(`Button clicked to ${action} product: ${productName}, Charge ID: ${chargeId}, Current status: ${currentStatus}`);
-  
+
   if (!confirm(confirmationMessage)) {
     console.log(`User cancelled the ${action} action.`);
     return;
@@ -58,7 +58,7 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumDa
   const invoiceAccountId = youniumData.invoiceAccount.accountNumber; // Use accountNumber and send as InvoiceAccountId
   const product = youniumData.products.find(p => p.charges.some(c => c.id === chargeId));
   const productId = product.productNumber; // Use productNumber instead of productId
-  const chargePlanNumber = product.chargePlanNumber; // Use chargePlanNumber instead of chargePlanId
+  const chargePlanId = product.chargePlanNumber; // Use chargePlanNumber instead of chargePlanId
   const isReadyForInvoicing = currentStatus ? 0 : 1;
 
   const requestBody = {

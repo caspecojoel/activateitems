@@ -85,29 +85,27 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
         return null;
       }
 
-      console.log('Processing Younium order:', youniumOrder);
+      console.log(`Processing Younium order with version: ${youniumOrder.version}`);
 
       const processedOrder = {
         id: youniumOrder.id, // OrderId
-        status: youniumOrder.status,
-        description: youniumOrder.description,
+        status: youniumOrder.status, // Status
+        description: youniumOrder.description, // Description
         account: {
-          id: youniumOrder.account.id, // AccountId
-          name: youniumOrder.account.name,
-          accountNumber: youniumOrder.account.accountNumber
+          accountNumber: youniumOrder.account.accountNumber, // AccountId
+          name: youniumOrder.account.name, // Account Name
         },
         invoiceAccount: {
-          id: youniumOrder.invoiceAccount.id, // InvoiceAccountId
-          name: youniumOrder.invoiceAccount.name,
-          accountNumber: youniumOrder.invoiceAccount.accountNumber
+          accountNumber: youniumOrder.invoiceAccount.accountNumber, // InvoiceAccountId
+          name: youniumOrder.invoiceAccount.name, // Invoice Account Name
         },
         products: youniumOrder.products.map(product => ({
-          productId: product.productId, // ProductId
-          chargePlanId: product.chargePlanId, // ChargePlanId
-          name: product.name,
+          productNumber: product.productNumber, // ProductId
+          chargePlanNumber: product.chargePlanNumber, // ChargePlanId
+          name: product.name, // Product Name
           charges: product.charges.map(charge => ({
             id: charge.id, // ChargeId
-            name: charge.name,
+            name: charge.name, // Charge Name
             effectiveStartDate: charge.effectiveStartDate,
             isReady4Invoicing: charge.customFields.isReady4Invoicing
           }))
