@@ -26,11 +26,11 @@ app.head('/trello-webhook', (req, res) => {
 async function registerTrelloWebhook() {
   const TRELLO_KEY = process.env.TRELLO_KEY;
   const TRELLO_TOKEN = process.env.TRELLO_TOKEN;
-  const BOARD_ID = '66cef36d9acf9961edb72775';  // Replace with your Trello board ID
-  const CALLBACK_URL = 'https://activateitems-d22e28f2e719.herokuapp.com/trello-webhook';  // Replace with your Heroku app URL
+  const BOARD_ID = '66cef36d9acf9961edb72775';
+  const CALLBACK_URL = 'https://activateitems-d22e28f2e719.herokuapp.com/trello-webhook';
 
   try {
-    const { data: webhooks } = await axios.get('https://api.trello.com/1/tokens/' + TRELLO_TOKEN + '/webhooks', {
+    const { data: webhooks } = await axios.get(`https://api.trello.com/1/tokens/${TRELLO_TOKEN}/webhooks`, {
       params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
     });
 
@@ -144,6 +144,58 @@ app.get('/get-younium-data', async (req, res) => {
   }
 });
 
+// Function to link duplicate cards based on Submission ID
+async function linkDuplicateCards(cardId, boardId, submissionId) {
+  try {
+    const TRELLO_KEY = process.env.TRELLO_KEY;
+    const TRELLO_TOKEN = process.env.TRELLO_TOKEN;
+
+    // Get all cards on the board
+    const cardsResponse = await axios.get(`https://api.trello.com/1/boards/${boardId}/cards`, {
+      params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
+    });
+
+    const cards = cardsResponse.data;
+
+    // Find duplicate cards with the same submission ID in their description
+    const duplicateCards = cards.filter(card => card.id !== cardId && card.desc.includes(submissionId));
+
+    for (const duplicateCard of duplicateCards) {
+      // Attach each card to the other, if not already attached
+      const existingAttachments = await axios.get(`https://api.trello.com/1/cards/${cardId}/attachments`, {
+        params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
+      });
+
+      const isAlreadyAttached = existingAttachments.data.some(
+        attachment => attachment.url === `https://trello.com/c/${duplicateCard.shortLink}`
+      );
+
+      if (!isAlreadyAttached) {
+        // Attach duplicate card to the current card
+        await axios.post(`https://api.trello.com/1/cards/${cardId}/attachments`, null, {
+          params: { key: TRELLO_KEY, token: TRELLO_TOKEN, url: `https://trello.com/c/${duplicateCard.shortLink}` },
+        });
+      }
+
+      // Also attach the current card to the duplicate card, if not already attached
+      const existingAttachmentsDuplicate = await axios.get(`https://api.trello.com/1/cards/${duplicateCard.id}/attachments`, {
+        params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
+      });
+
+      const isAlreadyAttachedDuplicate = existingAttachmentsDuplicate.data.some(
+        attachment => attachment.url === `https://trello.com/c/${cardId}`
+      );
+
+      if (!isAlreadyAttachedDuplicate) {
+        await axios.post(`https://api.trello.com/1/cards/${duplicateCard.id}/attachments`, null, {
+          params: { key: TRELLO_KEY, token: TRELLO_TOKEN, url: `https://trello.com/c/${cardId}` },
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Error linking duplicate cards:', error.message);
+  }
+}
 
 app.post('/trello-webhook', async (req, res) => {
   const { action } = req.body;
@@ -171,113 +223,106 @@ app.post('/trello-webhook', async (req, res) => {
         if (urlMatch) {
           const pdfUrl = urlMatch[1];
 
-          try {
-            // Check if the attachment already exists on the card
-            const attachmentsResponse = await axios.get(`${cardDetailsUrl}/attachments`, {
-              params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
-            });
+          // Check if the attachment already exists on the card
+          const attachmentsResponse = await axios.get(`${cardDetailsUrl}/attachments`, {
+            params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
+          });
 
-            const attachments = attachmentsResponse.data;
-            const fileName = `${cardTitle.replace(/[^a-zA-Z0-9]/g, '')}.pdf`;
+          const attachments = attachmentsResponse.data;
+          const fileName = `${cardTitle.replace(/[^a-zA-Z0-9]/g, '_')}_submission.pdf`;
 
-            // If an attachment with the same filename already exists, skip attaching
-            const alreadyAttached = attachments.some(attachment => attachment.name === fileName);
-            if (alreadyAttached) {
-              console.log(`PDF with filename ${fileName} is already attached. Skipping...`);
-              return res.status(200).send('PDF already attached');
-            }
-
-            // Download the PDF
+          // If an attachment with the same filename already exists, skip attaching
+          const alreadyAttached = attachments.some(attachment => attachment.name === fileName);
+          if (!alreadyAttached) {
+            // Download and attach the PDF to the card
             const pdfResponse = await axios.get(pdfUrl, { responseType: 'arraybuffer' });
-
-            const trelloAttachmentUrl = `https://api.trello.com/1/cards/${cardId}/attachments`;
             const form = new FormData();
             form.append('file', pdfResponse.data, fileName);
 
-            // Attach the PDF to the card
-            const attachResponse = await axios.post(trelloAttachmentUrl, form, {
+            await axios.post(`https://api.trello.com/1/cards/${cardId}/attachments`, form, {
               params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
               headers: form.getHeaders(),
             });
 
-            console.log(`PDF attached successfully as ${fileName}`, attachResponse.data);
-
-            // Now remove the URL from the card description
-            let updatedDescription = description.replace(urlMatch[0], '').trim();
-            const productList = updatedDescription.split(',').map(item => item.trim());
-
-            // Attach labels for each product found
-            for (const product of productList) {
-              try {
-                // Fetch all labels on the board
-                const labelsResponse = await axios.get(`https://api.trello.com/1/boards/${action.data.board.id}/labels`, {
-                  params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
-                });
-                const labels = labelsResponse.data;
-
-                // Check if the label already exists on the board
-                let label = labels.find(l => l.name.toLowerCase() === product.toLowerCase());
-
-                // If label doesn't exist, create a new one
-                if (!label) {
-                  const createLabelResponse = await axios.post(`https://api.trello.com/1/labels`, null, {
-                    params: {
-                      key: TRELLO_KEY,
-                      token: TRELLO_TOKEN,
-                      name: product,
-                      idBoard: action.data.board.id,
-                      color: 'blue', // you can choose the color here
-                    },
-                  });
-                  label = createLabelResponse.data;
-                }
-
-                // Check if the label is already attached to the card
-                const cardLabelsResponse = await axios.get(`${cardDetailsUrl}/idLabels`, {
-                  params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
-                });
-
-                const cardLabels = cardLabelsResponse.data;
-                const isLabelAttached = cardLabels.includes(label.id);
-
-                // If the label is not already attached, attach it
-                if (!isLabelAttached) {
-                  await axios.post(`https://api.trello.com/1/cards/${cardId}/idLabels`, null, {
-                    params: {
-                      key: TRELLO_KEY,
-                      token: TRELLO_TOKEN,
-                      value: label.id,
-                    },
-                  });
-                } else {
-                  console.log(`Label "${product}" is already attached. Skipping...`);
-                }
-              } catch (error) {
-                console.error(`Error handling label for product "${product}":`, error.message, error.response?.data || '');
-              }
-            }
-
-            // Clear the card description by setting it to an empty string (or a space if empty string fails)
-            console.log('Clearing card description...');
-            await axios.put(cardDetailsUrl, { desc: '' }, {
-              params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
-            });
-
-            console.log('Description cleared successfully.');
-            return res.status(200).send('PDF attached, labels added, and card description cleared');
-          } catch (error) {
-            console.error('Error attaching PDF to Trello card:', error.message, error.response?.data || '');
-            return res.status(500).send('Failed to attach PDF');
+            console.log(`PDF attached successfully as ${fileName}`);
           }
-        } else {
-          return res.status(400).send('No valid PDF URL found in description');
+
+          // Remove the URL from the card description
+          let updatedDescription = description.replace(urlMatch[0], '').trim();
+          const productList = updatedDescription.split(',').map(item => item.trim());
+
+          // Attach labels for each product found
+          for (const product of productList) {
+            try {
+              // Fetch all labels on the board
+              const labelsResponse = await axios.get(`https://api.trello.com/1/boards/${action.data.board.id}/labels`, {
+                params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
+              });
+              const labels = labelsResponse.data;
+
+              // Check if the label already exists on the board
+              let label = labels.find(l => l.name.toLowerCase() === product.toLowerCase());
+
+              // If label doesn't exist, create a new one
+              if (!label) {
+                const createLabelResponse = await axios.post(`https://api.trello.com/1/labels`, null, {
+                  params: {
+                    key: TRELLO_KEY,
+                    token: TRELLO_TOKEN,
+                    name: product,
+                    idBoard: action.data.board.id,
+                    color: 'blue',
+                  },
+                });
+                label = createLabelResponse.data;
+              }
+
+              // Check if the label is already attached to the card
+              const cardLabelsResponse = await axios.get(`${cardDetailsUrl}/idLabels`, {
+                params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
+              });
+
+              const cardLabels = cardLabelsResponse.data;
+              const isLabelAttached = cardLabels.includes(label.id);
+
+              // If the label is not already attached, attach it
+              if (!isLabelAttached) {
+                await axios.post(`https://api.trello.com/1/cards/${cardId}/idLabels`, null, {
+                  params: {
+                    key: TRELLO_KEY,
+                    token: TRELLO_TOKEN,
+                    value: label.id,
+                  },
+                });
+              } else {
+                console.log(`Label "${product}" is already attached. Skipping...`);
+              }
+            } catch (error) {
+              console.error(`Error handling label for product "${product}":`, error.message, error.response?.data || '');
+            }
+          }
+
+          // Clear the card description by setting it to an empty string (or a space if empty string fails)
+          console.log('Clearing card description...');
+          await axios.put(cardDetailsUrl, { desc: '' }, {
+            params: { key: TRELLO_KEY, token: TRELLO_TOKEN },
+          });
+
+          console.log('Description cleared successfully.');
         }
-      } else {
-        return res.status(400).send('Description is empty or missing');
+
+        // Check if there's a submission ID in the description and link duplicate cards
+        const submissionIdMatch = description.match(/sid=(\d+)/);
+        if (submissionIdMatch) {
+          const submissionId = submissionIdMatch[1];
+          await linkDuplicateCards(cardId, action.data.board.id, submissionId);
+        }
       }
+
+      return res.status(200).send('Card processed');
     } catch (error) {
-      console.error('Error fetching card details:', error.message);
-      return res.status(500).send('Failed to fetch card details');
+      console.error('Error processing card:', error.message);
+      return res.status(500).send('Failed to process card');
     }
   } else {
     return res.status(200).send('No relevant action');
