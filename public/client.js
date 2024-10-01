@@ -53,12 +53,13 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumDa
 
   console.log(`Proceeding to ${action} charge: ${chargeId}`);
 
-  // Extracting required data
+  // Extracting required data from youniumData
   const orderId = youniumData.id;  // Ensure this is the latest version
   const accountId = youniumData.account.accountNumber;
   const invoiceAccountId = youniumData.invoiceAccount.accountNumber;
   const product = youniumData.products.find(p => p.charges.some(c => c.id === chargeId));
 
+  // Validation checks
   if (!product) {
     console.error(`Error: No product found for Charge ID: ${chargeId}`);
     alert(`Error: No product found for Charge ID: ${chargeId}`);
@@ -69,15 +70,18 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumDa
   const chargePlanId = product.chargePlanNumber;
   const isReadyForInvoicing = currentStatus ? 0 : 1;
 
+  // Retrieve orgNo and hubspotId from the DOM elements
   const orgNo = document.getElementById('org-number').textContent.trim();
   const hubspotId = document.getElementById('hubspot-id').textContent.trim();
 
+  // Further validation checks before making the request
   if (!orderId || !accountId || !invoiceAccountId || !productId || !chargePlanId || !orgNo || !hubspotId) {
     console.error('Validation failed: Missing required information to proceed with the invoicing status update.');
     alert('Validation failed: Missing required information to proceed with the invoicing status update.');
     return;
   }
 
+  // Prepare the request body
   const requestBody = {
     chargeId,
     orderId,
@@ -88,8 +92,10 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumDa
     isReadyForInvoicing
   };
 
-  console.log('Sending request to toggle invoicing status:', requestBody);
+  // Log the full request body for verification
+  console.log('Request body being sent to /toggle-invoicing-status:', requestBody);
 
+  // Send the request to the backend API
   fetch('/toggle-invoicing-status', {
     method: 'POST',
     headers: {
@@ -98,18 +104,25 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumDa
     body: JSON.stringify(requestBody),
   })
     .then(response => {
-      console.log('Received response:', response.status);
-      console.log('Raw API Response:', response); // Log the raw response
+      // Log the raw response to analyze what is received
+      console.log('Raw API Response:', response);
+      console.log('Received response status:', response.status);
 
+      // If response is not OK, log and throw an error
       if (!response.ok) {
-        return response.json().then(errorData => {
-          throw new Error(`HTTP error! status: ${response.status}, message: ${JSON.stringify(errorData)}`);
+        return response.text().then(errorText => {
+          console.error('Error response text:', errorText); // Log the raw error text
+          throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
         });
       }
+
+      // Parse the response as JSON
       return response.json();
     })
     .then(data => {
+      // Log the parsed response data
       console.log('Parsed response data:', data);
+
       if (data.success) {
         console.log(`Successfully updated Charge ${chargeId} status to ${isReadyForInvoicing ? 'Ready' : 'Not Ready'} for invoicing`);
 
@@ -118,27 +131,34 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumDa
           // Fetch the updated Younium data using the retrieved orgNo and hubspotId
           fetchYouniumData(orgNo, hubspotId)
             .then(updatedYouniumData => {
+              // Log the updated data received from Younium
+              console.log('Updated Younium data received:', updatedYouniumData);
+
               if (!updatedYouniumData || updatedYouniumData.name === 'Invalid hubspot or orgnummer') {
                 console.error('Failed to fetch valid updated Younium data:', updatedYouniumData);
                 alert('Failed to fetch valid updated data. Please verify Hubspot ID and Organization Number.');
                 return;
               }
+
               // Update the modal with the new data
               updateModalWithYouniumData(updatedYouniumData);
+            })
+            .catch(fetchError => {
+              console.error('Error fetching updated Younium data:', fetchError);
+              alert('Error fetching updated data. Please try again later.');
             });
-        }, 1000); // Adjust delay as needed
+        }, 1000); // Adjust delay as necessary
       } else {
         console.error('Failed to update the charge status:', data.message, data.details);
         alert(`Failed to update status: ${data.message}`);
       }
     })
     .catch(error => {
+      // Log any error that occurs during the entire process
       console.error('Error updating the charge status:', error);
       alert(`Error updating status: ${error.message}`);
     });
 };
-
-
 
 const updateModalWithYouniumData = (youniumData) => {
   console.log('Updating modal with updated Younium data:', youniumData);
