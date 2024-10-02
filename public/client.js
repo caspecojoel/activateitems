@@ -42,38 +42,53 @@ const getActivationStatus = (youniumData) => {
   }
 };
 
-// Function to handle retry logic for fetching updated Younium data
 const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
-  fetchYouniumData(orgNo, hubspotId)
-    .then(updatedYouniumData => {
-      console.log('Updated Younium data received:', updatedYouniumData);
+  let lastData = null;
+  const tryFetch = (attemptNumber) => {
+    fetchYouniumData(orgNo, hubspotId)
+      .then(updatedYouniumData => {
+        console.log(`Attempt ${attemptNumber}: Updated Younium data received:`, updatedYouniumData);
+        console.log('isLastVersion:', updatedYouniumData.isLastVersion);
 
-      if (!updatedYouniumData || updatedYouniumData.name === 'Invalid hubspot or orgnummer') {
-        console.error('Failed to fetch valid updated Younium data:', updatedYouniumData);
-        alert('Failed to fetch valid updated data. Please verify Hubspot ID and Organization Number.');
-        return;
-      }
-
-      if (!updatedYouniumData.isLastVersion) {
-        if (retries > 0) {
-          console.warn(`Fetched data is not the latest version. Retrying in ${delay} ms...`);
-          setTimeout(() => fetchLatestYouniumData(retries - 1, delay, orgNo, hubspotId), delay);
-        } else {
-          console.error('Failed to fetch the latest version after multiple retries.');
-          alert('Failed to fetch the latest version. Please try again later.');
+        if (!updatedYouniumData || updatedYouniumData.name === 'Invalid hubspot or orgnummer') {
+          console.error('Failed to fetch valid updated Younium data:', updatedYouniumData);
+          alert('Failed to fetch valid updated data. Please verify Hubspot ID and Organization Number.');
+          return;
         }
-      } else {
-        updateModalWithYouniumData(updatedYouniumData);
-      }
-    })
-    .catch(fetchError => {
-      console.error('Error fetching updated Younium data:', fetchError);
-      if (retries > 0) {
-        setTimeout(() => fetchLatestYouniumData(retries - 1, delay, orgNo, hubspotId), delay);
-      } else {
-        alert('Error fetching updated data. Please try again later.');
-      }
-    });
+
+        if (!updatedYouniumData.isLastVersion && !isDataEqual(lastData, updatedYouniumData)) {
+          lastData = updatedYouniumData;
+          if (attemptNumber < retries) {
+            console.warn(`Fetched data might not be the latest version. Retrying in ${delay} ms...`);
+            setTimeout(() => tryFetch(attemptNumber + 1), delay);
+          } else {
+            console.warn('Failed to confirm the latest version after multiple retries. Proceeding with the most recent data.');
+            updateModalWithYouniumData(updatedYouniumData);
+          }
+        } else {
+          console.log('Latest data version confirmed or no changes detected.');
+          updateModalWithYouniumData(updatedYouniumData);
+        }
+      })
+      .catch(fetchError => {
+        console.error('Error fetching updated Younium data:', fetchError);
+        if (attemptNumber < retries) {
+          setTimeout(() => tryFetch(attemptNumber + 1), delay);
+        } else {
+          alert('Error fetching updated data. Please try again later.');
+        }
+      });
+  };
+
+  tryFetch(1);
+};
+
+// Helper function to compare two Younium data objects
+const isDataEqual = (data1, data2) => {
+  // Implement a deep comparison of relevant fields
+  // Return true if the data is effectively the same, false otherwise
+  // This is a simplified example, you'll need to adjust based on your data structure
+  return JSON.stringify(data1) === JSON.stringify(data2);
 };
 
 const handleToggleButtonClick = (chargeNumber, currentStatus, productName, youniumData) => {
