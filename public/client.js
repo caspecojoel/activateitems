@@ -42,6 +42,40 @@ const getActivationStatus = (youniumData) => {
   }
 };
 
+// Function to handle retry logic for fetching updated Younium data
+const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
+  fetchYouniumData(orgNo, hubspotId)
+    .then(updatedYouniumData => {
+      console.log('Updated Younium data received:', updatedYouniumData);
+
+      if (!updatedYouniumData || updatedYouniumData.name === 'Invalid hubspot or orgnummer') {
+        console.error('Failed to fetch valid updated Younium data:', updatedYouniumData);
+        alert('Failed to fetch valid updated data. Please verify Hubspot ID and Organization Number.');
+        return;
+      }
+
+      if (!updatedYouniumData.isLastVersion) {
+        if (retries > 0) {
+          console.warn(`Fetched data is not the latest version. Retrying in ${delay} ms...`);
+          setTimeout(() => fetchLatestYouniumData(retries - 1, delay, orgNo, hubspotId), delay);
+        } else {
+          console.error('Failed to fetch the latest version after multiple retries.');
+          alert('Failed to fetch the latest version. Please try again later.');
+        }
+      } else {
+        updateModalWithYouniumData(updatedYouniumData);
+      }
+    })
+    .catch(fetchError => {
+      console.error('Error fetching updated Younium data:', fetchError);
+      if (retries > 0) {
+        setTimeout(() => fetchLatestYouniumData(retries - 1, delay, orgNo, hubspotId), delay);
+      } else {
+        alert('Error fetching updated data. Please try again later.');
+      }
+    });
+};
+
 const handleToggleButtonClick = (chargeNumber, currentStatus, productName, youniumData) => {
   const action = currentStatus ? 'inactivate' : 'activate';
   const confirmationMessage = `Are you sure you want to ${action} ${productName}?`;
@@ -124,29 +158,8 @@ const handleToggleButtonClick = (chargeNumber, currentStatus, productName, youni
       if (data.success) {
         console.log(`Successfully updated Charge ${chargeNumber} status to ${ready4invoicing === "true" || ready4invoicing === "1" ? 'Ready' : 'Not Ready'} for invoicing`);
 
-        // Introduce a delay to give the backend time to process the update
-        setTimeout(() => {
-          fetchYouniumData(orgNo, hubspotId)
-            .then(updatedYouniumData => {
-              console.log('Updated Younium data received:', updatedYouniumData);
-
-              if (!updatedYouniumData || updatedYouniumData.name === 'Invalid hubspot or orgnummer') {
-                console.error('Failed to fetch valid updated Younium data:', updatedYouniumData);
-                alert('Failed to fetch valid updated data. Please verify Hubspot ID and Organization Number.');
-                return;
-              }
-
-              if (!updatedYouniumData.isLastVersion) {
-                console.warn('Fetched data is not the latest version. Consider increasing the delay or retrying.');
-              }
-
-              updateModalWithYouniumData(updatedYouniumData);
-            })
-            .catch(fetchError => {
-              console.error('Error fetching updated Younium data:', fetchError);
-              alert('Error fetching updated data. Please try again later.');
-            });
-        }, 2000);
+        // Retry to fetch the latest data after a delay
+        fetchLatestYouniumData(3, 2000, orgNo, hubspotId); // Retry 3 times with a 2000ms delay
       } else {
         console.error('Failed to update the charge status:', data.message, data.details);
         alert(`Failed to update status: ${data.message}`);
@@ -181,13 +194,13 @@ const updateModalWithYouniumData = (youniumData) => {
       product.charges.forEach(charge => {
         // Check if the charge is ready for invoicing based on the new ready4invoicing values
         const isActivated = charge.ready4invoicing === true || charge.ready4invoicing === "1" || charge.ready4invoicing === "true";
-        
+
         const buttonClass = isActivated ? 'inactivate-button' : 'activate-button';
         const buttonText = isActivated ? 'Mark as not ready' : 'Mark as ready';
-  
+
         // Format the effective start date (if available)
         const effectiveStartDate = charge.effectiveStartDate ? new Date(charge.effectiveStartDate).toLocaleDateString() : 'N/A';
-  
+
         // Populate the table row
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -279,7 +292,7 @@ const onBtnClick = (t, opts) => {
             fullscreen: false, // Set to true if you want the modal to take up the full screen
             mouseEvent: opts.mouseEvent
           });
-                  
+
         })
         .catch(err => {
           console.error('Error fetching Younium data or displaying popup:', err);
