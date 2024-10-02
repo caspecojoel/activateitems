@@ -81,7 +81,7 @@ h2 {
     height: 40px; /* Set a fixed height */
     text-align: center !important; /* Ensure the text is centered */
     white-space: nowrap; /* Prevents the text from breaking into multiple lines */
-    font-size: 1.3em; /* Ensure text size is readable */
+    font-size: 1.1em; /* Ensure text size is readable */
     cursor: pointer; /* Show pointer on hover */
 }
 
@@ -100,7 +100,7 @@ h2 {
     transition: background-color 0.3s ease;
     width: 130px; /* Set a fixed width */
     height: 40px; /* Set a fixed height */
-    font-size: 1.3em; /* Ensure text size is readable */
+    font-size: 1.1em; /* Ensure text size is readable */
     display: flex;
     align-items: center;
     justify-content: center;
