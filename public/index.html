@@ -9,9 +9,9 @@
 </head>
 <body>
     <div class="container">
-    
+
         <div id="loading-spinner" class="loading" style="display: none;">Loading order details...</div>
-    
+
         <div class="form-section">
             <!-- Section to display Younium details -->
             <div class="younium-details">
@@ -22,7 +22,7 @@
                     <strong>Order Status:</strong> <span id="order-status"></span>
                 </div>
             </div>
-    
+
             <!-- Section for products and charges in a table -->
             <div class="form-group product-selection">
                 <h3>Products</h3>
@@ -39,7 +39,7 @@
                     <tbody id="products-container"></tbody>
                 </table>
             </div>
-    
+
             <!-- IDs and Order Information -->
             <div class="id-info">
                 <p><strong>HubSpot ID:</strong> <span id="hubspot-id"></span></p>
@@ -47,9 +47,6 @@
                 <p><strong>Order ID:</strong> <span id="order-id"></span></p>
                 <p><strong>Account Number:</strong> <span id="account-number"></span></p>
                 <p><strong>Order Description:</strong> <span id="order-description"></span></p>
-                
-                <!-- Additional IDs -->
-                <div id="product-info"></div> <!-- For Product and Charge Plan IDs -->
             </div>
         </div>
     </div>
@@ -69,8 +66,7 @@
             orderId: document.getElementById('order-id'),
             orderStatus: document.getElementById('order-status'),
             orderDescription: document.getElementById('order-description'),
-            productsContainer: document.getElementById('products-container'),
-            productInfo: document.getElementById('product-info') // New element for displaying Product IDs and ChargePlan IDs
+            productsContainer: document.getElementById('products-container')
         };
 
         // Ensure all DOM elements exist
@@ -94,6 +90,9 @@
 
         // Hide loading spinner once data is loaded
         document.getElementById('loading-spinner').style.display = 'none';
+
+        // Sort products alphabetically by product name
+        youniumData.products.sort((a, b) => a.name.localeCompare(b.name));
 
         // Populate Products and Charges in a table
         youniumData.products.forEach(product => {
@@ -119,16 +118,6 @@
                     </td>
                 `;
                 domElements.productsContainer.appendChild(row);
-
-                // Display Product, ChargePlan, and Charge IDs in the ID info section
-                const productInfo = document.createElement('div');
-                productInfo.innerHTML = `
-                    <p><strong>Product Name:</strong> ${product.name}</p>
-                    <p><strong>Product ID:</strong> ${product.productNumber}</p>
-                    <p><strong>Charge Plan ID:</strong> ${product.chargePlanNumber}</p>
-                    <p><strong>Charge ID:</strong> ${charge.chargeNumber}</p>
-                `;
-                domElements.productInfo.appendChild(productInfo);
             });
         });
     </script>
