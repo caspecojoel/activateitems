@@ -23,7 +23,7 @@ const getActivationStatus = (youniumData) => {
     if (product.charges && Array.isArray(product.charges)) {
       totalCharges += product.charges.length;
       activatedCharges += product.charges.filter(charge => 
-        charge.ready4invoicing === "true" || charge.ready4invoicing === "1"
+        charge.ready4invoicing === true || charge.ready4invoicing === "true" || charge.ready4invoicing === "1"
       ).length;      
     }
   });
@@ -70,7 +70,7 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumDa
 
   const productId = product.productNumber;
   const chargePlanId = product.chargePlanNumber;
-  const ready4invoicing = currentStatus ? "0" : "1";
+  const ready4invoicing = currentStatus ? "false" : "true";
 
   // Retrieve orgNo and hubspotId from the DOM elements
   const orgNo = document.getElementById('org-number').textContent.trim();
