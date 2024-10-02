@@ -143,7 +143,7 @@ const handleToggleButtonClick = async (chargeNumber, currentStatus, productName,
 
   // Implement retry logic with initial delay
   const maxRetries = 3;
-  const initialDelay = 2000; // 3 seconds initial delay
+  const initialDelay = 200; // 3 seconds initial delay
   const retryDelay = 2000; // 2 seconds between retries
 
   console.log(`Waiting ${initialDelay / 1000} seconds before first attempt...`);
@@ -178,7 +178,6 @@ const handleToggleButtonClick = async (chargeNumber, currentStatus, productName,
       }
 
       const data = await response.json();
-      console.log('Parsed response data:', data);
 
       if (data.success) {
         console.log(`Successfully updated Charge ${chargeNumber} status to ${requestBody.ready4invoicing === "1" ? 'Ready' : 'Not Ready'} for invoicing`);
@@ -258,8 +257,6 @@ document.addEventListener('click', function (event) {
     const chargeNumber = event.target.getAttribute('data-charge-number');
     const productName = event.target.getAttribute('data-product-name');
     const currentStatus = event.target.textContent.trim() === "Mark as not ready"; // Determine current status based on the button text
-
-    console.log(`Button clicked for product: ${productName}, Charge Number: ${chargeNumber}, Current Status: ${currentStatus}`);
 
     handleToggleButtonClick(chargeNumber, currentStatus, productName, youniumData);
   }
