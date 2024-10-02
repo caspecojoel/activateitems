@@ -141,12 +141,17 @@ const handleToggleButtonClick = async (chargeNumber, currentStatus, productName,
 
   console.log('Request body being sent to /toggle-invoicing-status:', requestBody);
 
-  // Implement retry logic
+  // Implement retry logic with initial delay
   const maxRetries = 3;
-  const retryDelay = 2000; // 2 seconds
+  const initialDelay = 3000; // 3 seconds initial delay
+  const retryDelay = 2000; // 2 seconds between retries
+
+  console.log(`Waiting ${initialDelay / 1000} seconds before first attempt...`);
+  await new Promise(resolve => setTimeout(resolve, initialDelay));
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
+      console.log(`Attempting to update charge status (Attempt ${attempt} of ${maxRetries})...`);
       const response = await fetch('/toggle-invoicing-status', {
         method: 'POST',
         headers: {
@@ -164,7 +169,7 @@ const handleToggleButtonClick = async (chargeNumber, currentStatus, productName,
         
         if (response.status === 400 && errorText.includes('No latest version of subscription')) {
           if (attempt < maxRetries) {
-            console.log(`Retrying in ${retryDelay}ms... (Attempt ${attempt} of ${maxRetries})`);
+            console.log(`Retrying in ${retryDelay}ms... (Attempt ${attempt + 1} of ${maxRetries})`);
             await new Promise(resolve => setTimeout(resolve, retryDelay));
             continue;
           }
