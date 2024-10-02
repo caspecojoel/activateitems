@@ -76,8 +76,8 @@ h2 {
     align-items: center !important;
     justify-content: center !important;
     transition: background-color 0.3s ease;
-    width: 110px; /* Set a fixed width */
-    height: 30px; /* Set a fixed height */
+    width: 130px; /* Set a fixed width */
+    height: 40px; /* Set a fixed height */
     text-align: center !important; /* Ensure the text is centered */
     white-space: nowrap; /* Prevents the text from breaking into multiple lines */
     font-size: 0.8em; /* Ensure text size is readable */
@@ -97,8 +97,8 @@ h2 {
     cursor: pointer;
     border-radius: 5rem; /* Make the inactivate button match activate */
     transition: background-color 0.3s ease;
-    width: 110px; /* Set a fixed width */
-    height: 30px; /* Set a fixed height */
+    width: 130px; /* Set a fixed width */
+    height: 40px; /* Set a fixed height */
     display: flex;
     align-items: center;
     justify-content: center;
