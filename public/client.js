@@ -223,7 +223,7 @@ const updateModalWithYouniumData = (youniumData) => {
         const isActivated = charge.ready4invoicing === true || charge.ready4invoicing === "1" || charge.ready4invoicing === "true";
 
         const buttonClass = isActivated ? 'inactivate-button' : 'activate-button';
-        const buttonText = isActivated ? 'Mark as not ready' : 'Mark as ready';
+        const buttonText = isActivated ? 'Unready' : 'Ready';
 
         // Format the effective start date (if available)
         const effectiveStartDate = charge.effectiveStartDate ? new Date(charge.effectiveStartDate).toLocaleDateString() : 'N/A';
