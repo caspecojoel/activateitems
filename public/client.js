@@ -143,7 +143,7 @@ const handleToggleButtonClick = async (chargeNumber, currentStatus, productName,
 
   // Implement retry logic with initial delay
   const maxRetries = 3;
-  const initialDelay = 1500; // 3 seconds initial delay
+  const initialDelay = 2000; // 3 seconds initial delay
   const retryDelay = 2000; // 2 seconds between retries
 
   console.log(`Waiting ${initialDelay / 1000} seconds before first attempt...`);
@@ -160,7 +160,6 @@ const handleToggleButtonClick = async (chargeNumber, currentStatus, productName,
         body: JSON.stringify(requestBody),
       });
 
-      console.log('Raw API Response:', response);
       console.log('Received response status:', response.status);
 
       if (!response.ok) {
