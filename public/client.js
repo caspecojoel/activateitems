@@ -239,9 +239,9 @@ document.addEventListener('click', function (event) {
 
     console.log(`Button clicked for product: ${productName}, Charge Number: ${chargeNumber}, Current Status: ${currentStatus}`);
 
-    TrelloPowerUp.iframe().then(t => {
-      handleToggleButtonClick(chargeNumber, currentStatus, productName, youniumData, t);
-    });
+    // Use the Trello context that was passed when opening the modal
+    const t = TrelloPowerUp.iframe();
+    handleToggleButtonClick(chargeNumber, currentStatus, productName, youniumData, t);
   }
 });
 
