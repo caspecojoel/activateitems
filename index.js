@@ -340,7 +340,13 @@ registerTrelloWebhook();
 
 app.post('/toggle-invoicing-status', async (req, res) => {
   console.log('Received request to toggle invoicing status:', req.body);
-  const { chargeId, orderId, accountId, invoiceAccountId, productId, chargePlanId, ready4invoicing  } = req.body;
+  const { chargeId, orderId, accountId, invoiceAccountId, productId, chargePlanId, ready4invoicing } = req.body;
+
+  // Ensure the chargePlanId and chargeId correspond to the latest versions
+  if (!chargePlanId || !chargeId) {
+    console.error('Invalid chargePlanId or chargeId provided.');
+    return res.status(400).json({ success: false, message: 'Invalid chargePlanId or chargeId provided' });
+  }
 
   const activationUrl = `https://cas-test.loveyourq.se/dev/UpdateReady4Invoicing?OrderId=${orderId}&AccountId=${accountId}&InvoiceAccountId=${invoiceAccountId}&ProductId=${productId}&ChargePlanId=${chargePlanId}&ChargeId=${chargeId}&LegalEntity=Caspeco%20AB&IsReady4Invoicing=${ready4invoicing}`;
 
