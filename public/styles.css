@@ -1,5 +1,8 @@
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    letter-spacing: 1.5%;
+    color: #0C0656;
     margin: 0;
     padding: 0;
     height: 100vh;
@@ -21,7 +24,7 @@ body {
 
 h2 {
     text-align: center;
-    color: #333;
+    color: #0C0656;
     margin-bottom: 20px; /* Space below the title */
 }
 
@@ -34,7 +37,7 @@ h2 {
 
 .form-group {
     margin-bottom: 20px;
-    color: #333; /* Text color for form group */
+    color: #0C0656;
 }
 
 .form-group strong {
@@ -145,4 +148,97 @@ th {
 
 .button-container {
     text-align: center;
+}
+
+/* Styling for the products table */
+#products-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background-color: #fff;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    letter-spacing: 1.5%;
+    color: #0C0656;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+}
+
+/* Header styles */
+#products-table th {
+    background-color: #FFFFFF;
+    color: #0C06567A;
+    padding: 9px 11px;
+    text-align: left;
+    border-bottom: 1px solid rgba(12, 6, 86, 0.24) !important;
+    font-family: 'Inter';
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 21px;
+    letter-spacing: 0.015em;
+    border-right: 1px solid rgba(12, 6, 86, 0.24);
+}
+
+#products-table th:last-child,
+#products-table td:last-child {
+    border-right: none;
+    border-bottom: 1px solid rgba(12, 6, 86, 0.24);
+}
+
+/* Row styles */
+#products-table td {
+    padding: 12px 15px;
+    text-align: left;
+    vertical-align: middle;
+    border-bottom: 1px solid rgba(12, 6, 86, 0.24);
+    border-right: 1px solid rgba(12, 6, 86, 0.24);
+}
+
+#products-table th:first-child,
+#products-table td:first-child {
+    border-left: none;
+}
+
+#products-table tbody tr:hover {
+    transition: background-color 0.3s ease-in-out;
+}
+
+/* Responsive styling */
+@media (max-width: 768px) {
+    #products-table {
+        max-width: 768px;
+    }
+
+    #products-table th, #products-table td {
+        display: none;
+    }
+
+    #products-table th:nth-child(-n+3),
+    #products-table td:nth-child(-n+3) {
+        display: table-cell;
+    }
+
+    #products-table th:nth-child(3),
+    #products-table td:nth-child(3) {
+        border-right: none !important;
+    }
+}
+
+@media (max-width: 500px) {
+    #products-table {
+        max-width: 500px;
+    }
+
+    #products-table th, #products-table td {
+        display: none;
+    }
+
+    #products-table th:nth-child(-n+2),
+    #products-table td:nth-child(-n+2) {
+        display: table-cell;
+    }
+
+    #products-table th:nth-child(2),
+    #products-table td:nth-child(2) {
+        border-right: none !important;
+    }
 }
