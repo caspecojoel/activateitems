@@ -68,7 +68,7 @@ h2 {
 
 /* Activate Button */
 .activate-button {
-    background-color: green !important;
+    background-color: #1f8493 !important;
     color: white !important; /* Ensure text color is always visible */
     border: none !important;
     padding: 0.5rem 1.6rem !important;
