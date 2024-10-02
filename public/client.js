@@ -42,7 +42,7 @@ const getActivationStatus = (youniumData) => {
   }
 };
 
-const fetchLatestYouniumData = (orgNo, hubspotId, retryCount = 0, maxRetries = 5, delay = 2000) => {
+const fetchLatestYouniumData = (orgNo, hubspotId, t) => {
   console.log('Fetching Younium data for:', { orgNo, hubspotId });
 
   return fetchYouniumData(orgNo, hubspotId)
@@ -55,24 +55,16 @@ const fetchLatestYouniumData = (orgNo, hubspotId, retryCount = 0, maxRetries = 5
         return;
       }
 
-      if (!updatedYouniumData.isLastVersion && retryCount < maxRetries) {
-        console.warn(`Fetched data is not the latest version. Retrying in ${delay} ms... (Retry ${retryCount + 1} of ${maxRetries})`);
-        
-        // Retry after the delay
-        return new Promise(resolve => {
-          setTimeout(() => {
-            resolve(fetchLatestYouniumData(orgNo, hubspotId, retryCount + 1, maxRetries, delay));
-          }, delay);
-        });
-      } else if (!updatedYouniumData.isLastVersion && retryCount >= maxRetries) {
-        console.error('Failed to fetch the latest version after multiple retries.');
-        
-        // Close and reopen the modal if we reached the maximum retry count
+      if (!updatedYouniumData.isLastVersion) {
+        console.warn('Fetched data is not the latest version. Closing and reopening modal...');
+
+        // Close the modal and then reopen it to fetch the latest data
         return t.closeModal().then(() => {
           console.log('Modal closed. Reopening it...');
           setTimeout(() => {
-            openYouniumModal(t, orgNo, hubspotId);
-          }, 1000);
+            // Use onBtnClick to reopen the modal with the latest data
+            onBtnClick(t, { orgNo, hubspotId });
+          }, 500);  // Wait for 500 ms before reopening
         });
       }
 
@@ -84,6 +76,7 @@ const fetchLatestYouniumData = (orgNo, hubspotId, retryCount = 0, maxRetries = 5
       alert('Error fetching updated data. Please try again later.');
     });
 };
+
 
 const handleToggleButtonClick = (chargeNumber, currentStatus, productName, youniumData) => {
   const action = currentStatus ? 'inactivate' : 'activate';
