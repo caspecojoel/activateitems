@@ -46,7 +46,7 @@ const handleToggleButtonClick = (chargeNumber, currentStatus, productName, youni
   const action = currentStatus ? 'inactivate' : 'activate';
   const confirmationMessage = `Are you sure you want to ${action} ${productName}?`;
 
-  console.log(`Button clicked to ${action} product: ${productName}, Charge ID: ${chargeNumber}, Current status: ${currentStatus}`);
+  console.log(`Button clicked to ${action} product: ${productName}, Charge Number: ${chargeNumber}, Current status: ${currentStatus}`);
 
   if (!confirm(confirmationMessage)) {
     console.log(`User cancelled the ${action} action.`);
@@ -59,12 +59,12 @@ const handleToggleButtonClick = (chargeNumber, currentStatus, productName, youni
   const orderId = youniumData.id;  // Ensure this is the latest version
   const accountId = youniumData.account.accountNumber;
   const invoiceAccountId = youniumData.invoiceAccount.accountNumber;
-  const product = youniumData.products.find(p => p.charges.some(c => c.id === chargeNumber));
+  const product = youniumData.products.find(p => p.charges.some(c => c.chargeNumber === chargeNumber));
 
   // Validation checks
   if (!product) {
-    console.error(`Error: No product found for Charge ID: ${chargeNumber}`);
-    alert(`Error: No product found for Charge ID: ${chargeNumber}`);
+    console.error(`Error: No product found for Charge Number: ${chargeNumber}`);
+    alert(`Error: No product found for Charge Number: ${chargeNumber}`);
     return;
   }
 
@@ -106,23 +106,19 @@ const handleToggleButtonClick = (chargeNumber, currentStatus, productName, youni
     body: JSON.stringify(requestBody),
   })
     .then(response => {
-      // Log the raw response to analyze what is received
       console.log('Raw API Response:', response);
       console.log('Received response status:', response.status);
 
-      // If response is not OK, log and throw an error
       if (!response.ok) {
         return response.text().then(errorText => {
-          console.error('Error response text:', errorText); // Log the raw error text
+          console.error('Error response text:', errorText);
           throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
         });
       }
 
-      // Parse the response as JSON
       return response.json();
     })
     .then(data => {
-      // Log the parsed response data
       console.log('Parsed response data:', data);
 
       if (data.success) {
@@ -130,10 +126,8 @@ const handleToggleButtonClick = (chargeNumber, currentStatus, productName, youni
 
         // Introduce a delay to give the backend time to process the update
         setTimeout(() => {
-          // Fetch the updated Younium data using the retrieved orgNo and hubspotId
           fetchYouniumData(orgNo, hubspotId)
             .then(updatedYouniumData => {
-              // Log the updated data received from Younium
               console.log('Updated Younium data received:', updatedYouniumData);
 
               if (!updatedYouniumData || updatedYouniumData.name === 'Invalid hubspot or orgnummer') {
@@ -142,30 +136,28 @@ const handleToggleButtonClick = (chargeNumber, currentStatus, productName, youni
                 return;
               }
 
-              // Check if the latest version is retrieved
               if (!updatedYouniumData.isLastVersion) {
                 console.warn('Fetched data is not the latest version. Consider increasing the delay or retrying.');
               }
 
-              // Update the modal with the new data
               updateModalWithYouniumData(updatedYouniumData);
             })
             .catch(fetchError => {
               console.error('Error fetching updated Younium data:', fetchError);
               alert('Error fetching updated data. Please try again later.');
             });
-        }, 2000); // Increased delay to 2000 ms to allow backend more time
+        }, 2000);
       } else {
         console.error('Failed to update the charge status:', data.message, data.details);
         alert(`Failed to update status: ${data.message}`);
       }
     })
     .catch(error => {
-      // Log any error that occurs during the entire process
       console.error('Error updating the charge status:', error);
       alert(`Error updating status: ${error.message}`);
     });
 };
+
 
 const updateModalWithYouniumData = (youniumData) => {
   console.log('Updating modal with updated Younium data:', youniumData);
@@ -204,7 +196,7 @@ const updateModalWithYouniumData = (youniumData) => {
           <td>${effectiveStartDate}</td>
           <td>${isActivated ? 'Ready for invoicing' : 'Not ready for invoicing'}</td>
           <td class="button-container">
-            <button class="${buttonClass}" data-charge-id="${charge.id}" data-product-name="${product.name || ''}">
+            <button class="${buttonClass}" data-charge-number="${charge.chargeNumber}" data-product-name="${product.name || ''}">
               ${buttonText}
             </button>
           </td>
@@ -222,11 +214,11 @@ const updateModalWithYouniumData = (youniumData) => {
 // Add event listener for toggle buttons
 document.addEventListener('click', function (event) {
   if (event.target && event.target.tagName === 'BUTTON') {
-    const chargeNumber = event.target.getAttribute('data-charge-id');
+    const chargeNumber = event.target.getAttribute('data-charge-number');
     const productName = event.target.getAttribute('data-product-name');
     const currentStatus = event.target.textContent.trim() === "Mark as not ready"; // Determine current status based on the button text
 
-    console.log(`Button clicked for product: ${productName}, Charge ID: ${chargeNumber}, Current Status: ${currentStatus}`);
+    console.log(`Button clicked for product: ${productName}, Charge Number: ${chargeNumber}, Current Status: ${currentStatus}`);
 
     handleToggleButtonClick(chargeNumber, currentStatus, productName, youniumData);
   }
