@@ -160,20 +160,12 @@ const handleToggleButtonClick = (chargeNumber, currentStatus, productName, youni
       if (data.success) {
         console.log(`Successfully updated Charge ${chargeNumber} status to ${ready4invoicing === "true" || ready4invoicing === "1" ? 'Ready' : 'Not Ready'} for invoicing`);
 
-        // Close and reopen the modal after updating status
+        // Close the modal and emit a custom event to reopen it
         t.closeModal().then(() => {
-          console.log('Modal closed. Reopening it...');
+          console.log('Modal closed. Requesting parent to reopen it...');
           setTimeout(() => {
-            // Reopen the modal using Trello context
-            const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(youniumData))}&hubspotId=${encodeURIComponent(hubspotId)}&orgNo=${encodeURIComponent(orgNo)}`;
-            t.modal({
-              title: 'Ready for invoicing',
-              url: externalUrl,
-              height: 1000,
-              width: 1000,
-              fullscreen: false
-            });
-          }, 500); // Wait for 500 ms before reopening
+            window.parent.postMessage({ action: 'reopenModal' }, '*');
+          }, 500); // Wait for 500 ms before triggering reopen
         });
       } else {
         console.error('Failed to update the charge status:', data.message, data.details);
@@ -185,6 +177,28 @@ const handleToggleButtonClick = (chargeNumber, currentStatus, productName, youni
       alert(`Error updating status: ${error.message}`);
     });
 };
+
+// Listen for the custom event to reopen the modal
+window.addEventListener('message', (event) => {
+  if (event.data && event.data.action === 'reopenModal') {
+    console.log('Received request to reopen modal.');
+    const t = TrelloPowerUp.iframe();
+
+    // Extract orgNo and hubspotId from the existing DOM
+    const orgNo = document.getElementById('org-number').textContent.trim();
+    const hubspotId = document.getElementById('hubspot-id').textContent.trim();
+
+    // Reopen the modal
+    const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(youniumData))}&hubspotId=${encodeURIComponent(hubspotId)}&orgNo=${encodeURIComponent(orgNo)}`;
+    t.modal({
+      title: 'Ready for invoicing',
+      url: externalUrl,
+      height: 1000,
+      width: 1000,
+      fullscreen: false
+    });
+  }
+});
 
 const updateModalWithYouniumData = (youniumData) => {
   console.log('Updating modal with updated Younium data:', youniumData);
