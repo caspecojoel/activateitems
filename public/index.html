@@ -127,9 +127,9 @@
                 const productInfo = document.createElement('div');
                 productInfo.innerHTML = `
                     <p><strong>Product Name:</strong> ${product.name}</p>
-                    <p><strong>Product ID:</strong> ${product.productId}</p>
+                    <p><strong>Product ID:</strong> ${product.productNumber}</p>
                     <p><strong>Charge Plan ID:</strong> ${product.chargePlanId}</p>
-                    <p><strong>Charge ID:</strong> ${charge.id}</p>
+                    <p><strong>Charge ID:</strong> ${charge.chargeNumber}</p>
                 `;
                 domElements.productInfo.appendChild(productInfo);
             });
