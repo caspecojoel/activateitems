@@ -91,7 +91,7 @@ const isDataEqual = (data1, data2) => {
   return JSON.stringify(data1) === JSON.stringify(data2);
 };
 
-const handleToggleButtonClick = (chargeNumber, currentStatus, productName, youniumData) => {
+const handleToggleButtonClick = async (chargeNumber, currentStatus, productName, youniumData) => {
   const action = currentStatus ? 'inactivate' : 'activate';
   const confirmationMessage = `Are you sure you want to ${action} ${productName}?`;
 
@@ -104,86 +104,95 @@ const handleToggleButtonClick = (chargeNumber, currentStatus, productName, youni
 
   console.log(`Proceeding to ${action} charge: ${chargeNumber}`);
 
-  // Extracting required data from youniumData
-  const orderId = youniumData.id;  // Ensure this is the latest version
-  const accountId = youniumData.account.accountNumber;
-  const invoiceAccountId = youniumData.invoiceAccount.accountNumber;
-  const product = youniumData.products.find(p => p.charges.some(c => c.chargeNumber === chargeNumber));
-
-  // Validation checks
-  if (!product) {
-    console.error(`Error: No product found for Charge Number: ${chargeNumber}`);
-    alert(`Error: No product found for Charge Number: ${chargeNumber}`);
-    return;
-  }
-
-  const productId = product.productNumber;
-  const chargePlanId = product.chargePlanNumber;
-  const ready4invoicing = currentStatus ? "0" : "1";
-
   // Retrieve orgNo and hubspotId from the DOM elements
   const orgNo = document.getElementById('org-number').textContent.trim();
   const hubspotId = document.getElementById('hubspot-id').textContent.trim();
 
-  // Further validation checks before making the request
-  if (!orderId || !accountId || !invoiceAccountId || !productId || !chargePlanId || !orgNo || !hubspotId) {
-    console.error('Validation failed: Missing required information to proceed with the invoicing status update.');
-    alert('Validation failed: Missing required information to proceed with the invoicing status update.');
+  // Attempt to refresh Younium data before proceeding
+  try {
+    youniumData = await fetchYouniumData(orgNo, hubspotId);
+    if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
+      throw new Error('Failed to fetch updated Younium data');
+    }
+  } catch (error) {
+    console.error('Error refreshing Younium data:', error);
+    alert('Failed to refresh Younium data. Please try again.');
     return;
   }
 
-  // Prepare the request body
+  // Re-validate the charge exists in the refreshed data
+  const product = youniumData.products.find(p => p.charges.some(c => c.chargeNumber === chargeNumber));
+  if (!product) {
+    console.error(`Error: No product found for Charge Number: ${chargeNumber} in refreshed data`);
+    alert(`Error: No product found for Charge Number: ${chargeNumber} in refreshed data`);
+    return;
+  }
+
+  // Prepare the request body with refreshed data
   const requestBody = {
     chargeNumber,
-    orderId,
-    accountId,
-    invoiceAccountId,
-    productId,
-    chargePlanId,
-    ready4invoicing
+    orderId: youniumData.id,
+    accountId: youniumData.account.accountNumber,
+    invoiceAccountId: youniumData.invoiceAccount.accountNumber,
+    productId: product.productNumber,
+    chargePlanId: product.chargePlanNumber,
+    ready4invoicing: currentStatus ? "0" : "1"
   };
 
-  // Log the full request body for verification
   console.log('Request body being sent to /toggle-invoicing-status:', requestBody);
 
-  // Send the request to the backend API
-  fetch('/toggle-invoicing-status', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(requestBody),
-  })
-    .then(response => {
+  // Implement retry logic
+  const maxRetries = 3;
+  const retryDelay = 2000; // 2 seconds
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch('/toggle-invoicing-status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
       console.log('Raw API Response:', response);
       console.log('Received response status:', response.status);
 
       if (!response.ok) {
-        return response.text().then(errorText => {
-          console.error('Error response text:', errorText);
-          throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-        });
+        const errorText = await response.text();
+        console.error('Error response text:', errorText);
+        
+        if (response.status === 400 && errorText.includes('No latest version of subscription')) {
+          if (attempt < maxRetries) {
+            console.log(`Retrying in ${retryDelay}ms... (Attempt ${attempt} of ${maxRetries})`);
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
+            continue;
+          }
+        }
+        
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
 
-      return response.json();
-    })
-    .then(data => {
+      const data = await response.json();
       console.log('Parsed response data:', data);
 
       if (data.success) {
-        console.log(`Successfully updated Charge ${chargeNumber} status to ${ready4invoicing === "true" || ready4invoicing === "1" ? 'Ready' : 'Not Ready'} for invoicing`);
-
-        // Retry to fetch the latest data after a delay
-        fetchLatestYouniumData(3, 2000, orgNo, hubspotId); // Retry 3 times with a 2000ms delay
+        console.log(`Successfully updated Charge ${chargeNumber} status to ${requestBody.ready4invoicing === "1" ? 'Ready' : 'Not Ready'} for invoicing`);
+        // Refresh the UI with updated data
+        fetchLatestYouniumData(3, 2000, orgNo, hubspotId);
       } else {
         console.error('Failed to update the charge status:', data.message, data.details);
         alert(`Failed to update status: ${data.message}`);
       }
-    })
-    .catch(error => {
-      console.error('Error updating the charge status:', error);
-      alert(`Error updating status: ${error.message}`);
-    });
+
+      return; // Exit the retry loop if successful
+    } catch (error) {
+      console.error(`Error updating the charge status (Attempt ${attempt}):`, error);
+      if (attempt === maxRetries) {
+        alert(`Error updating status: ${error.message}`);
+      }
+    }
+  }
 };
 
 
