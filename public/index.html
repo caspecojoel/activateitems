@@ -90,11 +90,11 @@
         // Hide loading spinner once data is loaded
         document.getElementById('loading-spinner').style.display = 'none';
 
-        // Sort products alphabetically by product name
-        youniumData.products.sort((a, b) => a.name.localeCompare(b.name));
+        youniumData.products.sort((a, b) => a.name.localeCompare(b.name)); // Sort products alphabetically
 
-        // Populate Products and Charges in a table
         youniumData.products.forEach(product => {
+            product.charges.sort((a, b) => a.name.localeCompare(b.name)); // Sort charges alphabetically
+
             product.charges.forEach(charge => {
                 const isActivated = charge.ready4invoicing === true || charge.ready4invoicing === "true" || charge.ready4invoicing === "1";
                 const buttonClass = isActivated ? 'inactivate-button' : 'activate-button';
