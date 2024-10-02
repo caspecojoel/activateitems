@@ -22,7 +22,9 @@ const getActivationStatus = (youniumData) => {
   youniumData.products.forEach(product => {
     if (product.charges && Array.isArray(product.charges)) {
       totalCharges += product.charges.length;
-      activatedCharges += product.charges.filter(charge => charge.isready4invoicing).length;
+      activatedCharges += product.charges.filter(charge => 
+        charge.ready4invoicing === "true" || charge.ready4invoicing === "1"
+      ).length;      
     }
   });
 
@@ -68,7 +70,7 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumDa
 
   const productId = product.productNumber;
   const chargePlanId = product.chargePlanNumber;
-  const isReadyForInvoicing = currentStatus ? 0 : 1;
+  const ready4invoicing = currentStatus ? "false" : "true"; // Or "0" : "1" as per your use case.
 
   // Retrieve orgNo and hubspotId from the DOM elements
   const orgNo = document.getElementById('org-number').textContent.trim();
@@ -89,7 +91,7 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumDa
     invoiceAccountId,
     productId,
     chargePlanId,
-    isReadyForInvoicing
+    ready4invoicing
   };
 
   // Log the full request body for verification
@@ -124,7 +126,7 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumDa
       console.log('Parsed response data:', data);
 
       if (data.success) {
-        console.log(`Successfully updated Charge ${chargeId} status to ${isReadyForInvoicing ? 'Ready' : 'Not Ready'} for invoicing`);
+        console.log(`Successfully updated Charge ${chargeId} status to ${ready4invoicing === "true" || ready4invoicing === "1" ? 'Ready' : 'Not Ready'} for invoicing`);
 
         // Introduce a delay to give the backend time to process the update
         setTimeout(() => {
@@ -185,7 +187,7 @@ const updateModalWithYouniumData = (youniumData) => {
   youniumData.products.forEach(product => {
     if (product.charges && Array.isArray(product.charges)) {
       product.charges.forEach(charge => {
-        const isActivated = charge.isReady4Invoicing === "True";
+        const isActivated = charge.ready4invoicing === "true" || charge.ready4invoicing === "1";
         const buttonClass = isActivated ? 'inactivate-button' : 'activate-button';
         const buttonText = isActivated ? 'Mark as not ready' : 'Mark as ready';
 

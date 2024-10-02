@@ -108,7 +108,7 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
             id: charge.id, // ChargeId
             name: charge.name,
             effectiveStartDate: charge.effectiveStartDate,
-            isReady4Invoicing: charge.customFields.isReady4Invoicing
+            ready4invoicing: charge.customFields.ready4invoicing === "true" || charge.customFields.ready4invoicing === "1"
           }))
         }))
       };
