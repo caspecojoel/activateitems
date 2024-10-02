@@ -42,9 +42,10 @@ const getActivationStatus = (youniumData) => {
   }
 };
 
-// Function to handle retry logic for fetching updated Younium data
-const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
-  fetchYouniumData(orgNo, hubspotId)
+const fetchLatestYouniumData = (orgNo, hubspotId, retryCount = 0, maxRetries = 5, delay = 2000) => {
+  console.log('Fetching Younium data for:', { orgNo, hubspotId });
+
+  return fetchYouniumData(orgNo, hubspotId)
     .then(updatedYouniumData => {
       console.log('Updated Younium data received:', updatedYouniumData);
 
@@ -54,25 +55,33 @@ const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
         return;
       }
 
-      if (!updatedYouniumData.isLastVersion) {
-        if (retries > 0) {
-          console.warn(`Fetched data is not the latest version. Retrying in ${delay} ms...`);
-          setTimeout(() => fetchLatestYouniumData(retries - 1, delay, orgNo, hubspotId), delay);
-        } else {
-          console.error('Failed to fetch the latest version after multiple retries.');
-          alert('Failed to fetch the latest version. Please try again later.');
-        }
-      } else {
-        updateModalWithYouniumData(updatedYouniumData);
+      if (!updatedYouniumData.isLastVersion && retryCount < maxRetries) {
+        console.warn(`Fetched data is not the latest version. Retrying in ${delay} ms... (Retry ${retryCount + 1} of ${maxRetries})`);
+        
+        // Retry after the delay
+        return new Promise(resolve => {
+          setTimeout(() => {
+            resolve(fetchLatestYouniumData(orgNo, hubspotId, retryCount + 1, maxRetries, delay));
+          }, delay);
+        });
+      } else if (!updatedYouniumData.isLastVersion && retryCount >= maxRetries) {
+        console.error('Failed to fetch the latest version after multiple retries.');
+        
+        // Close and reopen the modal if we reached the maximum retry count
+        return t.closeModal().then(() => {
+          console.log('Modal closed. Reopening it...');
+          setTimeout(() => {
+            openYouniumModal(t, orgNo, hubspotId);
+          }, 1000);
+        });
       }
+
+      // Update modal with the latest data if the version is the latest
+      updateModalWithYouniumData(updatedYouniumData);
     })
     .catch(fetchError => {
       console.error('Error fetching updated Younium data:', fetchError);
-      if (retries > 0) {
-        setTimeout(() => fetchLatestYouniumData(retries - 1, delay, orgNo, hubspotId), delay);
-      } else {
-        alert('Error fetching updated data. Please try again later.');
-      }
+      alert('Error fetching updated data. Please try again later.');
     });
 };
 
