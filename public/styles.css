@@ -105,6 +105,37 @@ h2 {
     background-color: #c23628; /* Slightly darker red on hover */
 }
 
+.activate-button, .inactivate-button {
+    position: relative;
+  }
+  
+  .button-spinner {
+    border: 3px solid #f3f3f3; /* Light grey */
+    border-top: 3px solid #3498db; /* Blue */
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    animation: spin 1s linear infinite;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: none;
+  }
+  
+  @keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+  }
+  
+  .loading .button-spinner {
+    display: block;
+  }
+  
+  .loading .button-text {
+    visibility: hidden;
+  }
+
 /* Styling for product list */
 .product {
     margin-bottom: 15px;

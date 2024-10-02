@@ -108,6 +108,10 @@ const handleToggleButtonClick = async (chargeNumber, currentStatus, productName,
   const orgNo = document.getElementById('org-number').textContent.trim();
   const hubspotId = document.getElementById('hubspot-id').textContent.trim();
 
+  // Get the button element and add loading effect
+  const buttonElement = document.querySelector(`button[data-charge-number="${chargeNumber}"]`);
+  buttonElement.classList.add('loading');
+
   // Attempt to refresh Younium data before proceeding
   try {
     youniumData = await fetchYouniumData(orgNo, hubspotId);
