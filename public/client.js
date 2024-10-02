@@ -42,29 +42,29 @@ const getActivationStatus = (youniumData) => {
   }
 };
 
-const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumData) => {
+const handleToggleButtonClick = (chargeNumber, currentStatus, productName, youniumData) => {
   const action = currentStatus ? 'inactivate' : 'activate';
   const confirmationMessage = `Are you sure you want to ${action} ${productName}?`;
 
-  console.log(`Button clicked to ${action} product: ${productName}, Charge ID: ${chargeId}, Current status: ${currentStatus}`);
+  console.log(`Button clicked to ${action} product: ${productName}, Charge ID: ${chargeNumber}, Current status: ${currentStatus}`);
 
   if (!confirm(confirmationMessage)) {
     console.log(`User cancelled the ${action} action.`);
     return;
   }
 
-  console.log(`Proceeding to ${action} charge: ${chargeId}`);
+  console.log(`Proceeding to ${action} charge: ${chargeNumber}`);
 
   // Extracting required data from youniumData
   const orderId = youniumData.id;  // Ensure this is the latest version
   const accountId = youniumData.account.accountNumber;
   const invoiceAccountId = youniumData.invoiceAccount.accountNumber;
-  const product = youniumData.products.find(p => p.charges.some(c => c.id === chargeId));
+  const product = youniumData.products.find(p => p.charges.some(c => c.id === chargeNumber));
 
   // Validation checks
   if (!product) {
-    console.error(`Error: No product found for Charge ID: ${chargeId}`);
-    alert(`Error: No product found for Charge ID: ${chargeId}`);
+    console.error(`Error: No product found for Charge ID: ${chargeNumber}`);
+    alert(`Error: No product found for Charge ID: ${chargeNumber}`);
     return;
   }
 
@@ -85,7 +85,7 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumDa
 
   // Prepare the request body
   const requestBody = {
-    chargeId,
+    chargeNumber,
     orderId,
     accountId,
     invoiceAccountId,
@@ -126,7 +126,7 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumDa
       console.log('Parsed response data:', data);
 
       if (data.success) {
-        console.log(`Successfully updated Charge ${chargeId} status to ${ready4invoicing === "true" || ready4invoicing === "1" ? 'Ready' : 'Not Ready'} for invoicing`);
+        console.log(`Successfully updated Charge ${chargeNumber} status to ${ready4invoicing === "true" || ready4invoicing === "1" ? 'Ready' : 'Not Ready'} for invoicing`);
 
         // Introduce a delay to give the backend time to process the update
         setTimeout(() => {
@@ -222,13 +222,13 @@ const updateModalWithYouniumData = (youniumData) => {
 // Add event listener for toggle buttons
 document.addEventListener('click', function (event) {
   if (event.target && event.target.tagName === 'BUTTON') {
-    const chargeId = event.target.getAttribute('data-charge-id');
+    const chargeNumber = event.target.getAttribute('data-charge-id');
     const productName = event.target.getAttribute('data-product-name');
     const currentStatus = event.target.textContent.trim() === "Mark as not ready"; // Determine current status based on the button text
 
-    console.log(`Button clicked for product: ${productName}, Charge ID: ${chargeId}, Current Status: ${currentStatus}`);
+    console.log(`Button clicked for product: ${productName}, Charge ID: ${chargeNumber}, Current Status: ${currentStatus}`);
 
-    handleToggleButtonClick(chargeId, currentStatus, productName, youniumData);
+    handleToggleButtonClick(chargeNumber, currentStatus, productName, youniumData);
   }
 });
 

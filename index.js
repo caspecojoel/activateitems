@@ -87,7 +87,7 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
 
       console.log(`Processing Younium order with ID: ${youniumOrder.id}, Version: ${youniumOrder.version}`);
 
-      // Process the order and filter only the charges with the latest version
+      // Processing the order
       return {
         id: youniumOrder.id, // OrderId
         status: youniumOrder.status,
@@ -105,9 +105,9 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
           chargePlanNumber: product.chargePlanNumber, // ChargePlanId
           name: product.name,
           charges: product.charges
-            .filter(charge => charge.isLastVersion === true) // Only include charges with isLastVersion true
+            .filter(charge => charge.isLastVersion) // Only take the latest version of charges
             .map(charge => ({
-              id: charge.id, // ChargeId
+              chargeNumber: charge.chargeNumber, // Use chargeNumber instead of id
               name: charge.name,
               effectiveStartDate: charge.effectiveStartDate,
               ready4invoicing: charge.customFields.ready4invoicing === "true" || charge.customFields.ready4invoicing === "1"
@@ -340,15 +340,15 @@ registerTrelloWebhook();
 
 app.post('/toggle-invoicing-status', async (req, res) => {
   console.log('Received request to toggle invoicing status:', req.body);
-  const { chargeId, orderId, accountId, invoiceAccountId, productId, chargePlanId, ready4invoicing } = req.body;
+  const { chargeNumber, orderId, accountId, invoiceAccountId, productId, chargePlanId, ready4invoicing } = req.body;
 
-  // Ensure the chargePlanId and chargeId correspond to the latest versions
-  if (!chargePlanId || !chargeId) {
-    console.error('Invalid chargePlanId or chargeId provided.');
-    return res.status(400).json({ success: false, message: 'Invalid chargePlanId or chargeId provided' });
+  // Ensure the chargePlanId and chargeNumber correspond to the latest versions
+  if (!chargePlanId || !chargeNumber) {
+    console.error('Invalid chargePlanId or chargeNumber provided.');
+    return res.status(400).json({ success: false, message: 'Invalid chargePlanId or chargeNumber provided' });
   }
 
-  const activationUrl = `https://cas-test.loveyourq.se/dev/UpdateReady4Invoicing?OrderId=${orderId}&AccountId=${accountId}&InvoiceAccountId=${invoiceAccountId}&ProductId=${productId}&ChargePlanId=${chargePlanId}&ChargeId=${chargeId}&LegalEntity=Caspeco%20AB&IsReady4Invoicing=${ready4invoicing}`;
+  const activationUrl = `https://cas-test.loveyourq.se/dev/UpdateReady4Invoicing?OrderId=${orderId}&AccountId=${accountId}&InvoiceAccountId=${invoiceAccountId}&ProductId=${productId}&ChargePlanId=${chargePlanId}&ChargeId=${chargeNumber}&LegalEntity=Caspeco%20AB&IsReady4Invoicing=${ready4invoicing}`;
 
   console.log('Constructed activation URL:', activationUrl);
 
