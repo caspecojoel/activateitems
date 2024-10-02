@@ -78,7 +78,7 @@ const fetchLatestYouniumData = (orgNo, hubspotId, t) => {
 };
 
 
-const handleToggleButtonClick = (chargeNumber, currentStatus, productName, youniumData) => {
+const handleToggleButtonClick = (chargeNumber, currentStatus, productName, youniumData, t) => {
   const action = currentStatus ? 'inactivate' : 'activate';
   const confirmationMessage = `Are you sure you want to ${action} ${productName}?`;
 
@@ -160,8 +160,13 @@ const handleToggleButtonClick = (chargeNumber, currentStatus, productName, youni
       if (data.success) {
         console.log(`Successfully updated Charge ${chargeNumber} status to ${ready4invoicing === "true" || ready4invoicing === "1" ? 'Ready' : 'Not Ready'} for invoicing`);
 
-        // Retry to fetch the latest data after a delay
-        fetchLatestYouniumData(10, 2000, orgNo, hubspotId); // Retry 3 times with a 2000ms delay
+        // Close and reopen the modal after updating status
+        t.closeModal().then(() => {
+          console.log('Modal closed. Reopening it...');
+          setTimeout(() => {
+            onBtnClick(t, { mouseEvent: null });
+          }, 500); // Wait for 500 ms before reopening
+        });
       } else {
         console.error('Failed to update the charge status:', data.message, data.details);
         alert(`Failed to update status: ${data.message}`);
@@ -172,7 +177,6 @@ const handleToggleButtonClick = (chargeNumber, currentStatus, productName, youni
       alert(`Error updating status: ${error.message}`);
     });
 };
-
 
 const updateModalWithYouniumData = (youniumData) => {
   console.log('Updating modal with updated Younium data:', youniumData);
@@ -226,7 +230,7 @@ const updateModalWithYouniumData = (youniumData) => {
 
 
 
-// Add event listener for toggle buttons
+// Adjusted the event listener to pass `t` context
 document.addEventListener('click', function (event) {
   if (event.target && event.target.tagName === 'BUTTON') {
     const chargeNumber = event.target.getAttribute('data-charge-number');
@@ -235,7 +239,9 @@ document.addEventListener('click', function (event) {
 
     console.log(`Button clicked for product: ${productName}, Charge Number: ${chargeNumber}, Current Status: ${currentStatus}`);
 
-    handleToggleButtonClick(chargeNumber, currentStatus, productName, youniumData);
+    TrelloPowerUp.iframe().then(t => {
+      handleToggleButtonClick(chargeNumber, currentStatus, productName, youniumData, t);
+    });
   }
 });
 
