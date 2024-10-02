@@ -86,7 +86,7 @@ h2 {
 }
 
 .activate-button:hover {
-    background-color: darkgreen !important; /* Slightly darker hover effect */
+    background-color: #1c7482 !important; /* Slightly darker hover effect */
 }
 
 /* Inactivate Button */
