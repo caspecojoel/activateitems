@@ -159,7 +159,7 @@ const handleToggleButtonClick = (chargeNumber, currentStatus, productName, youni
         console.log(`Successfully updated Charge ${chargeNumber} status to ${ready4invoicing === "true" || ready4invoicing === "1" ? 'Ready' : 'Not Ready'} for invoicing`);
 
         // Retry to fetch the latest data after a delay
-        fetchLatestYouniumData(3, 2000, orgNo, hubspotId); // Retry 3 times with a 2000ms delay
+        fetchLatestYouniumData(10, 2000, orgNo, hubspotId); // Retry 3 times with a 2000ms delay
       } else {
         console.error('Failed to update the charge status:', data.message, data.details);
         alert(`Failed to update status: ${data.message}`);
