@@ -164,7 +164,15 @@ const handleToggleButtonClick = (chargeNumber, currentStatus, productName, youni
         t.closeModal().then(() => {
           console.log('Modal closed. Reopening it...');
           setTimeout(() => {
-            onBtnClick(t, { mouseEvent: null });
+            // Reopen the modal using Trello context
+            const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(youniumData))}&hubspotId=${encodeURIComponent(hubspotId)}&orgNo=${encodeURIComponent(orgNo)}`;
+            t.modal({
+              title: 'Ready for invoicing',
+              url: externalUrl,
+              height: 1000,
+              width: 1000,
+              fullscreen: false
+            });
           }, 500); // Wait for 500 ms before reopening
         });
       } else {
