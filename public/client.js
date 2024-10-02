@@ -143,7 +143,7 @@ const handleToggleButtonClick = async (chargeNumber, currentStatus, productName,
 
   // Implement retry logic with initial delay
   const maxRetries = 3;
-  const initialDelay = 1000; // 3 seconds initial delay
+  const initialDelay = 1500; // 3 seconds initial delay
   const retryDelay = 2000; // 2 seconds between retries
 
   console.log(`Waiting ${initialDelay / 1000} seconds before first attempt...`);
