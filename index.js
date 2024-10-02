@@ -87,7 +87,7 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
 
       console.log(`Processing Younium order with ID: ${youniumOrder.id}, Version: ${youniumOrder.version}`);
 
-      // Processing the order
+      // Process the order and filter only the charges with the latest version
       return {
         id: youniumOrder.id, // OrderId
         status: youniumOrder.status,
@@ -104,12 +104,14 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
           productNumber: product.productNumber, // ProductId
           chargePlanNumber: product.chargePlanNumber, // ChargePlanId
           name: product.name,
-          charges: product.charges.map(charge => ({
-            id: charge.id, // ChargeId
-            name: charge.name,
-            effectiveStartDate: charge.effectiveStartDate,
-            ready4invoicing: charge.customFields.ready4invoicing === true || charge.customFields.ready4invoicing === "true" || charge.customFields.ready4invoicing === "1"
-          }))
+          charges: product.charges
+            .filter(charge => charge.isLastVersion === true) // Only include charges with isLastVersion true
+            .map(charge => ({
+              id: charge.id, // ChargeId
+              name: charge.name,
+              effectiveStartDate: charge.effectiveStartDate,
+              ready4invoicing: charge.customFields.ready4invoicing === "true" || charge.customFields.ready4invoicing === "1"
+            }))
         }))
       };
     }

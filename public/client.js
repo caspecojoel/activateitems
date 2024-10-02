@@ -70,7 +70,7 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumDa
 
   const productId = product.productNumber;
   const chargePlanId = product.chargePlanNumber;
-  const ready4invoicing = currentStatus ? "false" : "true";
+  const ready4invoicing = currentStatus ? "0" : "1";
 
   // Retrieve orgNo and hubspotId from the DOM elements
   const orgNo = document.getElementById('org-number').textContent.trim();
@@ -187,13 +187,15 @@ const updateModalWithYouniumData = (youniumData) => {
   youniumData.products.forEach(product => {
     if (product.charges && Array.isArray(product.charges)) {
       product.charges.forEach(charge => {
-        const isActivated = charge.ready4invoicing === "true" || charge.ready4invoicing === "1";
+        // Check if the charge is ready for invoicing based on the new ready4invoicing values
+        const isActivated = charge.ready4invoicing === true || charge.ready4invoicing === "1" || charge.ready4invoicing === "true";
+        
         const buttonClass = isActivated ? 'inactivate-button' : 'activate-button';
         const buttonText = isActivated ? 'Mark as not ready' : 'Mark as ready';
-
+  
         // Format the effective start date (if available)
         const effectiveStartDate = charge.effectiveStartDate ? new Date(charge.effectiveStartDate).toLocaleDateString() : 'N/A';
-
+  
         // Populate the table row
         const row = document.createElement('tr');
         row.innerHTML = `
