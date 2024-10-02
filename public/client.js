@@ -70,7 +70,7 @@ const handleToggleButtonClick = (chargeId, currentStatus, productName, youniumDa
 
   const productId = product.productNumber;
   const chargePlanId = product.chargePlanNumber;
-  const ready4invoicing = currentStatus ? "false" : "true"; // Or "0" : "1" as per your use case.
+  const ready4invoicing = currentStatus ? "0" : "1";
 
   // Retrieve orgNo and hubspotId from the DOM elements
   const orgNo = document.getElementById('org-number').textContent.trim();
