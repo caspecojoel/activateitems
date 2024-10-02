@@ -42,10 +42,9 @@ const getActivationStatus = (youniumData) => {
   }
 };
 
-const fetchLatestYouniumData = (orgNo, hubspotId, t) => {
-  console.log('Fetching Younium data for:', { orgNo, hubspotId });
-
-  return fetchYouniumData(orgNo, hubspotId)
+// Function to handle retry logic for fetching updated Younium data
+const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
+  fetchYouniumData(orgNo, hubspotId)
     .then(updatedYouniumData => {
       console.log('Updated Younium data received:', updatedYouniumData);
 
@@ -56,29 +55,28 @@ const fetchLatestYouniumData = (orgNo, hubspotId, t) => {
       }
 
       if (!updatedYouniumData.isLastVersion) {
-        console.warn('Fetched data is not the latest version. Closing and reopening modal...');
-
-        // Close the modal and then reopen it to fetch the latest data
-        return t.closeModal().then(() => {
-          console.log('Modal closed. Reopening it...');
-          setTimeout(() => {
-            // Use onBtnClick to reopen the modal with the latest data
-            onBtnClick(t, { orgNo, hubspotId });
-          }, 500);  // Wait for 500 ms before reopening
-        });
+        if (retries > 0) {
+          console.warn(`Fetched data is not the latest version. Retrying in ${delay} ms...`);
+          setTimeout(() => fetchLatestYouniumData(retries - 1, delay, orgNo, hubspotId), delay);
+        } else {
+          console.error('Failed to fetch the latest version after multiple retries.');
+          alert('Failed to fetch the latest version. Please try again later.');
+        }
+      } else {
+        updateModalWithYouniumData(updatedYouniumData);
       }
-
-      // Update modal with the latest data if the version is the latest
-      updateModalWithYouniumData(updatedYouniumData);
     })
     .catch(fetchError => {
       console.error('Error fetching updated Younium data:', fetchError);
-      alert('Error fetching updated data. Please try again later.');
+      if (retries > 0) {
+        setTimeout(() => fetchLatestYouniumData(retries - 1, delay, orgNo, hubspotId), delay);
+      } else {
+        alert('Error fetching updated data. Please try again later.');
+      }
     });
 };
 
-
-const handleToggleButtonClick = (chargeNumber, currentStatus, productName, youniumData, t) => {
+const handleToggleButtonClick = (chargeNumber, currentStatus, productName, youniumData) => {
   const action = currentStatus ? 'inactivate' : 'activate';
   const confirmationMessage = `Are you sure you want to ${action} ${productName}?`;
 
@@ -160,13 +158,8 @@ const handleToggleButtonClick = (chargeNumber, currentStatus, productName, youni
       if (data.success) {
         console.log(`Successfully updated Charge ${chargeNumber} status to ${ready4invoicing === "true" || ready4invoicing === "1" ? 'Ready' : 'Not Ready'} for invoicing`);
 
-        // Close the modal and emit a custom event to reopen it
-        t.closeModal().then(() => {
-          console.log('Modal closed. Requesting parent to reopen it...');
-          setTimeout(() => {
-            window.parent.postMessage({ action: 'reopenModal' }, '*');
-          }, 500); // Wait for 500 ms before triggering reopen
-        });
+        // Retry to fetch the latest data after a delay
+        fetchLatestYouniumData(3, 2000, orgNo, hubspotId); // Retry 3 times with a 2000ms delay
       } else {
         console.error('Failed to update the charge status:', data.message, data.details);
         alert(`Failed to update status: ${data.message}`);
@@ -178,27 +171,6 @@ const handleToggleButtonClick = (chargeNumber, currentStatus, productName, youni
     });
 };
 
-// Listen for the custom event to reopen the modal
-window.addEventListener('message', (event) => {
-  if (event.data && event.data.action === 'reopenModal') {
-    console.log('Received request to reopen modal.');
-    const t = TrelloPowerUp.iframe();
-
-    // Extract orgNo and hubspotId from the existing DOM
-    const orgNo = document.getElementById('org-number').textContent.trim();
-    const hubspotId = document.getElementById('hubspot-id').textContent.trim();
-
-    // Reopen the modal
-    const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(youniumData))}&hubspotId=${encodeURIComponent(hubspotId)}&orgNo=${encodeURIComponent(orgNo)}`;
-    t.modal({
-      title: 'Ready for invoicing',
-      url: externalUrl,
-      height: 1000,
-      width: 1000,
-      fullscreen: false
-    });
-  }
-});
 
 const updateModalWithYouniumData = (youniumData) => {
   console.log('Updating modal with updated Younium data:', youniumData);
@@ -252,7 +224,7 @@ const updateModalWithYouniumData = (youniumData) => {
 
 
 
-// Adjusted the event listener to pass `t` context
+// Add event listener for toggle buttons
 document.addEventListener('click', function (event) {
   if (event.target && event.target.tagName === 'BUTTON') {
     const chargeNumber = event.target.getAttribute('data-charge-number');
@@ -261,9 +233,7 @@ document.addEventListener('click', function (event) {
 
     console.log(`Button clicked for product: ${productName}, Charge Number: ${chargeNumber}, Current Status: ${currentStatus}`);
 
-    // Use the Trello context that was passed when opening the modal
-    const t = TrelloPowerUp.iframe();
-    handleToggleButtonClick(chargeNumber, currentStatus, productName, youniumData, t);
+    handleToggleButtonClick(chargeNumber, currentStatus, productName, youniumData);
   }
 });
 
