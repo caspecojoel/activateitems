@@ -66,13 +66,14 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
     const response = await axios.get(`https://cas-test.loveyourq.se/dev/GetYouniumOrders`, {
       params: {
         OrgNo: orgNo,
-        HubspotDealId: hubspotDealId
+        HubspotDealId: hubspotDealId,
+        apikey: process.env.YOUNIUM_API_KEY
       },
       auth: {
         username: process.env.AUTH_USERNAME,
         password: process.env.AUTH_PASSWORD
       }
-    });
+    });    
 
     console.log('Received response from Younium API:', response.data);
 
@@ -348,7 +349,7 @@ app.post('/toggle-invoicing-status', async (req, res) => {
     return res.status(400).json({ success: false, message: 'Invalid chargePlanId or chargeNumber provided' });
   }
 
-  const activationUrl = `https://cas-test.loveyourq.se/dev/UpdateReady4Invoicing?OrderId=${orderId}&AccountId=${accountId}&InvoiceAccountId=${invoiceAccountId}&ProductId=${productId}&ChargePlanId=${chargePlanId}&ChargeId=${chargeNumber}&LegalEntity=Caspeco%20AB&IsReady4Invoicing=${ready4invoicing}`;
+  const activationUrl = `https://cas-test.loveyourq.se/dev/UpdateReady4Invoicing?OrderId=${orderId}&AccountId=${accountId}&InvoiceAccountId=${invoiceAccountId}&ProductId=${productId}&ChargePlanId=${chargePlanId}&ChargeId=${chargeNumber}&LegalEntity=Caspeco%20AB&IsReady4Invoicing=${ready4invoicing}&apikey=${process.env.YOUNIUM_API_KEY}`;
 
   console.log('Constructed activation URL:', activationUrl);
 
