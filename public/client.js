@@ -48,11 +48,11 @@ const getActivationStatus = (youniumData) => {
 
 function fetchAndUpdateBadge(t) {
   return t.card('all')
-    .then(function(card) {
+    .then(function (card) {
       const orgNo = getCustomFieldValue(card.customFieldItems, orgNoFieldId);
       const hubspotId = getCustomFieldValue(card.customFieldItems, hubspotIdFieldId);
 
-      console.log('Fetched Card:', card);  // Log the entire card object
+      console.log('Fetched Card:', card);
       console.log('OrgNo:', orgNo);
       console.log('HubSpotId:', hubspotId);
 
@@ -65,13 +65,11 @@ function fetchAndUpdateBadge(t) {
           callback: onBtnClick,
           refresh: false
         };
-        return t.set('card', 'private', 'badgeData', badgeData)
-          .then(() => t.notifyParent('card-detail-badges'))
-          .then(() => badgeData);
+        return t.set('card', 'private', 'badgeData', badgeData);
       }
 
       return fetchYouniumData(orgNo, hubspotId)
-        .then(function(youniumData) {
+        .then(function (youniumData) {
           if (!youniumData) {
             console.error('Younium data is null or undefined after API call');
             throw new Error('Younium data is null or undefined');
@@ -101,10 +99,12 @@ function fetchAndUpdateBadge(t) {
 
           // Store badge data and notify parent
           return t.set('card', 'private', 'badgeData', badgeData)
-            .then(() => t.notifyParent('card-detail-badges'))
-            .then(() => badgeData);
+            .then(() => {
+              console.log('Badge updated successfully.');
+              t.notifyParent('card-detail-badges');
+            });
         })
-        .catch(function(err) {
+        .catch(function (err) {
           console.error('Error fetching or processing Younium data:', err);
           const badgeData = {
             text: 'Error loading status',
@@ -114,11 +114,12 @@ function fetchAndUpdateBadge(t) {
             refresh: false
           };
           return t.set('card', 'private', 'badgeData', badgeData)
-            .then(() => t.notifyParent('card-detail-badges'))
-            .then(() => badgeData);
+            .then(() => {
+              t.notifyParent('card-detail-badges');
+            });
         });
     })
-    .catch(function(error) {
+    .catch(function (error) {
       console.error('Error while fetching card data:', error);
       const badgeData = {
         text: 'Error loading card',
@@ -126,7 +127,10 @@ function fetchAndUpdateBadge(t) {
         icon: iconUrl,
         refresh: false
       };
-      return badgeData;
+      return t.set('card', 'private', 'badgeData', badgeData)
+        .then(() => {
+          t.notifyParent('card-detail-badges');
+        });
     });
 }
 
@@ -384,38 +388,19 @@ const onBtnClick = (t, opts) => {
 };
 
 TrelloPowerUp.initialize({
-  'card-detail-badges': function(t, options) {
-    // Always start fetching data asynchronously to ensure badge is up to date
-    return fetchAndUpdateBadge(t)
-      .then(() => {
-        // Once fetching is done, get the updated badge data
-        return t.get('card', 'private', 'badgeData')
-          .then(function(badgeData) {
-            if (badgeData) {
-              // Return the most recent badge data
-              return [badgeData];
-            } else {
-              // Fallback if for some reason badgeData is not set correctly
-              return [{
-                text: 'Loading...',
-                color: 'blue',
-                icon: iconUrl,
-                refresh: 2 // Refresh every 2 seconds until data is ready
-              }];
-            }
-          });
-      })
-      .catch(function(error) {
-        console.error('Error updating the badge:', error);
-        return [{
-          text: 'Error loading status',
-          color: 'red',
-          icon: iconUrl,
-          refresh: false
-        }];
-      });
+  'card-detail-badges': function (t, options) {
+    // Return a "Loading..." badge immediately
+    fetchAndUpdateBadge(t); // Start fetching data asynchronously
+
+    return [{
+      text: 'Loading...',
+      color: 'blue',
+      icon: iconUrl,
+      refresh: 10 // Set refresh interval to give time for the async fetch to complete
+    }];
   }
 });
+
 
 
 
