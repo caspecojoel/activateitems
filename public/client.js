@@ -384,12 +384,12 @@ const onBtnClick = (t, opts) => {
       console.log('HubSpot ID:', hubspotId);
       console.log('Org Number:', orgNo);
 
-      // Step 1: Open the modal with `index.html`
+      // Step 1: Open the modal with a skeleton loader
       return t.modal({
           title: 'Ready for Invoicing Details',
-          url: '/index.html',  // URL for the index page which contains the skeleton loader
-          height: 600,
-          width: 800,
+          url: '/loading-modal.html',  // URL for the skeleton loader modal
+          height: 500,
+          width: 500,
           fullscreen: false,
           mouseEvent: opts.mouseEvent
       }).then(() => {
@@ -400,16 +400,11 @@ const onBtnClick = (t, opts) => {
               throw new Error('Failed to fetch Younium data');
           }
 
-          // Step 3: Use `window.parent.postMessage` to send the fetched data to the modal for updating
-          // Log the message structure to ensure it's being sent correctly
-            console.log('Sending Younium data to the modal:', {
-              type: 'updateYouniumData',
-              data: youniumData
-          });
-          window.parent.postMessage({
-              type: 'updateYouniumData',
-              data: youniumData
-          }, '*');  // Use the appropriate origin instead of '*', if possible
+          // Step 3: Update the modal to show actual content with fetched data
+          const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(youniumData))}&hubspotId=${encodeURIComponent(hubspotId)}&orgNo=${encodeURIComponent(orgNo)}`;
+          
+          // Update the modal to show the fetched data instead of the skeleton loader
+          return t.updateModal({ url: externalUrl });
       }).catch(err => {
           console.error('Error fetching Younium data or displaying popup:', err);
           return t.alert({
