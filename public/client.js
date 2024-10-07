@@ -4,8 +4,45 @@ function getCustomFieldValue(fields, fieldId) {
   return field?.value?.text || field?.value?.number || '';
 }
 
+// Function to get activation status
+const getActivationStatus = (youniumData) => {
+  console.log('getActivationStatus received:', youniumData);
+  if (!youniumData) {
+    console.log('youniumData is null or undefined');
+    return { status: 'error', text: 'No data available', color: 'red' };
+  }
+  if (!youniumData.products || !Array.isArray(youniumData.products)) {
+    console.log('youniumData.products is undefined or not an array');
+    return { status: 'error', text: 'No products data available', color: 'red' };
+  }
 
-// Function to fetch and update badge data
+  let totalCharges = 0;
+  let activatedCharges = 0;
+
+  youniumData.products.forEach(product => {
+    if (product.charges && Array.isArray(product.charges)) {
+      totalCharges += product.charges.length;
+      activatedCharges += product.charges.filter(charge => 
+        charge.ready4invoicing === true || charge.ready4invoicing === "true" || charge.ready4invoicing === "1"
+      ).length;      
+    }
+  });
+
+  console.log('Total charges:', totalCharges);
+  console.log('Activated charges:', activatedCharges);
+
+  if (totalCharges === 0) {
+    return { status: 'none', text: 'No charges found', color: 'yellow' };
+  } else if (activatedCharges === totalCharges) {
+    return { status: 'all', text: 'All products ready', color: 'green' };
+  } else if (activatedCharges > 0) {
+    return { status: 'partial', text: `${activatedCharges}/${totalCharges} products ready`, color: 'lime' };
+  } else {
+    return { status: 'none', text: 'No products ready', color: 'red' };
+  }
+};
+
+
 function fetchAndUpdateBadge(t) {
   t.card('all')
     .then(function(card) {
@@ -19,7 +56,7 @@ function fetchAndUpdateBadge(t) {
             badgeData = {
               text: 'Invalid ID',
               color: 'red',
-              icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+              icon: 'https://your-icon-url',
               callback: onBtnClick,
               refresh: false
             };
@@ -28,7 +65,7 @@ function fetchAndUpdateBadge(t) {
             badgeData = {
               text: status.text,
               color: status.color,
-              icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+              icon: 'https://your-icon-url',
               callback: onBtnClick,
               refresh: false
             };
@@ -42,7 +79,7 @@ function fetchAndUpdateBadge(t) {
           const badgeData = {
             text: 'Error loading status',
             color: 'red',
-            icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+            icon: 'https://your-icon-url',
             callback: onBtnClick,
             refresh: false
           };
@@ -51,66 +88,6 @@ function fetchAndUpdateBadge(t) {
     });
 }
 
-// Function to fetch and update badge data
-function fetchAndUpdateBadge(t) {
-  // Check if we're already fetching data to avoid multiple fetches
-  return t.get('card', 'private', 'isFetching').then(isFetching => {
-    if (isFetching) {
-      return;
-    }
-    // Mark that we're fetching data
-    return t.set('card', 'private', 'isFetching', true).then(() => {
-      return t.card('all')
-        .then(function(card) {
-          const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
-          const hubspotId = getCustomFieldValue(card.customFieldItems, '66e2a183ccc0da772098ab1e');
-
-          return fetchYouniumData(orgNo, hubspotId)
-            .then(function(youniumData) {
-              let badgeData;
-              if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
-                badgeData = {
-                  text: 'Invalid ID',
-                  color: 'red',
-                  icon: 'https://your-icon-url',
-                  callback: onBtnClick,
-                  refresh: false
-                };
-              } else {
-                const status = getActivationStatus(youniumData);
-                badgeData = {
-                  text: status.text,
-                  color: status.color,
-                  icon: 'https://your-icon-url',
-                  callback: onBtnClick,
-                  refresh: false
-                };
-              }
-
-              // Store badge data and clear isFetching
-              return t.set('card', 'private', {
-                'badgeData': badgeData,
-                'isFetching': false
-              });
-            })
-            .catch(function(err) {
-              console.error('Error fetching Younium data:', err);
-              const badgeData = {
-                text: 'Error loading status',
-                color: 'red',
-                icon: 'https://your-icon-url',
-                callback: onBtnClick,
-                refresh: false
-              };
-              return t.set('card', 'private', {
-                'badgeData': badgeData,
-                'isFetching': false
-              });
-            });
-        });
-    });
-  });
-}
 
 // Helper function to compare two Younium data objects
 const isDataEqual = (data1, data2) => {
@@ -277,8 +254,6 @@ const updateModalWithYouniumData = (youniumData) => {
     }
   });
 };
-
-
 
 // Add event listener for toggle buttons
 document.addEventListener('click', function (event) {
