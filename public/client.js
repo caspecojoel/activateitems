@@ -433,20 +433,20 @@ function fetchAndUpdateBadge(t) {
 TrelloPowerUp.initialize({
   'card-detail-badges': function(t, options) {
     return t.get('card', 'private', 'badgeData').then(function(badgeData) {
-      if (badgeData) {
-        // Return stored badge data
+      if (badgeData && badgeData.text) {
         return [badgeData];
       } else {
-        // Start fetching data asynchronously
-        fetchAndUpdateBadge(t);
-        // Return placeholder badge immediately
-        return [{
-          text: 'Loading...',
-          color: 'blue',
-          icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-          refresh: 10 // Refresh every 10 seconds
-        }];
+        // Badge data is invalid or missing, remove it and fetch new data
+        return t.remove('card', 'private', 'badgeData').then(function() {
+          fetchAndUpdateBadge(t);
+          return [{
+            text: 'Loading...',
+            color: 'blue',
+            icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+            refresh: 10 // Optional
+          }];
+        });
       }
-    });
+    });    
   }
 });
