@@ -401,6 +401,7 @@ const onBtnClick = (t, opts) => {
           }
 
           // Step 3: Use `window.parent.postMessage` to send the fetched data to the modal for updating
+          console.log('Sending Younium data to the modal:', youniumData);
           window.parent.postMessage({
               type: 'updateYouniumData',
               data: youniumData

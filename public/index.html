@@ -81,25 +81,29 @@
         // Listen for messages from the parent iframe to receive Younium data
         window.addEventListener('message', (event) => {
             console.log('Message received from origin:', event.origin);
-    
+
             // Ensure that the message is coming from a trusted source
             if (event.origin !== 'https://activateitems-d22e28f2e719.herokuapp.com' && event.origin !== 'https://trello.com') {
                 console.warn('Untrusted origin:', event.origin);
                 return;
             }
-    
+
             // Ensure the message type is 'updateYouniumData'
+            if (event.data && event.data.type) {
+                console.log('Message type received:', event.data.type);
+            }
+
             if (event.data && event.data.type === 'updateYouniumData') {
                 console.log('Processing Younium data update...');
                 const youniumData = event.data.data;
                 console.log('Received Younium data:', youniumData);
-    
+
                 // Validate if youniumData is not null or undefined
                 if (!youniumData) {
                     console.error('Received Younium data is null or undefined. Aborting update.');
                     return;
                 }
-    
+
                 // Populate Younium Account and Order data if the elements exist
                 if (domElements.hubspotId) {
                     domElements.hubspotId.textContent = youniumData.hubspotId || 'N/A';
@@ -129,36 +133,36 @@
                     domElements.orderDescription.textContent = youniumData.description || 'N/A';
                     console.log('Updated Order Description:', youniumData.description);
                 }
-    
+
                 // Clear previous products data
                 domElements.productsContainer.innerHTML = '';
                 console.log('Cleared previous product data.');
-    
+
                 // Validate products data
                 if (!youniumData.products || !Array.isArray(youniumData.products)) {
                     console.error('Younium products data is invalid. Expected an array but got:', youniumData.products);
                     return;
                 }
-    
+
                 // Sort and populate products data
                 youniumData.products.sort((a, b) => a.name.localeCompare(b.name)); // Sort products alphabetically
-    
+
                 youniumData.products.forEach((product, productIndex) => {
                     if (!product.charges || !Array.isArray(product.charges)) {
                         console.warn(`Product at index ${productIndex} has invalid charges data. Skipping product.`, product);
                         return;
                     }
-    
+
                     product.charges.sort((a, b) => a.name.localeCompare(b.name)); // Sort charges alphabetically
-    
+
                     product.charges.forEach((charge, chargeIndex) => {
                         const isActivated = charge.ready4invoicing === true || charge.ready4invoicing === "true" || charge.ready4invoicing === "1";
                         const buttonClass = isActivated ? 'inactivate-button' : 'activate-button';
                         const buttonText = isActivated ? 'Unready' : 'Ready';
-    
+
                         // Format the effective start date (if available)
                         const effectiveStartDate = charge.effectiveStartDate ? new Date(charge.effectiveStartDate).toLocaleDateString() : 'N/A';
-    
+
                         // Populate the table row
                         const row = document.createElement('tr');
                         row.innerHTML = `
@@ -176,12 +180,12 @@
                         console.log(`Added row for product '${product.name}' and charge '${charge.name}' (Charge ID: ${charge.id}).`);
                     });
                 });
-    
+
                 // Hide loading spinner once data is loaded
                 domElements.loadingSpinner.style.display = 'none';
                 console.log('Loading spinner hidden. Data successfully populated.');
             } else {
-                console.warn('Unexpected message type received:', event.data.type);
+                console.warn('Unexpected message type received:', event.data ? event.data.type : 'undefined');
             }
         });
     </script>
