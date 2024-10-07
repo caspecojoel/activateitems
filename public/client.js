@@ -72,8 +72,8 @@ function fetchAndUpdateBadge(t) {
 
           // Store badge data
           return t.set('card', 'private', 'badgeData', badgeData).then(function() {
-            // Refresh badges
-            t.refresh();
+            // Refresh badges by notifying parent
+            t.notifyParent('card-detail-badges');
           });
         })
         .catch(function(err) {
@@ -85,7 +85,7 @@ function fetchAndUpdateBadge(t) {
             callback: onBtnClick
           };
           return t.set('card', 'private', 'badgeData', badgeData).then(function() {
-            t.refresh();
+            t.notifyParent('card-detail-badges');
           });
         });
     });
