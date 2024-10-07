@@ -384,39 +384,36 @@ const onBtnClick = (t, opts) => {
     console.log('HubSpot ID:', hubspotId);
     console.log('Org Number:', orgNo);
 
-    // Open the modal immediately with loading state
-    const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?loading=true&hubspotId=${encodeURIComponent(hubspotId)}&orgNo=${encodeURIComponent(orgNo)}`;
-    t.modal({
-      title: 'Ready for Invoicing Details',
-      url: externalUrl,
-      height: 1000,
-      width: 1000,
-      fullscreen: false,
-      mouseEvent: opts.mouseEvent
+    return t.member('fullName').then(member => {
+      const userName = member.fullName;
+
+      // Fetch Younium data and display in the modal
+      return fetchYouniumData(orgNo, hubspotId)
+        .then(youniumData => {
+          if (!youniumData) {
+            throw new Error('Failed to fetch Younium data');
+          }
+
+          const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(youniumData))}&hubspotId=${encodeURIComponent(hubspotId)}&orgNo=${encodeURIComponent(orgNo)}`;
+
+          return t.modal({
+            title: 'Ready for Invoicing Details',
+            url: externalUrl,
+            height: 1000,  // Adjust the height as needed
+            width: 1000,   // Adjust the width as needed
+            fullscreen: false,
+            mouseEvent: opts.mouseEvent
+          });
+
+        })
+        .catch(err => {
+          console.error('Error fetching Younium data or displaying popup:', err);
+          return t.alert({
+            message: 'Failed to load Younium data. Please try again later.',
+            duration: 5
+          });
+        });
     });
-
-    // Continue fetching Younium data in the background
-    return fetchYouniumData(orgNo, hubspotId)
-      .then(youniumData => {
-        if (!youniumData) {
-          throw new Error('Failed to fetch Younium data');
-        }
-
-        // Send the fetched data to the modal
-        t.send({
-          message: 'updateModalContent',
-          youniumData: youniumData
-        });
-
-        console.log('Younium data sent to modal:', youniumData);
-      })
-      .catch(err => {
-        console.error('Error fetching Younium data or displaying popup:', err);
-        t.send({
-          message: 'updateModalContent',
-          error: 'Failed to load Younium data. Please try again later.'
-        });
-      });
   });
 };
 
