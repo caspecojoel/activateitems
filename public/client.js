@@ -95,7 +95,7 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
   const action = currentStatus ? 'inactivate' : 'activate';
   const confirmationMessage = `Are you sure you want to ${action} ${productName}?`;
 
-  console.log(`Button clicked to ${action} product: ${productName}, Charge Number: ${chargeId}, Current status: ${currentStatus}`);
+  console.log(`Button clicked to ${action} product: ${productName}, Charge ID: ${chargeId}, Current status: ${currentStatus}`);
 
   if (!confirm(confirmationMessage)) {
     console.log(`User cancelled the ${action} action.`);
@@ -125,7 +125,7 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
   let selectedCharge = null;
 
   for (const product of youniumData.products) {
-    const charge = product.charges.find(c => c.chargeId === chargeId);
+    const charge = product.charges.find(c => c.id === chargeId);
     if (charge) {
       selectedProduct = product;
       selectedCharge = charge;
@@ -134,8 +134,8 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
   }
 
   if (!selectedProduct || !selectedCharge) {
-    console.error(`Error: No product or charge found for Charge Number: ${chargeId} in refreshed data`);
-    alert(`Error: No product or charge found for Charge Number: ${chargeId}`);
+    console.error(`Error: No product or charge found for Charge ID: ${chargeId} in refreshed data`);
+    alert(`Error: No product or charge found for Charge ID: ${chargeId}`);
     return;
   }
 
@@ -209,7 +209,6 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
   }
 }
 
-
 const updateModalWithYouniumData = (youniumData) => {
   console.log('Updating modal with updated Younium data:', youniumData);
 
@@ -260,12 +259,12 @@ const updateModalWithYouniumData = (youniumData) => {
   });
 };
 
-// Add event listener for toggle buttons
+// Update the event listener for toggle buttons
 document.addEventListener('click', function (event) {
   if (event.target && event.target.tagName === 'BUTTON') {
     const chargeId = event.target.getAttribute('data-charge-id');
     const productName = event.target.getAttribute('data-product-name');
-    const currentStatus = event.target.textContent.trim() === "Mark as not ready"; // Determine current status based on the button text
+    const currentStatus = event.target.textContent.trim() === "Unready"; // Determine current status based on the button text
 
     handleToggleButtonClick(chargeId, currentStatus, productName, youniumData);
   }
