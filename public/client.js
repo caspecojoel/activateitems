@@ -377,58 +377,32 @@ const onBtnClick = (t, opts) => {
 TrelloPowerUp.initialize({
   'card-detail-badges': function (t, options) {
     console.log('card-detail-badges function called');
-
-    // Immediately return a loading badge
+    
+    // Immediately return a "Loading..." badge
     const loadingBadge = [{
       text: 'Loading...',
       color: 'blue',
       icon: iconUrl,
-      refresh: 5 // Refresh frequently while loading
+      refresh: 10 // Set refresh to 10 seconds
     }];
 
-    // Start fetching the actual badge data asynchronously
+    // Start fetching the updated data
     fetchAndUpdateBadge(t)
       .then(badgeData => {
         console.log('Badge data fetched:', badgeData);
-        return t.set('card', 'shared', 'badgeData', badgeData) // Store badge data
-          .then(() => {
-            t.notifyParent('card-detail-badges'); // Notify Trello that the badge needs to be refreshed
-          });
+        // Notify Trello to refresh the card badges after updating
+        t.notifyParent('card-detail-badges');
       })
       .catch(error => {
         console.error('Error fetching badge data:', error);
-        const errorBadge = [{
-          text: 'Error',
-          color: 'red',
-          icon: iconUrl,
-          refresh: 60
-        }];
-        return t.set('card', 'shared', 'badgeData', errorBadge)
-          .then(() => {
-            t.notifyParent('card-detail-badges');
-          });
       });
 
-    return loadingBadge; // Return the loading state while waiting for async call
-  },
-
-  'card-badges': function (t, options) {
-    // Get the final badge data or default to the loading badge if not yet fetched
-    return t.get('card', 'shared', 'badgeData')
-      .then(function (badgeData) {
-        if (badgeData) {
-          return badgeData;
-        } else {
-          return [{
-            text: 'Loading...',
-            color: 'blue',
-            icon: iconUrl,
-            refresh: 5
-          }];
-        }
-      });
+    // Return the loading badge immediately while waiting for async fetch
+    return loadingBadge;
   }
 });
+
+
 
 
 
