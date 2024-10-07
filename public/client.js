@@ -346,14 +346,13 @@ TrelloPowerUp.initialize({
           callback: onBtnClick
         };
 
-        // Set the loading badge while we fetch new data
+        // Return the loading badge immediately
         t.set('card', 'shared', 'youniumBadge', loadingBadge);
 
-        // Proceed to fetch the data
-        return fetchYouniumData(orgNo, hubspotId)
+        // Then fetch the data and update the badge
+        fetchYouniumData(orgNo, hubspotId)
           .then(youniumData => {
             let badge;
-
             if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
               badge = {
                 text: 'Invalid ID',
@@ -370,10 +369,8 @@ TrelloPowerUp.initialize({
                 callback: onBtnClick
               };
             }
-
             // Update the badge with the fetched data
-            return t.set('card', 'shared', 'youniumBadge', badge)
-              .then(() => [badge]);
+            return t.set('card', 'shared', 'youniumBadge', badge);
           })
           .catch(err => {
             console.error('Error processing Younium data:', err);
@@ -383,14 +380,12 @@ TrelloPowerUp.initialize({
               icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
               callback: onBtnClick
             };
-            return t.set('card', 'shared', 'youniumBadge', errorBadge)
-              .then(() => [errorBadge]);
+            return t.set('card', 'shared', 'youniumBadge', errorBadge);
           });
+
+        // Return a function that reads the latest badge state
+        return t.get('card', 'shared', 'youniumBadge')
+          .then(badge => badge ? [badge] : []);
       });
-  },
-  'card-badges': (t) => {
-    // Fetch the stored badge from Trello storage
-    return t.get('card', 'shared', 'youniumBadge')
-      .then(badge => badge ? [badge] : []);
   }
 });
