@@ -349,7 +349,7 @@ app.post('/toggle-invoicing-status', async (req, res) => {
     return res.status(400).json({ success: false, message: 'Invalid chargePlanId or chargeNumber provided' });
   }
 
-  const activationUrl = `https://cas-test.loveyourq.se/dev/UpdateReady4Invoicing?OrderId=${orderId}&AccountId=${accountId}&InvoiceAccountId=${invoiceAccountId}&ProductId=${productId}&ChargePlanId=${chargePlanId}&ChargeId=${chargeNumber}&LegalEntity=Caspeco%20AB&IsReady4Invoicing=${ready4invoicing}&apikey=${process.env.YOUNIUM_API_KEY}`;
+  const activationUrl = `https://cas-test.loveyourq.se/dev/UpdateReady4Invoicing?OrderId=${orderId}&AccountId=${accountId}&InvoiceAccountId=${invoiceAccountId}&ProductId=${productId}&ChargeId=${chargeNumber}&LegalEntity=Caspeco%20AB&IsReady4Invoicing=${ready4invoicing}&apikey=${process.env.YOUNIUM_API_KEY}`;
 
   console.log('Constructed activation URL:', activationUrl);
 

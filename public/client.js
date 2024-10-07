@@ -135,7 +135,7 @@ const handleToggleButtonClick = async (chargeNumber, currentStatus, productName,
     accountId: youniumData.account.accountNumber,
     invoiceAccountId: youniumData.invoiceAccount.accountNumber,
     productId: product.productNumber,
-    chargePlanId: product.chargePlanNumber,
+    chargePlanId: product.chargePlanId,
     ready4invoicing: currentStatus ? "0" : "1"
   };
 
