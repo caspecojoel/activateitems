@@ -332,18 +332,18 @@ const onBtnClick = (t, opts) => {
 
 TrelloPowerUp.initialize({
   'card-detail-badges': async (t, options) => {
-    // Return the default badge immediately
-    const defaultBadge = {
-      text: 'Fetching data...',
+    // Return default "Loading data" badge immediately to prevent timeout
+    const loadingBadge = {
+      text: 'Loading data...',
       color: 'yellow',
       icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico'
     };
-    
-    // Fetch the latest data in the background, asynchronously
+
+    // Asynchronously fetch Younium data and update badge
     fetchAndUpdateBadge(t);
 
-    // Return default badge to avoid timeout
-    return [defaultBadge];
+    // Return the "Loading data..." badge immediately
+    return [loadingBadge];
   },
 
   'card-badges': (t, options) => {
@@ -354,7 +354,7 @@ TrelloPowerUp.initialize({
   // Other capabilities can go here...
 });
 
-// Asynchronous function to fetch data and update the badge afterward
+// Function to fetch Younium data and update the badge asynchronously
 async function fetchAndUpdateBadge(t) {
   try {
     const card = await t.card('all');
@@ -368,6 +368,8 @@ async function fetchAndUpdateBadge(t) {
 
     // Fetch the Younium data
     const youniumData = await fetchYouniumData(orgNo, hubspotId);
+
+    // Prepare badge data based on fetched information
     let updatedBadge;
 
     if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
@@ -386,13 +388,14 @@ async function fetchAndUpdateBadge(t) {
       };
     }
 
-    // Save the updated badge data and notify Trello
+    // Save the updated badge data in Trello and notify the parent to refresh the badge display
     await t.set('card', 'shared', 'badgeData', updatedBadge);
     t.notifyParent('card-detail-badges');
+
   } catch (err) {
     console.error('Error fetching or updating Younium data:', err);
 
-    // Error badge
+    // Fallback badge in case of error
     const errorBadge = {
       text: 'Error loading status',
       color: 'red',
