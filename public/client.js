@@ -161,7 +161,6 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
 
   if (!selectedProduct || !selectedCharge) {
     console.error(`Error: No product or charge found for Charge ID: ${chargeId} in refreshed data`);
-    console.log('Younium data products:', youniumData.products);
     alert(`Error: No product or charge found for Charge ID: ${chargeId}`);
 
     // Restore the original button text
@@ -190,92 +189,66 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
   };
 
   console.log('Request body being sent to /toggle-invoicing-status:', requestBody);
-  
-  // Retry logic with detailed logs
-  const maxRetries = 3;
-  const initialDelay = 200;
-  const retryDelay = 1000;
 
-  console.log(`Waiting ${initialDelay / 1000} seconds before first attempt...`);
-  await new Promise(resolve => setTimeout(resolve, initialDelay));
+  try {
+    const response = await fetch('/toggle-invoicing-status', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
 
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      console.log(`Attempting to update charge status (Attempt ${attempt} of ${maxRetries})...`);
-      const response = await fetch('/toggle-invoicing-status', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
+    const data = await response.json();
 
-      console.log('Received response status:', response.status);
+    if (data.success) {
+      console.log(`Successfully updated Charge ${chargeId} status to ${requestBody.ready4invoicing === "1" ? 'Ready' : 'Not Ready'} for invoicing`);
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error response text:', errorText);
-
-        if (response.status === 400 && errorText.includes('No latest version of subscription')) {
-          if (attempt < maxRetries) {
-            console.log(`Retrying in ${retryDelay}ms... (Attempt ${attempt + 1} of ${maxRetries})`);
-            await new Promise(resolve => setTimeout(resolve, retryDelay));
-            continue;
-          }
-        }
-
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      // Update button text and color instantly
+      if (button) {
+        button.disabled = false;
+        button.innerHTML = requestBody.ready4invoicing === "1" ? 'Unready' : 'Ready';
+        button.classList.toggle('inactivate-button', requestBody.ready4invoicing === "1");
+        button.classList.toggle('activate-button', requestBody.ready4invoicing !== "1");
       }
 
-      const data = await response.json();
+      // Enable all buttons after successful update
+      allButtons.forEach(btn => btn.disabled = false);
 
-      if (data.success) {
-        console.log(`Successfully updated Charge ${chargeId} status to ${requestBody.ready4invoicing === "1" ? 'Ready' : 'Not Ready'} for invoicing`);
-
-        // Update button text and color instantly
-        if (button) {
-          button.disabled = false;
-          button.innerHTML = requestBody.ready4invoicing === "1" ? 'Unready' : 'Ready';
-          button.classList.toggle('inactivate-button', requestBody.ready4invoicing === "1");
-          button.classList.toggle('activate-button', requestBody.ready4invoicing !== "1");
-        }
-
-        // Enable all buttons after successful update
-        allButtons.forEach(btn => btn.disabled = false);
-
-        // Fetch latest data in the background for consistency
-        fetchLatestYouniumData(3, 2000, orgNo, hubspotId);
-      } else {
-        console.error('Failed to update the charge status:', data.message, data.details);
-        alert(`Failed to update status: ${data.message}`);
-
-        // Restore the original button text
-        if (button) {
-          button.disabled = false;
-          button.innerHTML = currentStatus ? 'Unready' : 'Ready';
-        }
-
-        // Enable all buttons after failure
-        allButtons.forEach(btn => btn.disabled = false);
+      // Display the activation URL in the HTML element for easy copying
+      const apiUrlElement = document.getElementById('api-url');
+      if (apiUrlElement && data.activationUrl) {
+        apiUrlElement.textContent = data.activationUrl;
       }
 
-      return;
-    } catch (error) {
-      console.error(`Error updating the charge status (Attempt ${attempt}):`, error);
-      if (attempt === maxRetries) {
-        alert(`Error updating status: ${error.message}`);
+      // Fetch latest data in the background for consistency
+      fetchLatestYouniumData(3, 2000, orgNo, hubspotId);
+    } else {
+      console.error('Failed to update the charge status:', data.message, data.details);
+      alert(`Failed to update status: ${data.message}`);
+
+      // Restore the original button text
+      if (button) {
+        button.disabled = false;
+        button.innerHTML = currentStatus ? 'Unready' : 'Ready';
       }
+
+      // Enable all buttons after failure
+      allButtons.forEach(btn => btn.disabled = false);
     }
-  }
+  } catch (error) {
+    console.error('Error updating the charge status:', error);
+    alert('Error updating the charge status. Please try again.');
 
-  // Restore the original button text if all retries fail
-  if (button) {
-    button.disabled = false;
-    button.innerHTML = currentStatus ? 'Unready' : 'Ready';
-  }
+    // Restore the original button text if all retries fail
+    if (button) {
+      button.disabled = false;
+      button.innerHTML = currentStatus ? 'Unready' : 'Ready';
+    }
 
-  // Enable all buttons after all retries fail
-  allButtons.forEach(btn => btn.disabled = false);
+    // Enable all buttons after all retries fail
+    allButtons.forEach(btn => btn.disabled = false);
+  }
 };
 
 const updateModalWithYouniumData = (youniumData) => {
