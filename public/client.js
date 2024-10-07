@@ -378,38 +378,55 @@ TrelloPowerUp.initialize({
   'card-detail-badges': function (t, options) {
     console.log('card-detail-badges function called');
 
-    // Immediately return a loading badge
-    const loadingBadge = [{
+    // Show the initial "Loading..." badge while fetching data
+    let loadingBadge = [{
       text: 'Loading...',
       color: 'blue',
       icon: iconUrl,
-      refresh: 10 // Refresh quickly until the real data is ready
+      refresh: 2 // Refresh every 2 seconds to check for updated data
     }];
-    
-    // Start fetching the final badge data asynchronously
+
+    // Return loading badge immediately
     fetchAndUpdateBadge(t)
       .then(badgeData => {
         console.log('Badge data fetched:', badgeData);
-
-        // Update the card badges with the fetched data
-        t.notifyParent('card-detail-badges');
+        // Use t.set to store the final badge data so it can be used by the next refresh
+        t.set('card', 'shared', 'finalBadgeData', badgeData);
       })
       .catch(error => {
         console.error('Error fetching badge data:', error);
-
-        // Set an error badge to indicate the issue
-        t.set('card', 'shared', 'badgeData', [{
+        let errorBadge = [{
           text: 'Error loading',
           color: 'red',
           icon: iconUrl,
           refresh: 60 // Retry after 60 seconds
-        }]);
-        t.notifyParent('card-detail-badges');
+        }];
+        t.set('card', 'shared', 'finalBadgeData', errorBadge);
       });
 
     return loadingBadge;
+  },
+
+  'card-badges': function (t, options) {
+    // Check if we have final badge data stored
+    return t.get('card', 'shared', 'finalBadgeData')
+      .then(function (finalBadgeData) {
+        if (finalBadgeData) {
+          // Return the final badge data once available
+          return finalBadgeData;
+        } else {
+          // If final data isn't available yet, continue to show loading
+          return [{
+            text: 'Loading...',
+            color: 'blue',
+            icon: iconUrl,
+            refresh: 2 // Refresh every 2 seconds
+          }];
+        }
+      });
   }
 });
+
 
 
 
