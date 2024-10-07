@@ -106,18 +106,22 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
 
   console.log(`Proceeding to ${action} charge: ${chargeId}`);
 
-  // Grey out all buttons and remove hover effects
-  const buttons = document.querySelectorAll('.activate-button, .inactivate-button');
-  buttons.forEach(button => {
-    button.disabled = true;
-    button.classList.add('disabled-button');
-  });
-
   // Retrieve orgNo and hubspotId from the DOM elements
   const orgNo = document.getElementById('org-number').textContent.trim();
   const hubspotId = document.getElementById('hubspot-id').textContent.trim();
   console.log('Retrieved OrgNo:', orgNo);
   console.log('Retrieved HubspotId:', hubspotId);
+
+  // Find the button element and update it to show "Wait..." with a spinner
+  const button = document.querySelector(`button[data-charge-id="${chargeId}"]`);
+  if (button) {
+    button.disabled = true; // Disable the button to prevent multiple clicks
+    button.innerHTML = '<span class="spinner"></span> Wait...';
+  }
+
+  // Disable all other buttons while processing
+  const allButtons = document.querySelectorAll('.activate-button, .inactivate-button');
+  allButtons.forEach(btn => btn.disabled = true);
 
   // Attempt to refresh Younium data before proceeding
   try {
@@ -129,10 +133,15 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
   } catch (error) {
     console.error('Error refreshing Younium data:', error);
     alert('Failed to refresh Younium data. Please try again.');
-    buttons.forEach(button => {
+
+    // Restore the original button text
+    if (button) {
       button.disabled = false;
-      button.classList.remove('disabled-button');
-    });
+      button.innerHTML = currentStatus ? 'Unready' : 'Ready';
+    }
+
+    // Enable all buttons after failure
+    allButtons.forEach(btn => btn.disabled = false);
     return;
   }
 
@@ -154,10 +163,15 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
     console.error(`Error: No product or charge found for Charge ID: ${chargeId} in refreshed data`);
     console.log('Younium data products:', youniumData.products);
     alert(`Error: No product or charge found for Charge ID: ${chargeId}`);
-    buttons.forEach(button => {
+
+    // Restore the original button text
+    if (button) {
       button.disabled = false;
-      button.classList.remove('disabled-button');
-    });
+      button.innerHTML = currentStatus ? 'Unready' : 'Ready';
+    }
+
+    // Enable all buttons after failure
+    allButtons.forEach(btn => btn.disabled = false);
     return;
   }
 
@@ -184,13 +198,6 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
 
   console.log(`Waiting ${initialDelay / 1000} seconds before first attempt...`);
   await new Promise(resolve => setTimeout(resolve, initialDelay));
-
-  const clickedButton = document.querySelector(`button[data-charge-id="${chargeId}"]`);
-  const statusCell = clickedButton.parentElement.previousElementSibling;
-
-  // Temporarily change button text and color to indicate processing
-  clickedButton.textContent = 'Wait...';
-  clickedButton.classList.add('processing-button');
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
@@ -225,20 +232,31 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
       if (data.success) {
         console.log(`Successfully updated Charge ${chargeId} status to ${requestBody.ready4invoicing === "1" ? 'Ready' : 'Not Ready'} for invoicing`);
 
-        // Update button text, color, and status column instantly
-        const newStatus = requestBody.ready4invoicing === "1" ? 'Unready' : 'Ready';
-        const newColorClass = requestBody.ready4invoicing === "1" ? 'inactivate-button' : 'activate-button';
+        // Update button text and color instantly
+        if (button) {
+          button.disabled = false;
+          button.innerHTML = requestBody.ready4invoicing === "1" ? 'Unready' : 'Ready';
+          button.classList.toggle('inactivate-button', requestBody.ready4invoicing === "1");
+          button.classList.toggle('activate-button', requestBody.ready4invoicing !== "1");
+        }
 
-        clickedButton.textContent = newStatus;
-        clickedButton.classList.remove('processing-button', 'activate-button', 'inactivate-button');
-        clickedButton.classList.add(newColorClass);
-        statusCell.textContent = requestBody.ready4invoicing === "1" ? 'Ready for invoicing' : 'Not ready for invoicing';
+        // Enable all buttons after successful update
+        allButtons.forEach(btn => btn.disabled = false);
 
-        // Fetch the latest Younium data after the change
+        // Fetch latest data in the background for consistency
         fetchLatestYouniumData(3, 2000, orgNo, hubspotId);
       } else {
         console.error('Failed to update the charge status:', data.message, data.details);
         alert(`Failed to update status: ${data.message}`);
+
+        // Restore the original button text
+        if (button) {
+          button.disabled = false;
+          button.innerHTML = currentStatus ? 'Unready' : 'Ready';
+        }
+
+        // Enable all buttons after failure
+        allButtons.forEach(btn => btn.disabled = false);
       }
 
       return;
@@ -247,14 +265,17 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
       if (attempt === maxRetries) {
         alert(`Error updating status: ${error.message}`);
       }
-    } finally {
-      // Re-enable all buttons and restore hover effect after operation is complete
-      buttons.forEach(button => {
-        button.disabled = false;
-        button.classList.remove('disabled-button');
-      });
     }
   }
+
+  // Restore the original button text if all retries fail
+  if (button) {
+    button.disabled = false;
+    button.innerHTML = currentStatus ? 'Unready' : 'Ready';
+  }
+
+  // Enable all buttons after all retries fail
+  allButtons.forEach(btn => btn.disabled = false);
 };
 
 const updateModalWithYouniumData = (youniumData) => {
