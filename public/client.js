@@ -134,7 +134,6 @@ function fetchAndUpdateBadge(t) {
     });
 }
 
-
 // Helper function to compare two Younium data objects
 const isDataEqual = (data1, data2) => {
   // Implement a deep comparison of relevant fields
@@ -390,28 +389,17 @@ const onBtnClick = (t, opts) => {
 
 TrelloPowerUp.initialize({
   'card-detail-badges': function (t, options) {
-    // Start fetching data asynchronously
-    fetchAndUpdateBadge(t); 
+    // Return a "Loading..." badge immediately
+    fetchAndUpdateBadge(t); // Start fetching data asynchronously
 
-    // Try to get the badge data from storage
-    return t.get('card', 'private', 'badgeData')
-      .then(function(badgeData) {
-        if (badgeData) {
-          // Return the stored badge data
-          return [badgeData];
-        } else {
-          // Return a "Loading..." badge with refresh set to true
-          return [{
-            text: 'Loading...',
-            color: 'blue',
-            icon: iconUrl,
-            refresh: true // Set to true to refresh the badge when we call t.notifyParent
-          }];
-        }
-      });
+    return [{
+      text: 'Loading...',
+      color: 'blue',
+      icon: iconUrl,
+      refresh: 10 // Set refresh interval to give time for the async fetch to complete
+    }];
   }
 });
-
 
 
 
