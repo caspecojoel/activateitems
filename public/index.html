@@ -80,7 +80,8 @@
     
         // Listen for messages from the parent iframe to receive Younium data
         window.addEventListener('message', (event) => {
-            console.log('Message received from origin:', event.origin);
+            // Log the entire message for debugging
+            console.log('Received message event:', event);
 
             // Ensure that the message is coming from a trusted source
             if (event.origin !== 'https://activateitems-d22e28f2e719.herokuapp.com' && event.origin !== 'https://trello.com') {
@@ -88,105 +89,109 @@
                 return;
             }
 
-            // Ensure the message type is 'updateYouniumData'
-            if (event.data && event.data.type) {
-                console.log('Message type received:', event.data.type);
+            // Check if the event data has the expected format
+            if (!event.data || !event.data.type) {
+                console.warn('Message data is missing or type is undefined:', event.data);
+                return;
             }
 
-            if (event.data && event.data.type === 'updateYouniumData') {
-                console.log('Processing Younium data update...');
-                const youniumData = event.data.data;
-                console.log('Received Younium data:', youniumData);
+            // Only handle the message if it has the correct type
+            if (event.data.type !== 'updateYouniumData') {
+                console.warn('Ignoring irrelevant message type:', event.data.type);
+                return;
+            }
 
-                // Validate if youniumData is not null or undefined
-                if (!youniumData) {
-                    console.error('Received Younium data is null or undefined. Aborting update.');
+            // Process the correct message
+            console.log('Processing Younium data update...');
+            const youniumData = event.data.data;
+            console.log('Received Younium data:', youniumData);
+
+            // Validate if youniumData is not null or undefined
+            if (!youniumData) {
+                console.error('Received Younium data is null or undefined. Aborting update.');
+                return;
+            }
+
+            // Populate Younium Account and Order data if the elements exist
+            if (domElements.hubspotId) {
+                domElements.hubspotId.textContent = youniumData.hubspotId || 'N/A';
+                console.log('Updated HubSpot ID:', youniumData.hubspotId);
+            }
+            if (domElements.orgNumber) {
+                domElements.orgNumber.textContent = youniumData.orgNo || 'N/A';
+                console.log('Updated Org Number:', youniumData.orgNo);
+            }
+            if (domElements.accountName) {
+                domElements.accountName.textContent = youniumData.account?.name || 'N/A';
+                console.log('Updated Account Name:', youniumData.account?.name);
+            }
+            if (domElements.accountNumber) {
+                domElements.accountNumber.textContent = youniumData.account?.accountNumber || 'N/A';
+                console.log('Updated Account Number:', youniumData.account?.accountNumber);
+            }
+            if (domElements.orderId) {
+                domElements.orderId.textContent = youniumData.id || 'N/A';
+                console.log('Updated Order ID:', youniumData.id);
+            }
+            if (domElements.orderStatus) {
+                domElements.orderStatus.textContent = youniumData.status || 'N/A';
+                console.log('Updated Order Status:', youniumData.status);
+            }
+            if (domElements.orderDescription) {
+                domElements.orderDescription.textContent = youniumData.description || 'N/A';
+                console.log('Updated Order Description:', youniumData.description);
+            }
+
+            // Clear previous products data
+            domElements.productsContainer.innerHTML = '';
+            console.log('Cleared previous product data.');
+
+            // Validate products data
+            if (!youniumData.products || !Array.isArray(youniumData.products)) {
+                console.error('Younium products data is invalid. Expected an array but got:', youniumData.products);
+                return;
+            }
+
+            // Sort and populate products data
+            youniumData.products.sort((a, b) => a.name.localeCompare(b.name)); // Sort products alphabetically
+
+            youniumData.products.forEach((product, productIndex) => {
+                if (!product.charges || !Array.isArray(product.charges)) {
+                    console.warn(`Product at index ${productIndex} has invalid charges data. Skipping product.`, product);
                     return;
                 }
 
-                // Populate Younium Account and Order data if the elements exist
-                if (domElements.hubspotId) {
-                    domElements.hubspotId.textContent = youniumData.hubspotId || 'N/A';
-                    console.log('Updated HubSpot ID:', youniumData.hubspotId);
-                }
-                if (domElements.orgNumber) {
-                    domElements.orgNumber.textContent = youniumData.orgNo || 'N/A';
-                    console.log('Updated Org Number:', youniumData.orgNo);
-                }
-                if (domElements.accountName) {
-                    domElements.accountName.textContent = youniumData.account?.name || 'N/A';
-                    console.log('Updated Account Name:', youniumData.account?.name);
-                }
-                if (domElements.accountNumber) {
-                    domElements.accountNumber.textContent = youniumData.account?.accountNumber || 'N/A';
-                    console.log('Updated Account Number:', youniumData.account?.accountNumber);
-                }
-                if (domElements.orderId) {
-                    domElements.orderId.textContent = youniumData.id || 'N/A';
-                    console.log('Updated Order ID:', youniumData.id);
-                }
-                if (domElements.orderStatus) {
-                    domElements.orderStatus.textContent = youniumData.status || 'N/A';
-                    console.log('Updated Order Status:', youniumData.status);
-                }
-                if (domElements.orderDescription) {
-                    domElements.orderDescription.textContent = youniumData.description || 'N/A';
-                    console.log('Updated Order Description:', youniumData.description);
-                }
+                product.charges.sort((a, b) => a.name.localeCompare(b.name)); // Sort charges alphabetically
 
-                // Clear previous products data
-                domElements.productsContainer.innerHTML = '';
-                console.log('Cleared previous product data.');
+                product.charges.forEach((charge, chargeIndex) => {
+                    const isActivated = charge.ready4invoicing === true || charge.ready4invoicing === "true" || charge.ready4invoicing === "1";
+                    const buttonClass = isActivated ? 'inactivate-button' : 'activate-button';
+                    const buttonText = isActivated ? 'Unready' : 'Ready';
 
-                // Validate products data
-                if (!youniumData.products || !Array.isArray(youniumData.products)) {
-                    console.error('Younium products data is invalid. Expected an array but got:', youniumData.products);
-                    return;
-                }
+                    // Format the effective start date (if available)
+                    const effectiveStartDate = charge.effectiveStartDate ? new Date(charge.effectiveStartDate).toLocaleDateString() : 'N/A';
 
-                // Sort and populate products data
-                youniumData.products.sort((a, b) => a.name.localeCompare(b.name)); // Sort products alphabetically
-
-                youniumData.products.forEach((product, productIndex) => {
-                    if (!product.charges || !Array.isArray(product.charges)) {
-                        console.warn(`Product at index ${productIndex} has invalid charges data. Skipping product.`, product);
-                        return;
-                    }
-
-                    product.charges.sort((a, b) => a.name.localeCompare(b.name)); // Sort charges alphabetically
-
-                    product.charges.forEach((charge, chargeIndex) => {
-                        const isActivated = charge.ready4invoicing === true || charge.ready4invoicing === "true" || charge.ready4invoicing === "1";
-                        const buttonClass = isActivated ? 'inactivate-button' : 'activate-button';
-                        const buttonText = isActivated ? 'Unready' : 'Ready';
-
-                        // Format the effective start date (if available)
-                        const effectiveStartDate = charge.effectiveStartDate ? new Date(charge.effectiveStartDate).toLocaleDateString() : 'N/A';
-
-                        // Populate the table row
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${product.name || 'N/A'}</td>
-                            <td>${charge.name || 'N/A'}</td>
-                            <td>${effectiveStartDate}</td>
-                            <td>${isActivated ? 'Ready for invoicing' : 'Not ready for invoicing'}</td>
-                            <td class="button-container">
-                                <button class="${buttonClass}" data-charge-id="${charge.id}" data-product-name="${product.name || ''}">
-                                    ${buttonText}
-                                </button>
-                            </td>
-                        `;
-                        domElements.productsContainer.appendChild(row);
-                        console.log(`Added row for product '${product.name}' and charge '${charge.name}' (Charge ID: ${charge.id}).`);
-                    });
+                    // Populate the table row
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${product.name || 'N/A'}</td>
+                        <td>${charge.name || 'N/A'}</td>
+                        <td>${effectiveStartDate}</td>
+                        <td>${isActivated ? 'Ready for invoicing' : 'Not ready for invoicing'}</td>
+                        <td class="button-container">
+                            <button class="${buttonClass}" data-charge-id="${charge.id}" data-product-name="${product.name || ''}">
+                                ${buttonText}
+                            </button>
+                        </td>
+                    `;
+                    domElements.productsContainer.appendChild(row);
+                    console.log(`Added row for product '${product.name}' and charge '${charge.name}' (Charge ID: ${charge.id}).`);
                 });
+            });
 
-                // Hide loading spinner once data is loaded
-                domElements.loadingSpinner.style.display = 'none';
-                console.log('Loading spinner hidden. Data successfully populated.');
-            } else {
-                console.warn('Unexpected message type received:', event.data ? event.data.type : 'undefined');
-            }
+            // Hide loading spinner once data is loaded
+            domElements.loadingSpinner.style.display = 'none';
+            console.log('Loading spinner hidden. Data successfully populated.');
         });
     </script>
     
