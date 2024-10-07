@@ -44,7 +44,6 @@ const getActivationStatus = (youniumData) => {
 
 // Function to fetch and update badge data
 function fetchAndUpdateBadge(t) {
-  // Fetch data asynchronously
   t.card('all')
     .then(function(card) {
       const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
@@ -52,13 +51,14 @@ function fetchAndUpdateBadge(t) {
 
       return fetchYouniumData(orgNo, hubspotId)
         .then(function(youniumData) {
-          var badgeData;
+          let badgeData;
           if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
             badgeData = {
               text: 'Invalid ID',
               color: 'red',
               icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-              callback: onBtnClick
+              callback: onBtnClick,
+              refresh: false
             };
           } else {
             const status = getActivationStatus(youniumData);
@@ -66,26 +66,28 @@ function fetchAndUpdateBadge(t) {
               text: status.text,
               color: status.color,
               icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-              callback: onBtnClick
+              callback: onBtnClick,
+              refresh: false
             };
           }
 
-          // Store badge data
+          // Store badge data and refresh the badge
           return t.set('card', 'private', 'badgeData', badgeData).then(function() {
-            // Refresh badges by notifying parent
-            t.notifyParent('card-detail-badges');
+            // Force re-render the badge once
+            t.forceRerender();
           });
         })
         .catch(function(err) {
           console.error('Error fetching Younium data:', err);
-          var badgeData = {
+          const badgeData = {
             text: 'Error loading status',
             color: 'red',
             icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-            callback: onBtnClick
+            callback: onBtnClick,
+            refresh: false
           };
           return t.set('card', 'private', 'badgeData', badgeData).then(function() {
-            t.notifyParent('card-detail-badges');
+            t.forceRerender();
           });
         });
     });
@@ -429,19 +431,26 @@ function fetchAndUpdateBadge(t) {
 
 TrelloPowerUp.initialize({
   'card-detail-badges': function(t, options) {
-    return t.get('card', 'private', 'badgeData').then(function(badgeData) {
+    return Promise.all([
+      t.get('card', 'private', 'badgeData'),
+      t.get('card', 'private', 'badgeFetched')
+    ]).then(function([badgeData, badgeFetched]) {
       if (badgeData && badgeData.text) {
-        // Return the stored badge data without removing it
+        // Return the stored badge data
         return [badgeData];
       } else {
-        // Start fetching data asynchronously
-        fetchAndUpdateBadge(t);
+        if (!badgeFetched) {
+          // Mark that we are fetching data to prevent multiple fetches
+          t.set('card', 'private', 'badgeFetched', true);
+          // Start fetching data asynchronously
+          fetchAndUpdateBadge(t);
+        }
         // Return placeholder badge immediately
         return [{
           text: 'Loading...',
           color: 'blue',
           icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-          // Optionally set a refresh interval if needed
+          refresh: false // Do not auto-refresh
         }];
       }
     });
