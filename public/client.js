@@ -378,29 +378,24 @@ TrelloPowerUp.initialize({
   'card-detail-badges': function (t, options) {
     console.log('card-detail-badges function called');
 
-    // Immediately return a loading badge
-    const loadingBadge = [{
-      text: 'Loading...',
-      color: 'blue',
-      icon: iconUrl,
-      refresh: 10 // Set refresh to 10 seconds
-    }];
-
-    // Return the loading badge immediately
-    fetchAndUpdateBadge(t)
+    // Return a loading badge while we wait for data
+    return fetchAndUpdateBadge(t)
       .then(badgeData => {
         console.log('Badge data fetched:', badgeData);
-        // Return the fetched badge data immediately
-        t.notifyParent('card-detail-badges');  // Notifies Trello to refresh
-        return badgeData; // Ensures Trello uses the new data
+        return badgeData; // Return updated badge directly
       })
       .catch(error => {
         console.error('Error fetching badge data:', error);
+        return [{
+          text: 'Error loading',
+          color: 'red',
+          icon: iconUrl,
+          refresh: 60 // Retry after 60 seconds
+        }];
       });
-
-    return loadingBadge;
   }
 });
+
 
 
 
