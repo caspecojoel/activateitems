@@ -375,57 +375,70 @@ const onBtnClick = (t, opts) => {
 };
 
 TrelloPowerUp.initialize({
-  'card-detail-badges': function (t, options) {
+  'card-detail-badges': async function (t, options) {
     console.log('card-detail-badges function called');
 
-    // Show the initial "Loading..." badge while fetching data
+    // Immediately return a "Loading..." badge
+    t.set('card', 'shared', 'isFetchingBadge', true);
     let loadingBadge = [{
       text: 'Loading...',
       color: 'blue',
       icon: iconUrl,
-      refresh: 2 // Refresh every 2 seconds to check for updated data
     }];
 
-    // Return loading badge immediately
+    // Start fetching data
     fetchAndUpdateBadge(t)
       .then(badgeData => {
         console.log('Badge data fetched:', badgeData);
-        // Use t.set to store the final badge data so it can be used by the next refresh
-        t.set('card', 'shared', 'finalBadgeData', badgeData);
+
+        // Set the fetched badge data to be used
+        t.set('card', 'shared', 'badgeData', badgeData);
+        t.set('card', 'shared', 'isFetchingBadge', false);
+        
+        // Manually trigger a re-fetch to update the badge in Trello
+        t.closeOverlay().then(() => {
+          t.navigate({
+            url: '/',
+            accentColor: '#ffffff',
+            height: '200px'
+          });
+        });
       })
       .catch(error => {
         console.error('Error fetching badge data:', error);
+        
+        // Set error badge data
         let errorBadge = [{
           text: 'Error loading',
           color: 'red',
           icon: iconUrl,
-          refresh: 60 // Retry after 60 seconds
         }];
-        t.set('card', 'shared', 'finalBadgeData', errorBadge);
+        t.set('card', 'shared', 'badgeData', errorBadge);
+        t.set('card', 'shared', 'isFetchingBadge', false);
       });
 
     return loadingBadge;
   },
+  'card-badges': async function (t, options) {
+    const isFetchingBadge = await t.get('card', 'shared', 'isFetchingBadge');
 
-  'card-badges': function (t, options) {
-    // Check if we have final badge data stored
-    return t.get('card', 'shared', 'finalBadgeData')
-      .then(function (finalBadgeData) {
-        if (finalBadgeData) {
-          // Return the final badge data once available
-          return finalBadgeData;
-        } else {
-          // If final data isn't available yet, continue to show loading
-          return [{
-            text: 'Loading...',
-            color: 'blue',
-            icon: iconUrl,
-            refresh: 2 // Refresh every 2 seconds
-          }];
-        }
-      });
-  }
+    if (isFetchingBadge) {
+      return [{
+        text: 'Loading...',
+        color: 'blue',
+        icon: iconUrl,
+      }];
+    }
+
+    const badgeData = await t.get('card', 'shared', 'badgeData');
+    return badgeData || [{
+      text: 'Data not available',
+      color: 'red',
+      icon: iconUrl,
+    }];
+  },
 });
+
 
 
 
