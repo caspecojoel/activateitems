@@ -42,12 +42,12 @@ const getActivationStatus = (youniumData) => {
   }
 };
 
-
+// Function to fetch and update badge data
 function fetchAndUpdateBadge(t) {
   t.card('all')
     .then(function(card) {
-      const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
-      const hubspotId = getCustomFieldValue(card.customFieldItems, '66e2a183ccc0da772098ab1e');
+      const orgNo = getCustomFieldValue(card.customFieldItems, 'your-orgno-field-id');
+      const hubspotId = getCustomFieldValue(card.customFieldItems, 'your-hubspotid-field-id');
 
       return fetchYouniumData(orgNo, hubspotId)
         .then(function(youniumData) {
@@ -71,11 +71,11 @@ function fetchAndUpdateBadge(t) {
             };
           }
 
-          // Store badge data without calling t.forceRerender()
+          // Store badge data without calling t.forceRerender() or t.notifyParent()
           return t.set('card', 'private', 'badgeData', badgeData);
         })
         .catch(function(err) {
-          console.error('Error fetching Younium data:', err);
+          console.error('Error fetching or processing Younium data:', err);
           const badgeData = {
             text: 'Error loading status',
             color: 'red',
@@ -84,10 +84,9 @@ function fetchAndUpdateBadge(t) {
             refresh: false
           };
           return t.set('card', 'private', 'badgeData', badgeData);
-        });
+        });        
     });
 }
-
 
 // Helper function to compare two Younium data objects
 const isDataEqual = (data1, data2) => {
@@ -278,8 +277,16 @@ const fetchYouniumData = (orgNo, hubspotId) => {
     });
   }
 
-  return fetch(`/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`)
-    .then(response => response.json())
+  // Use the correct API endpoint
+  const apiUrl = `https://your-api-domain.com/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`;
+
+  return fetch(apiUrl)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+      return response.json();
+    })
     .then(data => {
       console.log('Younium API response data:', data);
       return data;
@@ -289,6 +296,7 @@ const fetchYouniumData = (orgNo, hubspotId) => {
       return null;
     });
 };
+
 
 const onBtnClick = (t, opts) => {
   console.log('Button clicked on card:', opts);
@@ -334,54 +342,6 @@ const onBtnClick = (t, opts) => {
   });
 };
 
-// Function to fetch and update badge data
-function fetchAndUpdateBadge(t) {
-  // Fetch data asynchronously
-  t.card('all')
-    .then(function(card) {
-      const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
-      const hubspotId = getCustomFieldValue(card.customFieldItems, '66e2a183ccc0da772098ab1e');
-
-      return fetchYouniumData(orgNo, hubspotId)
-        .then(function(youniumData) {
-          let badgeData;
-          if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
-            badgeData = {
-              text: 'Invalid ID',
-              color: 'red',
-              icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-              callback: onBtnClick
-            };
-          } else {
-            const status = getActivationStatus(youniumData);
-            badgeData = {
-              text: status.text,
-              color: status.color,
-              icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-              callback: onBtnClick
-            };
-          }
-
-          // Update the badge by notifying Trello to re-run the capability handler
-          t.set('card', 'private', 'badgeData', badgeData).then(function() {
-            t.notifyParent('card-detail-badges');
-          });
-        })
-        .catch(function(err) {
-          console.error('Error fetching Younium data:', err);
-          const badgeData = {
-            text: 'Error loading status',
-            color: 'red',
-            icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-            callback: onBtnClick
-          };
-          t.set('card', 'private', 'badgeData', badgeData).then(function() {
-            t.notifyParent('card-detail-badges');
-          });
-        });
-    });
-}
-
 // Initialize Trello Power-Up with updated card-detail-badges
 TrelloPowerUp.initialize({
   'card-detail-badges': function(t, options) {
@@ -397,10 +357,11 @@ TrelloPowerUp.initialize({
           return [{
             text: 'Loading...',
             color: 'blue',
-            icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+            icon: 'https://your-icon-url',
             refresh: 2 // Refresh every 2 seconds until data is ready
           }];
         }
       });
   }
 });
+
