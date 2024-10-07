@@ -65,7 +65,8 @@ function fetchAndUpdateBadge(t) {
           callback: onBtnClick,
           refresh: false
         };
-        return t.set('card', 'private', 'badgeData', badgeData);
+        t.notifyParent('card-detail-badges');
+        return [badgeData];
       }
 
       return fetchYouniumData(orgNo, hubspotId)
@@ -97,12 +98,10 @@ function fetchAndUpdateBadge(t) {
             };
           }
 
-          // Store badge data and notify parent
-          return t.set('card', 'private', 'badgeData', badgeData)
-            .then(() => {
-              console.log('Badge updated successfully.');
-              t.notifyParent('card-detail-badges');
-            });
+          // Update the badge and notify Trello
+          console.log('Badge updated successfully.');
+          t.notifyParent('card-detail-badges');
+          return [badgeData];
         })
         .catch(function (err) {
           console.error('Error fetching or processing Younium data:', err);
@@ -113,10 +112,8 @@ function fetchAndUpdateBadge(t) {
             callback: onBtnClick,
             refresh: false
           };
-          return t.set('card', 'private', 'badgeData', badgeData)
-            .then(() => {
-              t.notifyParent('card-detail-badges');
-            });
+          t.notifyParent('card-detail-badges');
+          return [badgeData];
         });
     })
     .catch(function (error) {
@@ -127,10 +124,8 @@ function fetchAndUpdateBadge(t) {
         icon: iconUrl,
         refresh: false
       };
-      return t.set('card', 'private', 'badgeData', badgeData)
-        .then(() => {
-          t.notifyParent('card-detail-badges');
-        });
+      t.notifyParent('card-detail-badges');
+      return [badgeData];
     });
 }
 
@@ -389,14 +384,20 @@ const onBtnClick = (t, opts) => {
 
 TrelloPowerUp.initialize({
   'card-detail-badges': function (t, options) {
-    // Return a "Loading..." badge immediately
-    fetchAndUpdateBadge(t); // Start fetching data asynchronously
+    // Return a "Loading..." badge immediately while fetching fresh data asynchronously
+    fetchAndUpdateBadge(t)
+      .then(badgeData => {
+        // Notify Trello to refresh with new data once fetched
+        t.set('card', 'shared', 'badgeData', badgeData)
+          .then(() => t.notifyParent('card-detail-badges'));
+      });
 
+    // Immediately return a "Loading..." badge
     return [{
       text: 'Loading...',
       color: 'blue',
       icon: iconUrl,
-      refresh: 10 // Set refresh interval to give time for the async fetch to complete
+      refresh: 10 // Set refresh to give the badge a chance to update
     }];
   }
 });
