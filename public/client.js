@@ -378,6 +378,14 @@ TrelloPowerUp.initialize({
   'card-detail-badges': function (t, options) {
     console.log('card-detail-badges function called');
 
+    // Immediately return a loading badge
+    const loadingBadge = [{
+      text: 'Loading...',
+      color: 'blue',
+      icon: iconUrl,
+      refresh: 10 // Set refresh to 10 seconds
+    }];
+
     // Return a loading badge while we wait for data
     return fetchAndUpdateBadge(t)
       .then(badgeData => {
