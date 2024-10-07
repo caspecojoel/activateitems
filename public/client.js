@@ -377,8 +377,8 @@ const onBtnClick = (t, opts) => {
 TrelloPowerUp.initialize({
   'card-detail-badges': function (t, options) {
     console.log('card-detail-badges function called');
-    
-    // Immediately return a "Loading..." badge
+
+    // Immediately return a loading badge
     const loadingBadge = [{
       text: 'Loading...',
       color: 'blue',
@@ -386,21 +386,22 @@ TrelloPowerUp.initialize({
       refresh: 10 // Set refresh to 10 seconds
     }];
 
-    // Start fetching the updated data
+    // Return the loading badge immediately
     fetchAndUpdateBadge(t)
       .then(badgeData => {
         console.log('Badge data fetched:', badgeData);
-        // Notify Trello to refresh the card badges after updating
-        t.notifyParent('card-detail-badges');
+        // Return the fetched badge data immediately
+        t.notifyParent('card-detail-badges');  // Notifies Trello to refresh
+        return badgeData; // Ensures Trello uses the new data
       })
       .catch(error => {
         console.error('Error fetching badge data:', error);
       });
 
-    // Return the loading badge immediately while waiting for async fetch
     return loadingBadge;
   }
 });
+
 
 
 
