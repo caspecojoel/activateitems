@@ -116,7 +116,7 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
   const button = document.querySelector(`button[data-charge-id="${chargeId}"]`);
   if (button) {
     button.disabled = true; // Disable the button to prevent multiple clicks
-    button.innerHTML = '<span class="spinner"></span>  Wait...';
+    button.innerHTML = '<span class="spinner"></span> Wait...';
   }
 
   // Disable all other buttons while processing
