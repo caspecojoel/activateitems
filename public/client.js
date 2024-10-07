@@ -312,72 +312,30 @@ const onBtnClick = (t, opts) => {
     return t.member('fullName').then(member => {
       const userName = member.fullName;
 
-      // Fetch Younium data and display in popup
-      return fetchYouniumData(orgNo, hubspotId)
-        .then(youniumData => {
-          if (!youniumData) {
-            throw new Error('Failed to fetch Younium data');
-          }
+      // Construct the external URL for the modal
+      const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=&hubspotId=${encodeURIComponent(hubspotId)}&orgNo=${encodeURIComponent(orgNo)}`;
 
-          const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(youniumData))}&hubspotId=${encodeURIComponent(hubspotId)}&orgNo=${encodeURIComponent(orgNo)}`;
-
-          return t.modal({
-            title: 'Ready for invoicing',
-            url: externalUrl,
-            height: 1000,  // Set the height (1000px in this case)
-            width: 1000,   // You can also set the width as needed
-            fullscreen: false, // Set to true if you want the modal to take up the full screen
-            mouseEvent: opts.mouseEvent
-          });
-
-        })
-        .catch(err => {
-          console.error('Error fetching Younium data or displaying popup:', err);
-          return t.alert({
-            message: 'Failed to load Younium data. Please try again later.',
-            duration: 5
-          });
-        });
+      return t.modal({
+        title: 'Ready for invoicing',
+        url: externalUrl,
+        height: 1000,  // Set the height (1000px in this case)
+        width: 1000,   // You can also set the width as needed
+        fullscreen: false, // Set to true if you want the modal to take up the full screen
+        mouseEvent: opts.mouseEvent
+      });
     });
   });
 };
 
-// Initialize Trello Power-Up with dynamic card-detail-badge
+// Initialize Trello Power-Up with a static card-detail-badge
 TrelloPowerUp.initialize({
   'card-detail-badges': (t, options) => {
-    return t.card('all')
-      .then(card => {
-        const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
-        const hubspotId = getCustomFieldValue(card.customFieldItems, '66e2a183ccc0da772098ab1e');
-
-        return fetchYouniumData(orgNo, hubspotId)
-          .then(youniumData => {
-            if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
-              return [{
-                text: 'Invalid ID',
-                color: 'red',
-                icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-                callback: onBtnClick
-              }];
-            }
-
-            const status = getActivationStatus(youniumData);
-            return [{
-              text: status.text,
-              color: status.color,
-              icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-              callback: onBtnClick
-            }];
-          })
-          .catch(err => {
-            console.error('Error processing Younium data:', err);
-            return [{
-              text: 'Error loading status',
-              color: 'red',
-              icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-              callback: onBtnClick
-            }];
-          });
-      });
+    // Return a static badge
+    return [{
+      text: 'View Invoicing Status',
+      color: 'blue',
+      icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+      callback: onBtnClick
+    }];
   }
 });
