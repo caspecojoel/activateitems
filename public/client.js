@@ -346,54 +346,51 @@ TrelloPowerUp.initialize({
           callback: onBtnClick
         };
 
-        // Return the loading badge immediately
-        return t.get('card', 'shared', 'youniumBadge')
-          .then(currentBadge => {
-            if (currentBadge && currentBadge.text !== 'Laddar') {
-              // If there's already a badge and it's not loading, return it directly
-              return [currentBadge];
+        // Set the loading badge while we fetch new data
+        t.set('card', 'shared', 'youniumBadge', loadingBadge);
+
+        // Proceed to fetch the data
+        return fetchYouniumData(orgNo, hubspotId)
+          .then(youniumData => {
+            let badge;
+
+            if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
+              badge = {
+                text: 'Invalid ID',
+                color: 'red',
+                icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+                callback: onBtnClick
+              };
             } else {
-              // Otherwise, set the loading badge and proceed to fetch new data
-              t.set('card', 'shared', 'youniumBadge', loadingBadge);
-
-              // Then fetch the data and update the badge
-              return fetchYouniumData(orgNo, hubspotId)
-                .then(youniumData => {
-                  let badge;
-                  if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
-                    badge = {
-                      text: 'Invalid ID',
-                      color: 'red',
-                      icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-                      callback: onBtnClick
-                    };
-                  } else {
-                    const status = getActivationStatus(youniumData);
-                    badge = {
-                      text: status.text,
-                      color: status.color,
-                      icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-                      callback: onBtnClick
-                    };
-                  }
-
-                  // Update the badge with the fetched data
-                  return t.set('card', 'shared', 'youniumBadge', badge)
-                    .then(() => [badge]);
-                })
-                .catch(err => {
-                  console.error('Error processing Younium data:', err);
-                  const errorBadge = {
-                    text: 'Error loading status',
-                    color: 'red',
-                    icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-                    callback: onBtnClick
-                  };
-                  return t.set('card', 'shared', 'youniumBadge', errorBadge)
-                    .then(() => [errorBadge]);
-                });
+              const status = getActivationStatus(youniumData);
+              badge = {
+                text: status.text,
+                color: status.color,
+                icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+                callback: onBtnClick
+              };
             }
+
+            // Update the badge with the fetched data
+            return t.set('card', 'shared', 'youniumBadge', badge)
+              .then(() => [badge]);
+          })
+          .catch(err => {
+            console.error('Error processing Younium data:', err);
+            const errorBadge = {
+              text: 'Error loading status',
+              color: 'red',
+              icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+              callback: onBtnClick
+            };
+            return t.set('card', 'shared', 'youniumBadge', errorBadge)
+              .then(() => [errorBadge]);
           });
       });
+  },
+  'card-badges': (t) => {
+    // Fetch the stored badge from Trello storage
+    return t.get('card', 'shared', 'youniumBadge')
+      .then(badge => badge ? [badge] : []);
   }
 });
