@@ -347,45 +347,53 @@ TrelloPowerUp.initialize({
         };
 
         // Return the loading badge immediately
-        t.set('card', 'shared', 'youniumBadge', loadingBadge);
-
-        // Then fetch the data and update the badge
-        fetchYouniumData(orgNo, hubspotId)
-          .then(youniumData => {
-            let badge;
-            if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
-              badge = {
-                text: 'Invalid ID',
-                color: 'red',
-                icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-                callback: onBtnClick
-              };
-            } else {
-              const status = getActivationStatus(youniumData);
-              badge = {
-                text: status.text,
-                color: status.color,
-                icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-                callback: onBtnClick
-              };
-            }
-            // Update the badge with the fetched data
-            return t.set('card', 'shared', 'youniumBadge', badge);
-          })
-          .catch(err => {
-            console.error('Error processing Younium data:', err);
-            const errorBadge = {
-              text: 'Error loading status',
-              color: 'red',
-              icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-              callback: onBtnClick
-            };
-            return t.set('card', 'shared', 'youniumBadge', errorBadge);
-          });
-
-        // Return a function that reads the latest badge state
         return t.get('card', 'shared', 'youniumBadge')
-          .then(badge => badge ? [badge] : []);
+          .then(currentBadge => {
+            if (currentBadge && currentBadge.text !== 'Laddar') {
+              // If there's already a badge and it's not loading, return it directly
+              return [currentBadge];
+            } else {
+              // Otherwise, set the loading badge and proceed to fetch new data
+              t.set('card', 'shared', 'youniumBadge', loadingBadge);
+
+              // Then fetch the data and update the badge
+              return fetchYouniumData(orgNo, hubspotId)
+                .then(youniumData => {
+                  let badge;
+                  if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
+                    badge = {
+                      text: 'Invalid ID',
+                      color: 'red',
+                      icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+                      callback: onBtnClick
+                    };
+                  } else {
+                    const status = getActivationStatus(youniumData);
+                    badge = {
+                      text: status.text,
+                      color: status.color,
+                      icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+                      callback: onBtnClick
+                    };
+                  }
+
+                  // Update the badge with the fetched data
+                  return t.set('card', 'shared', 'youniumBadge', badge)
+                    .then(() => [badge]);
+                })
+                .catch(err => {
+                  console.error('Error processing Younium data:', err);
+                  const errorBadge = {
+                    text: 'Error loading status',
+                    color: 'red',
+                    icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+                    callback: onBtnClick
+                  };
+                  return t.set('card', 'shared', 'youniumBadge', errorBadge)
+                    .then(() => [errorBadge]);
+                });
+            }
+          });
       });
   }
 });
