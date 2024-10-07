@@ -4,43 +4,6 @@ function getCustomFieldValue(fields, fieldId) {
   return field?.value?.text || field?.value?.number || '';
 }
 
-// Function to get activation status
-const getActivationStatus = (youniumData) => {
-  console.log('getActivationStatus received:', youniumData);
-  if (!youniumData) {
-    console.log('youniumData is null or undefined');
-    return { status: 'error', text: 'No data available' };
-  }
-  if (!youniumData.products || !Array.isArray(youniumData.products)) {
-    console.log('youniumData.products is undefined or not an array');
-    return { status: 'error', text: 'No products data available' };
-  }
-
-  let totalCharges = 0;
-  let activatedCharges = 0;
-
-  youniumData.products.forEach(product => {
-    if (product.charges && Array.isArray(product.charges)) {
-      totalCharges += product.charges.length;
-      activatedCharges += product.charges.filter(charge => 
-        charge.ready4invoicing === true || charge.ready4invoicing === "true" || charge.ready4invoicing === "1"
-      ).length;      
-    }
-  });
-
-  console.log('Total charges:', totalCharges);
-  console.log('Activated charges:', activatedCharges);
-
-  if (totalCharges === 0) {
-    return { status: 'none', text: 'No charges found', color: 'yellow' };
-  } else if (activatedCharges === totalCharges) {
-    return { status: 'all', text: 'All products ready', color: 'green' };
-  } else if (activatedCharges > 0) {
-    return { status: 'partial', text: `${activatedCharges}/${totalCharges} products ready`, color: 'lime' };
-  } else {
-    return { status: 'none', text: 'No products ready', color: 'red' };
-  }
-};
 
 // Function to fetch and update badge data
 function fetchAndUpdateBadge(t) {
@@ -71,11 +34,8 @@ function fetchAndUpdateBadge(t) {
             };
           }
 
-          // Store badge data and refresh the badge
-          return t.set('card', 'private', 'badgeData', badgeData).then(function() {
-            // Force re-render the badge once
-            t.forceRerender();
-          });
+          // Store badge data without calling t.forceRerender()
+          return t.set('card', 'private', 'badgeData', badgeData);
         })
         .catch(function(err) {
           console.error('Error fetching Younium data:', err);
@@ -86,9 +46,7 @@ function fetchAndUpdateBadge(t) {
             callback: onBtnClick,
             refresh: false
           };
-          return t.set('card', 'private', 'badgeData', badgeData).then(function() {
-            t.forceRerender();
-          });
+          return t.set('card', 'private', 'badgeData', badgeData);
         });
     });
 }
@@ -455,18 +413,16 @@ TrelloPowerUp.initialize({
     return t.get('card', 'private', 'badgeData')
       .then(function(badgeData) {
         if (badgeData) {
-          // Return badge data and clear it for next time
-          return t.set('card', 'private', 'badgeData', null).then(function() {
-            return [badgeData];
-          });
+          // Return badge data without clearing it
+          return [badgeData];
         } else {
-          // Start fetching data if not already in progress
+          // Start fetching data asynchronously
           fetchAndUpdateBadge(t);
           // Return loading badge with refresh
           return [{
             text: 'Loading...',
             color: 'blue',
-            icon: 'https://your-icon-url',
+            icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
             refresh: 2 // Refresh every 2 seconds until data is ready
           }];
         }
