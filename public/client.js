@@ -93,46 +93,66 @@ function fetchAndUpdateBadge(t) {
     });
 }
 
-const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
-  let lastData = null;
-  const tryFetch = (attemptNumber) => {
-    fetchYouniumData(orgNo, hubspotId)
-      .then(updatedYouniumData => {
-        console.log(`Attempt ${attemptNumber}: Updated Younium data received:`, updatedYouniumData);
-        console.log('isLastVersion:', updatedYouniumData.isLastVersion);
+// Function to fetch and update badge data
+function fetchAndUpdateBadge(t) {
+  // Check if we're already fetching data to avoid multiple fetches
+  return t.get('card', 'private', 'isFetching').then(isFetching => {
+    if (isFetching) {
+      return;
+    }
+    // Mark that we're fetching data
+    return t.set('card', 'private', 'isFetching', true).then(() => {
+      return t.card('all')
+        .then(function(card) {
+          const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
+          const hubspotId = getCustomFieldValue(card.customFieldItems, '66e2a183ccc0da772098ab1e');
 
-        if (!updatedYouniumData || updatedYouniumData.name === 'Invalid hubspot or orgnummer') {
-          console.error('Failed to fetch valid updated Younium data:', updatedYouniumData);
-          alert('Failed to fetch valid updated data. Please verify Hubspot ID and Organization Number.');
-          return;
-        }
+          return fetchYouniumData(orgNo, hubspotId)
+            .then(function(youniumData) {
+              let badgeData;
+              if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
+                badgeData = {
+                  text: 'Invalid ID',
+                  color: 'red',
+                  icon: 'https://your-icon-url',
+                  callback: onBtnClick,
+                  refresh: false
+                };
+              } else {
+                const status = getActivationStatus(youniumData);
+                badgeData = {
+                  text: status.text,
+                  color: status.color,
+                  icon: 'https://your-icon-url',
+                  callback: onBtnClick,
+                  refresh: false
+                };
+              }
 
-        if (!updatedYouniumData.isLastVersion && !isDataEqual(lastData, updatedYouniumData)) {
-          lastData = updatedYouniumData;
-          if (attemptNumber < retries) {
-            console.warn(`Fetched data might not be the latest version. Retrying in ${delay} ms...`);
-            setTimeout(() => tryFetch(attemptNumber + 1), delay);
-          } else {
-            console.warn('Failed to confirm the latest version after multiple retries. Proceeding with the most recent data.');
-            updateModalWithYouniumData(updatedYouniumData);
-          }
-        } else {
-          console.log('Latest data version confirmed or no changes detected.');
-          updateModalWithYouniumData(updatedYouniumData);
-        }
-      })
-      .catch(fetchError => {
-        console.error('Error fetching updated Younium data:', fetchError);
-        if (attemptNumber < retries) {
-          setTimeout(() => tryFetch(attemptNumber + 1), delay);
-        } else {
-          alert('Error fetching updated data. Please try again later.');
-        }
-      });
-  };
-
-  tryFetch(1);
-};
+              // Store badge data and clear isFetching
+              return t.set('card', 'private', {
+                'badgeData': badgeData,
+                'isFetching': false
+              });
+            })
+            .catch(function(err) {
+              console.error('Error fetching Younium data:', err);
+              const badgeData = {
+                text: 'Error loading status',
+                color: 'red',
+                icon: 'https://your-icon-url',
+                callback: onBtnClick,
+                refresh: false
+              };
+              return t.set('card', 'private', {
+                'badgeData': badgeData,
+                'isFetching': false
+              });
+            });
+        });
+    });
+  });
+}
 
 // Helper function to compare two Younium data objects
 const isDataEqual = (data1, data2) => {
@@ -429,30 +449,27 @@ function fetchAndUpdateBadge(t) {
     });
 }
 
+// Initialize Trello Power-Up with updated card-detail-badges
 TrelloPowerUp.initialize({
   'card-detail-badges': function(t, options) {
-    return Promise.all([
-      t.get('card', 'private', 'badgeData'),
-      t.get('card', 'private', 'badgeFetched')
-    ]).then(function([badgeData, badgeFetched]) {
-      if (badgeData && badgeData.text) {
-        // Return the stored badge data
-        return [badgeData];
-      } else {
-        if (!badgeFetched) {
-          // Mark that we are fetching data to prevent multiple fetches
-          t.set('card', 'private', 'badgeFetched', true);
-          // Start fetching data asynchronously
+    return t.get('card', 'private', 'badgeData')
+      .then(function(badgeData) {
+        if (badgeData) {
+          // Return badge data and clear it for next time
+          return t.set('card', 'private', 'badgeData', null).then(function() {
+            return [badgeData];
+          });
+        } else {
+          // Start fetching data if not already in progress
           fetchAndUpdateBadge(t);
+          // Return loading badge with refresh
+          return [{
+            text: 'Loading...',
+            color: 'blue',
+            icon: 'https://your-icon-url',
+            refresh: 2 // Refresh every 2 seconds until data is ready
+          }];
         }
-        // Return placeholder badge immediately
-        return [{
-          text: 'Loading...',
-          color: 'blue',
-          icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-          refresh: false // Do not auto-refresh
-        }];
-      }
-    });
+      });
   }
 });
