@@ -93,31 +93,33 @@ const isDataEqual = (data1, data2) => {
   return JSON.stringify(data1) === JSON.stringify(data2);
 };
 
-const handleToggleButtonClick = async (chargeId, currentStatus, productName, youniumData) => {
+const handleToggleButtonClick = async (chargeId, currentStatus, productName, youniumData, clickedButton) => {
   const action = currentStatus ? 'inactivate' : 'activate';
   const confirmationMessage = `Are you sure you want to ${action} ${productName}?`;
-
-  console.log(`Button clicked to ${action} product: ${productName}, Charge ID: ${chargeId}, Current status: ${currentStatus}`);
 
   if (!confirm(confirmationMessage)) {
     console.log(`User cancelled the ${action} action.`);
     return;
   }
 
-  console.log(`Proceeding to ${action} charge: ${chargeId}`);
-
-  // Grey out all buttons and remove hover effects
-  const buttons = document.querySelectorAll('.activate-button, .inactivate-button');
-  buttons.forEach(button => {
-    button.disabled = true;
-    button.classList.add('disabled-button');
+  // Disable all buttons except the one clicked
+  const allButtons = document.querySelectorAll('button.activate-button, button.inactivate-button');
+  allButtons.forEach(button => {
+    if (button !== clickedButton) {
+      button.disabled = true;
+      button.classList.add('disabled');
+    }
   });
+
+  // Update the clicked button's text to "Wait..." and add a spinner
+  clickedButton.textContent = 'Wait...';
+  clickedButton.classList.add('spinner');
+
+  console.log(`Proceeding to ${action} charge: ${chargeId}`);
 
   // Retrieve orgNo and hubspotId from the DOM elements
   const orgNo = document.getElementById('org-number').textContent.trim();
   const hubspotId = document.getElementById('hubspot-id').textContent.trim();
-  console.log('Retrieved OrgNo:', orgNo);
-  console.log('Retrieved HubspotId:', hubspotId);
 
   // Attempt to refresh Younium data before proceeding
   try {
@@ -125,14 +127,9 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
     if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
       throw new Error('Failed to fetch updated Younium data');
     }
-    console.log('Fetched updated Younium data:', youniumData);
   } catch (error) {
     console.error('Error refreshing Younium data:', error);
     alert('Failed to refresh Younium data. Please try again.');
-    buttons.forEach(button => {
-      button.disabled = false;
-      button.classList.remove('disabled-button');
-    });
     return;
   }
 
@@ -140,7 +137,6 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
   let selectedProduct = null;
   let selectedCharge = null;
 
-  console.log('Searching for product and charge with Charge ID:', chargeId);
   for (const product of youniumData.products) {
     const charge = product.charges.find(c => c.id === chargeId);
     if (charge) {
@@ -152,17 +148,9 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
 
   if (!selectedProduct || !selectedCharge) {
     console.error(`Error: No product or charge found for Charge ID: ${chargeId} in refreshed data`);
-    console.log('Younium data products:', youniumData.products);
     alert(`Error: No product or charge found for Charge ID: ${chargeId}`);
-    buttons.forEach(button => {
-      button.disabled = false;
-      button.classList.remove('disabled-button');
-    });
     return;
   }
-
-  console.log('Found selected product:', selectedProduct);
-  console.log('Found selected charge:', selectedCharge);
 
   // Prepare the request body with internal IDs (GUIDs)
   const requestBody = {
@@ -175,22 +163,11 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
     ready4invoicing: currentStatus ? "0" : "1"
   };
 
-  console.log('Request body being sent to /toggle-invoicing-status:', requestBody);
-  
-  // Retry logic with detailed logs
   const maxRetries = 3;
   const initialDelay = 200;
   const retryDelay = 1000;
 
-  console.log(`Waiting ${initialDelay / 1000} seconds before first attempt...`);
   await new Promise(resolve => setTimeout(resolve, initialDelay));
-
-  const clickedButton = document.querySelector(`button[data-charge-id="${chargeId}"]`);
-  const statusCell = clickedButton.parentElement.previousElementSibling;
-
-  // Temporarily change button text and color to indicate processing
-  clickedButton.textContent = 'Wait...';
-  clickedButton.classList.add('processing-button');
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
@@ -203,20 +180,9 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
         body: JSON.stringify(requestBody),
       });
 
-      console.log('Received response status:', response.status);
-
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Error response text:', errorText);
-
-        if (response.status === 400 && errorText.includes('No latest version of subscription')) {
-          if (attempt < maxRetries) {
-            console.log(`Retrying in ${retryDelay}ms... (Attempt ${attempt + 1} of ${maxRetries})`);
-            await new Promise(resolve => setTimeout(resolve, retryDelay));
-            continue;
-          }
-        }
-
         throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
 
@@ -225,16 +191,26 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
       if (data.success) {
         console.log(`Successfully updated Charge ${chargeId} status to ${requestBody.ready4invoicing === "1" ? 'Ready' : 'Not Ready'} for invoicing`);
 
-        // Update button text, color, and status column instantly
-        const newStatus = requestBody.ready4invoicing === "1" ? 'Unready' : 'Ready';
-        const newColorClass = requestBody.ready4invoicing === "1" ? 'inactivate-button' : 'activate-button';
+        // Update button immediately after a successful 200 response
+        clickedButton.textContent = currentStatus ? 'Ready' : 'Unready';
+        clickedButton.classList.toggle('activate-button');
+        clickedButton.classList.toggle('inactivate-button');
+        clickedButton.classList.remove('spinner');
+        clickedButton.disabled = false;
 
-        clickedButton.textContent = newStatus;
-        clickedButton.classList.remove('processing-button', 'activate-button', 'inactivate-button');
-        clickedButton.classList.add(newColorClass);
+        // Update the status in the table immediately
+        const statusCell = clickedButton.closest('tr').querySelector('td:nth-child(4)');
         statusCell.textContent = requestBody.ready4invoicing === "1" ? 'Ready for invoicing' : 'Not ready for invoicing';
 
-        // Fetch the latest Younium data after the change
+        // Re-enable all other buttons
+        allButtons.forEach(button => {
+          if (button !== clickedButton) {
+            button.disabled = false;
+            button.classList.remove('disabled');
+          }
+        });
+
+        // Fetch the latest Younium data to ensure consistency
         fetchLatestYouniumData(3, 2000, orgNo, hubspotId);
       } else {
         console.error('Failed to update the charge status:', data.message, data.details);
@@ -247,14 +223,19 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
       if (attempt === maxRetries) {
         alert(`Error updating status: ${error.message}`);
       }
-    } finally {
-      // Re-enable all buttons and restore hover effect after operation is complete
-      buttons.forEach(button => {
-        button.disabled = false;
-        button.classList.remove('disabled-button');
-      });
     }
   }
+
+  // Re-enable all other buttons if the process fails
+  allButtons.forEach(button => {
+    button.disabled = false;
+    button.classList.remove('disabled');
+  });
+
+  // Reset the clicked button
+  clickedButton.textContent = currentStatus ? 'Ready' : 'Unready';
+  clickedButton.classList.remove('spinner');
+  clickedButton.disabled = false;
 };
 
 const updateModalWithYouniumData = (youniumData) => {
