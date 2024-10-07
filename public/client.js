@@ -342,6 +342,9 @@ TrelloPowerUp.initialize({
     // Immediately set the loading badge to avoid timeout issues
     t.set('card', 'shared', 'card-detail-badge', loadingBadge);
 
+    // Introducing a small delay to allow "Loading..." to be visible
+    await new Promise(resolve => setTimeout(resolve, 500));
+
     try {
       // Fetch card data
       const card = await t.card('all');
@@ -388,4 +391,5 @@ TrelloPowerUp.initialize({
     }
   }
 });
+
 
