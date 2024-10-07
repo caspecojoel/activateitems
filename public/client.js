@@ -46,12 +46,11 @@ const getActivationStatus = (youniumData) => {
   }
 };
 
-// Update the fetchAndUpdateBadge function to handle timeouts
 function fetchAndUpdateBadge(t) {
   return new Promise((resolve, reject) => {
     const fetchTimeout = setTimeout(() => {
       reject(new Error('Fetch timed out'));
-    }, 3000); // 3 seconds timeout
+    }, 8000); // 8 seconds timeout
 
     t.card('all')
       .then(function (card) {
@@ -292,7 +291,7 @@ document.addEventListener('click', function (event) {
   }
 });
 
-// Update fetchYouniumData to handle timeouts
+// Function to fetch Younium data
 const fetchYouniumData = (orgNo, hubspotId) => {
   console.log('Fetching Younium data for:', { orgNo, hubspotId });
 
@@ -309,7 +308,7 @@ const fetchYouniumData = (orgNo, hubspotId) => {
   return new Promise((resolve, reject) => {
     const fetchTimeout = setTimeout(() => {
       reject(new Error('API request timed out'));
-    }, 5000); // 5 seconds timeout
+    }, 7000); // 7 seconds timeout
 
     fetch(apiUrl)
       .then(response => {
@@ -377,35 +376,61 @@ const onBtnClick = (t, opts) => {
 
 TrelloPowerUp.initialize({
   'card-detail-badges': function (t, options) {
-    return new Promise((resolve) => {
-      const timeoutDuration = 4000; // 4 seconds timeout
-      const timeoutId = setTimeout(() => {
-        console.warn('Badge fetch timed out, resolving with loading badge');
-        resolve([{
-          text: 'Loading...',
-          color: 'blue',
-          icon: iconUrl,
-          refresh: 5 // Refresh after 5 seconds
-        }]);
-      }, timeoutDuration);
+    console.log('card-detail-badges function called');
+    
+    // Immediately return a loading badge
+    t.set('card', 'shared', 'badgeLoading', true);
+    
+    const loadingBadge = [{
+      text: 'Loading...',
+      color: 'blue',
+      icon: iconUrl,
+      refresh: 0.1 // Refresh very quickly
+    }];
 
-      fetchAndUpdateBadge(t)
-        .then(badgeData => {
-          clearTimeout(timeoutId);
-          console.log('Badge data fetched:', badgeData);
-          resolve(badgeData);
-        })
-        .catch(error => {
-          clearTimeout(timeoutId);
-          console.error('Error fetching badge data:', error);
-          resolve([{
-            text: 'Error',
-            color: 'red',
-            icon: iconUrl,
-            refresh: 10
-          }]);
+    fetchAndUpdateBadge(t)
+      .then(badgeData => {
+        console.log('Badge data fetched:', badgeData);
+        t.set('card', 'shared', 'badgeData', badgeData);
+        t.set('card', 'shared', 'badgeLoading', false);
+        t.closePopup();
+        t.alert({
+          message: 'Badge updated successfully!',
+          duration: 3
         });
-    });
+      })
+      .catch(error => {
+        console.error('Error fetching badge data:', error);
+        t.set('card', 'shared', 'badgeData', [{
+          text: 'Error',
+          color: 'red',
+          icon: iconUrl,
+          refresh: 60
+        }]);
+        t.set('card', 'shared', 'badgeLoading', false);
+        t.closePopup();
+        t.alert({
+          message: 'Error updating badge. Please try again.',
+          duration: 5
+        });
+      });
+
+    return loadingBadge;
+  },
+  'card-badges': function(t, options) {
+    return t.get('card', 'shared', 'badgeLoading')
+      .then(function(badgeLoading) {
+        if (badgeLoading) {
+          return [{
+            text: 'Loading...',
+            color: 'blue',
+            icon: iconUrl,
+            refresh: 0.1
+          }];
+        } else {
+          return t.get('card', 'shared', 'badgeData');
+        }
+      });
   }
 });
 
