@@ -337,15 +337,7 @@ TrelloPowerUp.initialize({
         const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
         const hubspotId = getCustomFieldValue(card.customFieldItems, '66e2a183ccc0da772098ab1e');
 
-        // Return a loading badge immediately
-        const loadingBadge = {
-          text: 'Loading...',
-          color: 'blue',
-          icon: 'https://your-icon-url.com/favicon.ico',
-          callback: onBtnClick
-        };
-
-        // Return the loading badge and start fetching data
+        // Return a Promise that resolves to the badge data
         return fetchYouniumData(orgNo, hubspotId)
           .then(youniumData => {
             let badge;
@@ -353,7 +345,7 @@ TrelloPowerUp.initialize({
               badge = {
                 text: 'Invalid ID',
                 color: 'red',
-                icon: 'https://your-icon-url.com/favicon.ico',
+                icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
                 callback: onBtnClick
               };
             } else {
@@ -361,7 +353,7 @@ TrelloPowerUp.initialize({
               badge = {
                 text: status.text,
                 color: status.color,
-                icon: 'https://your-icon-url.com/favicon.ico',
+                icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
                 callback: onBtnClick
               };
             }
@@ -372,7 +364,7 @@ TrelloPowerUp.initialize({
             const errorBadge = {
               text: 'Error loading status',
               color: 'red',
-              icon: 'https://your-icon-url.com/favicon.ico',
+              icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
               callback: onBtnClick
             };
             return [errorBadge];
