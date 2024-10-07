@@ -46,78 +46,73 @@ const getActivationStatus = (youniumData) => {
   }
 };
 
-// Update the fetchAndUpdateBadge function to return the badge data directly
+// Update the fetchAndUpdateBadge function to handle timeouts
 function fetchAndUpdateBadge(t) {
-  return t.card('all')
-    .then(function (card) {
-      const orgNo = getCustomFieldValue(card.customFieldItems, orgNoFieldId);
-      const hubspotId = getCustomFieldValue(card.customFieldItems, hubspotIdFieldId);
+  return new Promise((resolve, reject) => {
+    const fetchTimeout = setTimeout(() => {
+      reject(new Error('Fetch timed out'));
+    }, 3000); // 3 seconds timeout
 
-      console.log('Fetched Card:', card);
-      console.log('OrgNo:', orgNo);
-      console.log('HubSpotId:', hubspotId);
+    t.card('all')
+      .then(function (card) {
+        clearTimeout(fetchTimeout);
+        const orgNo = getCustomFieldValue(card.customFieldItems, orgNoFieldId);
+        const hubspotId = getCustomFieldValue(card.customFieldItems, hubspotIdFieldId);
 
-      if (!orgNo || !hubspotId) {
-        console.warn('Missing orgNo or hubspotId, cannot fetch Younium data.');
-        return [{
-          text: 'Invalid card data',
-          color: 'red',
-          icon: iconUrl,
-          refresh: 60
-        }];
-      }
+        console.log('Fetched Card:', card);
+        console.log('OrgNo:', orgNo);
+        console.log('HubSpotId:', hubspotId);
 
-      return fetchYouniumData(orgNo, hubspotId)
-        .then(function (youniumData) {
-          if (!youniumData) {
-            console.error('Younium data is null or undefined after API call');
-            return [{
-              text: 'Error loading status',
-              color: 'red',
-              icon: iconUrl,
-              refresh: 60
-            }];
-          }
-
-          if (youniumData.name === 'Invalid hubspot or orgnummer') {
-            console.error('Invalid Younium data received: Invalid hubspot or orgnummer');
-            return [{
-              text: 'Invalid ID',
-              color: 'red',
-              icon: iconUrl,
-              refresh: 60
-            }];
-          }
-
-          const status = getActivationStatus(youniumData);
-          console.log('Status from getActivationStatus:', status);
-
+        if (!orgNo || !hubspotId) {
+          console.warn('Missing orgNo or hubspotId, cannot fetch Younium data.');
           return [{
-            text: status.text,
-            color: status.color,
+            text: 'Invalid card data',
+            color: 'red',
             icon: iconUrl,
             refresh: 60
           }];
-        })
-        .catch(function (err) {
-          console.error('Error fetching or processing Younium data:', err);
+        }
+
+        return fetchYouniumData(orgNo, hubspotId);
+      })
+      .then(function (youniumData) {
+        if (!youniumData) {
+          console.error('Younium data is null or undefined after API call');
           return [{
             text: 'Error loading status',
             color: 'red',
             icon: iconUrl,
             refresh: 60
           }];
-        });
-    })
-    .catch(function (error) {
-      console.error('Error while fetching card data:', error);
-      return [{
-        text: 'Error loading card',
-        color: 'red',
-        icon: iconUrl,
-        refresh: 60
-      }];
-    });
+        }
+
+        if (youniumData.name === 'Invalid hubspot or orgnummer') {
+          console.error('Invalid Younium data received: Invalid hubspot or orgnummer');
+          return [{
+            text: 'Invalid ID',
+            color: 'red',
+            icon: iconUrl,
+            refresh: 60
+          }];
+        }
+
+        const status = getActivationStatus(youniumData);
+        console.log('Status from getActivationStatus:', status);
+
+        return [{
+          text: status.text,
+          color: status.color,
+          icon: iconUrl,
+          refresh: 60
+        }];
+      })
+      .then(resolve)
+      .catch(function (error) {
+        clearTimeout(fetchTimeout);
+        console.error('Error while fetching card data or Younium data:', error);
+        reject(error);
+      });
+  });
 }
 
 // Helper function to compare two Younium data objects
@@ -297,7 +292,7 @@ document.addEventListener('click', function (event) {
   }
 });
 
-// Function to fetch Younium data
+// Update fetchYouniumData to handle timeouts
 const fetchYouniumData = (orgNo, hubspotId) => {
   console.log('Fetching Younium data for:', { orgNo, hubspotId });
 
@@ -309,24 +304,31 @@ const fetchYouniumData = (orgNo, hubspotId) => {
     });
   }
 
-  // Use the correct API endpoint
   const apiUrl = `https://activateitems-d22e28f2e719.herokuapp.com/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`;
 
-  return fetch(apiUrl)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`API request failed with status ${response.status}`);
-      }
-      return response.json();
-    })
-    .then(data => {
-      console.log('Younium API response data:', data);
-      return data;
-    })
-    .catch(err => {
-      console.error('Error fetching Younium data:', err);
-      return null;
-    });
+  return new Promise((resolve, reject) => {
+    const fetchTimeout = setTimeout(() => {
+      reject(new Error('API request timed out'));
+    }, 5000); // 5 seconds timeout
+
+    fetch(apiUrl)
+      .then(response => {
+        clearTimeout(fetchTimeout);
+        if (!response.ok) {
+          throw new Error(`API request failed with status ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('Younium API response data:', data);
+        resolve(data);
+      })
+      .catch(err => {
+        clearTimeout(fetchTimeout);
+        console.error('Error fetching Younium data:', err);
+        reject(err);
+      });
+  });
 };
 
 const onBtnClick = (t, opts) => {
@@ -376,12 +378,25 @@ const onBtnClick = (t, opts) => {
 TrelloPowerUp.initialize({
   'card-detail-badges': function (t, options) {
     return new Promise((resolve) => {
+      const timeoutDuration = 4000; // 4 seconds timeout
+      const timeoutId = setTimeout(() => {
+        console.warn('Badge fetch timed out, resolving with loading badge');
+        resolve([{
+          text: 'Loading...',
+          color: 'blue',
+          icon: iconUrl,
+          refresh: 5 // Refresh after 5 seconds
+        }]);
+      }, timeoutDuration);
+
       fetchAndUpdateBadge(t)
         .then(badgeData => {
+          clearTimeout(timeoutId);
           console.log('Badge data fetched:', badgeData);
           resolve(badgeData);
         })
         .catch(error => {
+          clearTimeout(timeoutId);
           console.error('Error fetching badge data:', error);
           resolve([{
             text: 'Error',
