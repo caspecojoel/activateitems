@@ -61,7 +61,8 @@
             orderId: document.getElementById('order-id'),
             orderStatus: document.getElementById('order-status'),
             orderDescription: document.getElementById('order-description'),
-            productsContainer: document.getElementById('products-container')
+            productsContainer: document.getElementById('products-container'),
+            loadingSpinner: document.getElementById('loading-spinner')
         };
     
         // Ensure all DOM elements exist
@@ -71,12 +72,19 @@
             }
         });
     
-        // Show loading spinner while fetching data
-        document.getElementById('loading-spinner').style.display = 'block';
+        // Show loading spinner while waiting for data
+        domElements.loadingSpinner.style.display = 'block';
     
         // Listen for messages from the parent iframe to receive Younium data
         window.addEventListener('message', (event) => {
-            if (event.data.type === 'updateYouniumData') {
+            // Ensure that the message is coming from a trusted source
+            if (event.origin !== 'https://activateitems-d22e28f2e719.herokuapp.com' && event.origin !== 'https://trello.com') {
+                console.warn('Untrusted origin:', event.origin);
+                return;
+            }
+    
+            // Ensure the message type is 'updateYouniumData'
+            if (event.data && event.data.type === 'updateYouniumData') {
                 const youniumData = event.data.data;
                 console.log('Received Younium data:', youniumData);
     
@@ -124,16 +132,11 @@
                 });
     
                 // Hide loading spinner once data is loaded
-                document.getElementById('loading-spinner').style.display = 'none';
+                domElements.loadingSpinner.style.display = 'none';
             }
         });
-    
-        // Show loading spinner while waiting for data
-        document.getElementById('loading-spinner').style.display = 'block';
     </script>
     
-
-    <script src="https://p.trellocdn.com/power-up.min.js"></script>
     <script src="/client.js"></script>
 </body>
 </html>
