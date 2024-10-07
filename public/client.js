@@ -332,33 +332,24 @@ const onBtnClick = (t, opts) => {
 
 TrelloPowerUp.initialize({
   'card-detail-badges': async (t, options) => {
-    // Return the loading badge initially
+    // Immediately return the "Loading..." badge
     const loadingBadge = {
       text: 'Loading...',
       color: 'blue',
       icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico'
     };
 
-    // Immediately return the loading badge to avoid timeout issues
+    // Set loading badge to show immediately
     t.set('card', 'shared', 'youniumBadge', loadingBadge);
 
-    // Check if there's already a badge saved
-    const cachedBadge = await t.get('card', 'shared', 'youniumBadge');
-
-    // If the badge is already set and not in a loading state, return it
-    if (cachedBadge && cachedBadge.text !== 'Loading...') {
-      console.log('Using cached badge:', cachedBadge);
-      return [cachedBadge];
-    }
-
     try {
-      // Fetch card data
+      // Fetch the card details
       const card = await t.card('all');
       const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
       const hubspotId = getCustomFieldValue(card.customFieldItems, '66e2a183ccc0da772098ab1e');
 
       if (!orgNo || !hubspotId) {
-        console.error('Missing required OrgNo or HubspotId for fetching Younium data');
+        console.error('Missing OrgNo or HubspotId');
         const errorBadge = {
           text: 'Missing Data',
           color: 'red',
@@ -368,29 +359,29 @@ TrelloPowerUp.initialize({
         return [errorBadge];
       }
 
-      // Fetch Younium data asynchronously
+      // Fetch Younium data
       const youniumData = await fetchYouniumData(orgNo, hubspotId);
 
-      let newBadge;
+      let finalBadge;
       if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
         console.error('Invalid Younium data received:', youniumData);
-        newBadge = {
+        finalBadge = {
           text: 'Invalid Data',
           color: 'red',
           icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico'
         };
       } else {
         const status = getActivationStatus(youniumData);
-        newBadge = {
+        finalBadge = {
           text: status.text,
           color: status.color,
           icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico'
         };
       }
 
-      // Cache the badge state so it doesn't keep fetching every time
-      await t.set('card', 'shared', 'youniumBadge', newBadge);
-      return [newBadge];
+      // Update the badge with the fetched data
+      await t.set('card', 'shared', 'youniumBadge', finalBadge);
+      return [finalBadge];
 
     } catch (err) {
       console.error('Error fetching or processing Younium data:', err);
