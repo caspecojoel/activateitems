@@ -46,6 +46,7 @@ const getActivationStatus = (youniumData) => {
   }
 };
 
+// Update the fetchAndUpdateBadge function to return the badge data directly
 function fetchAndUpdateBadge(t) {
   return t.card('all')
     .then(function (card) {
@@ -62,7 +63,7 @@ function fetchAndUpdateBadge(t) {
           text: 'Invalid card data',
           color: 'red',
           icon: iconUrl,
-          refresh: false
+          refresh: 60
         }];
       }
 
@@ -74,7 +75,7 @@ function fetchAndUpdateBadge(t) {
               text: 'Error loading status',
               color: 'red',
               icon: iconUrl,
-              refresh: false
+              refresh: 60
             }];
           }
 
@@ -84,7 +85,7 @@ function fetchAndUpdateBadge(t) {
               text: 'Invalid ID',
               color: 'red',
               icon: iconUrl,
-              refresh: false
+              refresh: 60
             }];
           }
 
@@ -95,7 +96,7 @@ function fetchAndUpdateBadge(t) {
             text: status.text,
             color: status.color,
             icon: iconUrl,
-            refresh: false
+            refresh: 60
           }];
         })
         .catch(function (err) {
@@ -104,7 +105,7 @@ function fetchAndUpdateBadge(t) {
             text: 'Error loading status',
             color: 'red',
             icon: iconUrl,
-            refresh: false
+            refresh: 60
           }];
         });
     })
@@ -114,7 +115,7 @@ function fetchAndUpdateBadge(t) {
         text: 'Error loading card',
         color: 'red',
         icon: iconUrl,
-        refresh: false
+        refresh: 60
       }];
     });
 }
@@ -374,21 +375,22 @@ const onBtnClick = (t, opts) => {
 
 TrelloPowerUp.initialize({
   'card-detail-badges': function (t, options) {
-    // Return a "Loading..." badge immediately while fetching fresh data asynchronously
-    fetchAndUpdateBadge(t)
-      .then(badgeData => {
-        // Notify Trello with the updated badge data after fetching
-        console.log('Badge updated successfully.');
-        t.notifyParent('card-detail-badges');
-      });
-
-    // Immediately return a "Loading..." badge
-    return [{
-      text: 'Loading...',
-      color: 'blue',
-      icon: iconUrl,
-      refresh: 10 // Set refresh to give the badge a chance to update
-    }];
+    return new Promise((resolve) => {
+      fetchAndUpdateBadge(t)
+        .then(badgeData => {
+          console.log('Badge data fetched:', badgeData);
+          resolve(badgeData);
+        })
+        .catch(error => {
+          console.error('Error fetching badge data:', error);
+          resolve([{
+            text: 'Error',
+            color: 'red',
+            icon: iconUrl,
+            refresh: 10
+          }]);
+        });
+    });
   }
 });
 
