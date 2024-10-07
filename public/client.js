@@ -431,10 +431,8 @@ TrelloPowerUp.initialize({
   'card-detail-badges': function(t, options) {
     return t.get('card', 'private', 'badgeData').then(function(badgeData) {
       if (badgeData && badgeData.text) {
-        // Return the updated badge data and remove it to fetch fresh data next time
-        return t.remove('card', 'private', 'badgeData').then(function() {
-          return [badgeData];
-        });
+        // Return the stored badge data without removing it
+        return [badgeData];
       } else {
         // Start fetching data asynchronously
         fetchAndUpdateBadge(t);
@@ -443,7 +441,7 @@ TrelloPowerUp.initialize({
           text: 'Loading...',
           color: 'blue',
           icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-          refresh: 10 // Optional
+          // Optionally set a refresh interval if needed
         }];
       }
     });
