@@ -377,62 +377,32 @@ const onBtnClick = (t, opts) => {
 TrelloPowerUp.initialize({
   'card-detail-badges': function (t, options) {
     console.log('card-detail-badges function called');
-    
+
     // Immediately return a loading badge
-    t.set('card', 'shared', 'badgeLoading', true);
-    
     const loadingBadge = [{
       text: 'Loading...',
       color: 'blue',
       icon: iconUrl,
-      refresh: 0.1 // Refresh very quickly
+      refresh: 5 // Refresh frequently while loading
     }];
 
+    // Start fetching the actual badge data asynchronously
     fetchAndUpdateBadge(t)
       .then(badgeData => {
         console.log('Badge data fetched:', badgeData);
-        t.set('card', 'shared', 'badgeData', badgeData);
-        t.set('card', 'shared', 'badgeLoading', false);
-        t.closePopup();
-        t.alert({
-          message: 'Badge updated successfully!',
-          duration: 3
-        });
+        // Update the badge with the fetched data
+        t.closePopup(); // Close any pop-up related to badge updates
+        t.notifyParent('card-detail-badges'); // Notify Trello that the badge needs to be refreshed
       })
       .catch(error => {
         console.error('Error fetching badge data:', error);
-        t.set('card', 'shared', 'badgeData', [{
-          text: 'Error',
-          color: 'red',
-          icon: iconUrl,
-          refresh: 60
-        }]);
-        t.set('card', 'shared', 'badgeLoading', false);
-        t.closePopup();
-        t.alert({
-          message: 'Error updating badge. Please try again.',
-          duration: 5
-        });
+        t.notifyParent('card-detail-badges'); // Ensure the UI is updated to reflect an error state
       });
 
-    return loadingBadge;
-  },
-  'card-badges': function(t, options) {
-    return t.get('card', 'shared', 'badgeLoading')
-      .then(function(badgeLoading) {
-        if (badgeLoading) {
-          return [{
-            text: 'Loading...',
-            color: 'blue',
-            icon: iconUrl,
-            refresh: 0.1
-          }];
-        } else {
-          return t.get('card', 'shared', 'badgeData');
-        }
-      });
+    return loadingBadge; // Return the loading state while waiting for async call
   }
 });
+
 
 
 
