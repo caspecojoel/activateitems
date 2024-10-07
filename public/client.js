@@ -129,13 +129,13 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
   } catch (error) {
       console.error('Error refreshing Younium data:', error);
       alert('Failed to refresh Younium data. Please try again.');
-      
+
       // Restore the original button text
       if (button) {
           button.disabled = false;
           button.innerHTML = currentStatus ? 'Ready' : 'Unready';
       }
-      
+
       return;
   }
 
@@ -157,7 +157,7 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
       console.error(`Error: No product or charge found for Charge ID: ${chargeId} in refreshed data`);
       console.log('Younium data products:', youniumData.products);
       alert(`Error: No product or charge found for Charge ID: ${chargeId}`);
-      
+
       // Restore the original button text
       if (button) {
           button.disabled = false;
@@ -223,16 +223,26 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
 
           if (data.success) {
               console.log(`Successfully updated Charge ${chargeId} status to ${requestBody.ready4invoicing === "1" ? 'Ready' : 'Not Ready'} for invoicing`);
+
+              // Update button text and color instantly
+              if (button) {
+                  button.disabled = false;
+                  button.innerHTML = requestBody.ready4invoicing === "1" ? 'Unready' : 'Ready';
+                  button.classList.toggle('inactivate-button', requestBody.ready4invoicing === "1");
+                  button.classList.toggle('activate-button', requestBody.ready4invoicing !== "1");
+              }
+
+              // Fetch latest data in the background for consistency
               fetchLatestYouniumData(3, 2000, orgNo, hubspotId);
           } else {
               console.error('Failed to update the charge status:', data.message, data.details);
               alert(`Failed to update status: ${data.message}`);
-          }
 
-          // Restore the original button text after successful update
-          if (button) {
-              button.disabled = false;
-              button.innerHTML = requestBody.ready4invoicing === "1" ? 'Unready' : 'Ready';
+              // Restore the original button text
+              if (button) {
+                  button.disabled = false;
+                  button.innerHTML = currentStatus ? 'Ready' : 'Unready';
+              }
           }
 
           return;
