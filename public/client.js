@@ -328,33 +328,7 @@ const onBtnClick = (t, opts) => {
   });
 };
 
-TrelloPowerUp.initialize({
-  'card-detail-badges': async (t, options) => {
-    // Return default "Loading data" badge immediately to prevent timeout
-    const loadingBadge = {
-      text: 'Loading data...',
-      color: 'yellow',
-      icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico'
-    };
-
-    // Start a timer to repeatedly update the badge
-    setInterval(async () => {
-      await fetchAndUpdateBadge(t);
-    }, 5000); // Every 5 seconds
-
-    // Return the "Loading data..." badge initially
-    return [loadingBadge];
-  },
-
-  'card-badges': (t, options) => {
-    // Provide an empty badge array, just to satisfy the capability requirement
-    return [];
-  },
-
-  // Other capabilities can go here...
-});
-
-// Function to fetch Younium data and update the badge asynchronously
+// Function to fetch data and update the badge asynchronously
 async function fetchAndUpdateBadge(t) {
   try {
     const card = await t.card('all');
@@ -376,7 +350,8 @@ async function fetchAndUpdateBadge(t) {
       updatedBadge = {
         text: 'Invalid ID',
         color: 'red',
-        icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico'
+        icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+        callback: onBtnClick,
       };
     } else {
       // Get activation status
@@ -384,7 +359,8 @@ async function fetchAndUpdateBadge(t) {
       updatedBadge = {
         text: status.text,
         color: status.color,
-        icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico'
+        icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+        callback: onBtnClick,
       };
     }
 
@@ -399,10 +375,37 @@ async function fetchAndUpdateBadge(t) {
     const errorBadge = {
       text: 'Error loading status',
       color: 'red',
-      icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico'
+      icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+      callback: onBtnClick,
     };
     await t.set('card', 'shared', 'badgeData', errorBadge);
     t.notifyParent('card-detail-badges');
   }
 }
 
+// Initialize Trello Power-Up
+TrelloPowerUp.initialize({
+  'card-detail-badges': (t, options) => {
+    // Return the loading badge immediately
+    const loadingBadge = {
+      text: 'Loading data...',
+      color: 'yellow',
+      icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+      // Optionally, you can add a callback to allow manual refresh
+      callback: onBtnClick,
+    };
+
+    // Start fetching data asynchronously
+    fetchAndUpdateBadge(t);
+
+    // Return the loading badge
+    return [loadingBadge];
+  },
+
+  'card-badges': (t, options) => {
+    // Provide an empty badge array to satisfy capability requirements
+    return [];
+  },
+
+  // Include other capabilities as needed
+});
