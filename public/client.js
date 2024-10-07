@@ -331,68 +331,61 @@ const onBtnClick = (t, opts) => {
 };
 
 TrelloPowerUp.initialize({
-  'card-detail-badges': (t, options) => {
-    // Return a loading badge immediately
+  'card-detail-badges': async (t, options) => {
+    // Return a loading badge initially
     const loadingBadge = [{
       text: 'Loading...',
       color: 'blue',
       icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico'
     }];
 
-    // Return the loading badge immediately to avoid timeout issues
-    const initialBadge = t.set('card', 'shared', 'card-detail-badge', loadingBadge);
+    // Immediately set the loading badge to avoid timeout issues
+    t.set('card', 'shared', 'card-detail-badge', loadingBadge);
 
-    // Fetch data and update the badge asynchronously
-    t.card('all')
-      .then(card => {
-        const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
-        const hubspotId = getCustomFieldValue(card.customFieldItems, '66e2a183ccc0da772098ab1e');
+    try {
+      // Fetch card data
+      const card = await t.card('all');
+      const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
+      const hubspotId = getCustomFieldValue(card.customFieldItems, '66e2a183ccc0da772098ab1e');
 
-        if (!orgNo || !hubspotId) {
-          console.error('Missing required OrgNo or HubspotId for fetching Younium data');
-          return [{
-            text: 'Missing Data',
-            color: 'red',
-            icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico'
-          }];
-        }
-
-        return fetchYouniumData(orgNo, hubspotId)
-          .then(youniumData => {
-            if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
-              console.error('Invalid Younium data received:', youniumData);
-              return t.set('card', 'shared', 'card-detail-badge', [{
-                text: 'Invalid Data',
-                color: 'red',
-                icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico'
-              }]);
-            }
-
-            const status = getActivationStatus(youniumData);
-            return t.set('card', 'shared', 'card-detail-badge', [{
-              text: status.text,
-              color: status.color,
-              icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico'
-            }]);
-          })
-          .catch(err => {
-            console.error('Error fetching or processing Younium data:', err);
-            return t.set('card', 'shared', 'card-detail-badge', [{
-              text: 'Error Loading',
-              color: 'red',
-              icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico'
-            }]);
-          });
-      })
-      .catch(err => {
-        console.error('Error during card fetching or setting badge:', err);
-        return t.set('card', 'shared', 'card-detail-badge', [{
-          text: 'Loading Failed',
+      if (!orgNo || !hubspotId) {
+        console.error('Missing required OrgNo or HubspotId for fetching Younium data');
+        return [{
+          text: 'Missing Data',
           color: 'red',
           icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico'
-        }]);
-      });
+        }];
+      }
 
-    return loadingBadge;
+      // Fetch Younium data
+      const youniumData = await fetchYouniumData(orgNo, hubspotId);
+
+      if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
+        console.error('Invalid Younium data received:', youniumData);
+        return [{
+          text: 'Invalid Data',
+          color: 'red',
+          icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico'
+        }];
+      }
+
+      // Get activation status and update badge
+      const status = getActivationStatus(youniumData);
+      return [{
+        text: status.text,
+        color: status.color,
+        icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico'
+      }];
+
+    } catch (err) {
+      // Log the error and update the badge with an error state
+      console.error('Error fetching or processing Younium data:', err);
+      return [{
+        text: 'Error Loading',
+        color: 'red',
+        icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico'
+      }];
+    }
   }
 });
+
