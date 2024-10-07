@@ -274,6 +274,7 @@ const updateModalWithYouniumData = (youniumData) => {
 document.addEventListener('click', function (event) {
   if (event.target && event.target.tagName === 'BUTTON') {
     const chargeId = event.target.getAttribute('data-charge-id');
+    console.log('Charge ID:', chargeId); // This should now log the correct ID from the button
     const productName = event.target.getAttribute('data-product-name');
     const currentStatus = event.target.textContent.trim() === "Unready"; // Determine current status based on the button text
 
