@@ -246,7 +246,7 @@ const updateModalWithYouniumData = (youniumData) => {
           <td>${effectiveStartDate}</td>
           <td>${isActivated ? 'Ready for invoicing' : 'Not ready for invoicing'}</td>
           <td class="button-container">
-            <button class="${buttonClass}" data-charge-id="${charge.chargeId}" data-product-name="${product.name || ''}">
+            <button class="${buttonClass}" data-charge-id="${charge.id}" data-product-name="${product.name || ''}">
               ${buttonText}
             </button>
           </td>
@@ -264,7 +264,7 @@ document.addEventListener('click', function (event) {
   if (event.target && event.target.tagName === 'BUTTON') {
     const chargeId = event.target.getAttribute('data-charge-id');
     const productName = event.target.getAttribute('data-product-name');
-    const currentStatus = event.target.textContent.trim() === "Unready"; // Determine current status based on the button text
+    const currentStatus = event.target.textContent.trim() === "Unready";
 
     handleToggleButtonClick(chargeId, currentStatus, productName, youniumData);
   }
