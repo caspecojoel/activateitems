@@ -52,10 +52,12 @@
 
     <script src="https://p.trellocdn.com/power-up.min.js"></script>
     <script>
-        // Parse the URL and get Younium data
+        // Parse the URL parameters
         const urlParams = new URLSearchParams(window.location.search);
-        const youniumData = JSON.parse(urlParams.get('youniumData'));
-
+        const isLoading = urlParams.get('loading') === 'true';
+        const hubspotId = urlParams.get('hubspotId');
+        const orgNo = urlParams.get('orgNo');
+    
         // Map DOM elements for reusability
         const domElements = {
             hubspotId: document.getElementById('hubspot-id'),
@@ -65,62 +67,65 @@
             orderId: document.getElementById('order-id'),
             orderStatus: document.getElementById('order-status'),
             orderDescription: document.getElementById('order-description'),
-            productsContainer: document.getElementById('products-container')
+            productsContainer: document.getElementById('products-container'),
+            loadingSpinner: document.getElementById('loading-spinner')
         };
-
-        // Ensure all DOM elements exist
-        Object.keys(domElements).forEach(key => {
-            if (!domElements[key]) {
-                console.error(`Element with ID '${key}' is missing from the HTML.`);
+    
+        // Show loading spinner initially if loading state is set
+        if (isLoading) {
+            domElements.loadingSpinner.style.display = 'block';
+        }
+    
+        // Wait for the data message from the Trello Power-Up context
+        window.TrelloPowerUp.iframe().on('message', function(event) {
+            if (event.message === 'updateModalContent') {
+                // Hide loading spinner
+                domElements.loadingSpinner.style.display = 'none';
+    
+                if (event.error) {
+                    console.error(event.error);
+                    alert(event.error);
+                    return;
+                }
+    
+                const youniumData = event.youniumData;
+    
+                // Populate the modal with Younium data
+                if (domElements.hubspotId) domElements.hubspotId.textContent = hubspotId;
+                if (domElements.orgNumber) domElements.orgNumber.textContent = orgNo;
+                if (domElements.accountName) domElements.accountName.textContent = youniumData.account.name || 'N/A';
+                if (domElements.accountNumber) domElements.accountNumber.textContent = youniumData.account.accountNumber || 'N/A';
+                if (domElements.orderId) domElements.orderId.textContent = youniumData.id || 'N/A';
+                if (domElements.orderStatus) domElements.orderStatus.textContent = youniumData.status || 'N/A';
+                if (domElements.orderDescription) domElements.orderDescription.textContent = youniumData.description || 'N/A';
+    
+                // Populate products and charges table
+                youniumData.products.forEach(product => {
+                    product.charges.forEach(charge => {
+                        const isActivated = charge.ready4invoicing === true || charge.ready4invoicing === "true" || charge.ready4invoicing === "1";
+                        const buttonClass = isActivated ? 'inactivate-button' : 'activate-button';
+                        const buttonText = isActivated ? 'Unready' : 'Ready';
+    
+                        const effectiveStartDate = charge.effectiveStartDate ? new Date(charge.effectiveStartDate).toLocaleDateString() : 'N/A';
+    
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${product.name}</td>
+                            <td>${charge.name}</td>
+                            <td>${effectiveStartDate}</td>
+                            <td>${isActivated ? 'Ready for invoicing' : 'Not ready for invoicing'}</td>
+                            <td class="button-container">
+                                <button class="${buttonClass}" data-charge-id="${charge.id}" data-product-name="${product.name}">
+                                    ${buttonText}
+                                </button>
+                            </td>
+                        `;
+                        domElements.productsContainer.appendChild(row);
+                    });
+                });
             }
         });
-
-        // Show loading spinner while fetching data
-        document.getElementById('loading-spinner').style.display = 'block';
-
-        // Populate Younium Account and Order data if the elements exist
-        if (domElements.hubspotId) domElements.hubspotId.textContent = urlParams.get('hubspotId');
-        if (domElements.orgNumber) domElements.orgNumber.textContent = urlParams.get('orgNo');
-        if (domElements.accountName) domElements.accountName.textContent = youniumData.account.name;
-        if (domElements.accountNumber) domElements.accountNumber.textContent = youniumData.account.accountNumber;
-        if (domElements.orderId) domElements.orderId.textContent = youniumData.id;
-        if (domElements.orderStatus) domElements.orderStatus.textContent = youniumData.status;
-        if (domElements.orderDescription) domElements.orderDescription.textContent = youniumData.description;
-
-        // Hide loading spinner once data is loaded
-        document.getElementById('loading-spinner').style.display = 'none';
-
-        youniumData.products.sort((a, b) => a.name.localeCompare(b.name)); // Sort products alphabetically
-
-        youniumData.products.forEach(product => {
-            product.charges.sort((a, b) => a.name.localeCompare(b.name)); // Sort charges alphabetically
-
-            product.charges.forEach(charge => {
-                const isActivated = charge.ready4invoicing === true || charge.ready4invoicing === "true" || charge.ready4invoicing === "1";
-                const buttonClass = isActivated ? 'inactivate-button' : 'activate-button';
-                const buttonText = isActivated ? 'Unready' : 'Ready';
-
-                // Format the effective start date (if available)
-                const effectiveStartDate = new Date(charge.effectiveStartDate).toLocaleDateString();
-
-                // Populate the table row
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${product.name}</td>
-                    <td>${charge.name}</td>
-                    <td>${effectiveStartDate || 'N/A'}</td>
-                    <td>${isActivated ? 'Ready for invoicing' : 'Not ready for invoicing'}</td>
-                    <td class="button-container">
-                        <button class="${buttonClass}" data-charge-id="${charge.id}" data-product-name="${product.name}">
-                            ${buttonText}
-                        </button>
-                    </td>
-                `;
-                domElements.productsContainer.appendChild(row);
-            });
-        });
     </script>
-
     <script src="https://p.trellocdn.com/power-up.min.js"></script>
     <script src="/client.js"></script>
 </body>
