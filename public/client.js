@@ -4,6 +4,8 @@ function getCustomFieldValue(fields, fieldId) {
   return field?.value?.text || field?.value?.number || '';
 }
 
+const iconUrl = 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico';
+
 // Function to get activation status
 const getActivationStatus = (youniumData) => {
   console.log('getActivationStatus received:', youniumData);
@@ -42,12 +44,14 @@ const getActivationStatus = (youniumData) => {
   }
 };
 
-// Function to fetch and update badge data
 function fetchAndUpdateBadge(t) {
   t.card('all')
     .then(function(card) {
-      const orgNo = getCustomFieldValue(card.customFieldItems, 'your-orgno-field-id');
-      const hubspotId = getCustomFieldValue(card.customFieldItems, 'your-hubspotid-field-id');
+      const orgNo = getCustomFieldValue(card.customFieldItems, orgNoFieldId);
+      const hubspotId = getCustomFieldValue(card.customFieldItems, hubspotIdFieldId);
+
+      console.log('orgNo:', orgNo);
+      console.log('hubspotId:', hubspotId);
 
       return fetchYouniumData(orgNo, hubspotId)
         .then(function(youniumData) {
@@ -56,7 +60,7 @@ function fetchAndUpdateBadge(t) {
             badgeData = {
               text: 'Invalid ID',
               color: 'red',
-              icon: 'https://your-icon-url',
+              icon: iconUrl,
               callback: onBtnClick,
               refresh: false
             };
@@ -65,7 +69,7 @@ function fetchAndUpdateBadge(t) {
             badgeData = {
               text: status.text,
               color: status.color,
-              icon: 'https://your-icon-url',
+              icon: iconUrl,
               callback: onBtnClick,
               refresh: false
             };
@@ -79,7 +83,7 @@ function fetchAndUpdateBadge(t) {
           const badgeData = {
             text: 'Error loading status',
             color: 'red',
-            icon: 'https://your-icon-url',
+            icon: iconUrl,
             callback: onBtnClick,
             refresh: false
           };
@@ -342,7 +346,6 @@ const onBtnClick = (t, opts) => {
   });
 };
 
-// Initialize Trello Power-Up with updated card-detail-badges
 TrelloPowerUp.initialize({
   'card-detail-badges': function(t, options) {
     return t.get('card', 'private', 'badgeData')
@@ -357,11 +360,12 @@ TrelloPowerUp.initialize({
           return [{
             text: 'Loading...',
             color: 'blue',
-            icon: 'https://your-icon-url',
+            icon: iconUrl,
             refresh: 2 // Refresh every 2 seconds until data is ready
           }];
         }
       });
   }
 });
+
 
