@@ -333,7 +333,15 @@ const onBtnClick = (t, opts) => {
 // Initialize Trello Power-Up with dynamic card-detail-badge
 TrelloPowerUp.initialize({
   'card-detail-badges': (t, options) => {
-    return t.card('all')
+    // Return a placeholder immediately to prevent timeouts
+    return [{
+      text: 'Loading...',
+      color: 'yellow',
+      icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+    }];
+
+    // Asynchronously fetch Younium data to update the badge
+    t.card('all')
       .then(card => {
         const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
         const hubspotId = getCustomFieldValue(card.customFieldItems, '66e2a183ccc0da772098ab1e');
@@ -341,29 +349,32 @@ TrelloPowerUp.initialize({
         return fetchYouniumData(orgNo, hubspotId)
           .then(youniumData => {
             if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
+              t.notifyParent('card-detail-badges');
               return [{
                 text: 'Invalid ID',
                 color: 'red',
                 icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-                callback: onBtnClick
+                callback: onBtnClick,
               }];
             }
 
             const status = getActivationStatus(youniumData);
+            t.notifyParent('card-detail-badges');
             return [{
               text: status.text,
               color: status.color,
               icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-              callback: onBtnClick
+              callback: onBtnClick,
             }];
           })
           .catch(err => {
             console.error('Error processing Younium data:', err);
+            t.notifyParent('card-detail-badges');
             return [{
               text: 'Error loading status',
               color: 'red',
               icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-              callback: onBtnClick
+              callback: onBtnClick,
             }];
           });
       });
