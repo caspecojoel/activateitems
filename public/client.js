@@ -390,18 +390,46 @@ TrelloPowerUp.initialize({
     fetchAndUpdateBadge(t)
       .then(badgeData => {
         console.log('Badge data fetched:', badgeData);
-        // Update the badge with the fetched data
-        t.closePopup(); // Close any pop-up related to badge updates
-        t.notifyParent('card-detail-badges'); // Notify Trello that the badge needs to be refreshed
+        return t.set('card', 'shared', 'badgeData', badgeData) // Store badge data
+          .then(() => {
+            t.notifyParent('card-detail-badges'); // Notify Trello that the badge needs to be refreshed
+          });
       })
       .catch(error => {
         console.error('Error fetching badge data:', error);
-        t.notifyParent('card-detail-badges'); // Ensure the UI is updated to reflect an error state
+        const errorBadge = [{
+          text: 'Error',
+          color: 'red',
+          icon: iconUrl,
+          refresh: 60
+        }];
+        return t.set('card', 'shared', 'badgeData', errorBadge)
+          .then(() => {
+            t.notifyParent('card-detail-badges');
+          });
       });
 
     return loadingBadge; // Return the loading state while waiting for async call
+  },
+
+  'card-badges': function (t, options) {
+    // Get the final badge data or default to the loading badge if not yet fetched
+    return t.get('card', 'shared', 'badgeData')
+      .then(function (badgeData) {
+        if (badgeData) {
+          return badgeData;
+        } else {
+          return [{
+            text: 'Loading...',
+            color: 'blue',
+            icon: iconUrl,
+            refresh: 5
+          }];
+        }
+      });
   }
 });
+
 
 
 
