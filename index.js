@@ -80,7 +80,7 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
     if (response.data && response.data.length > 0) {
       // Find the order with isLastVersion true
       const youniumOrder = response.data.find(order => order.isLastVersion === true);
-      
+
       if (!youniumOrder) {
         console.log('No latest version found for the provided OrgNo and HubspotDealId.');
         return null;
@@ -103,12 +103,12 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
         },
         products: youniumOrder.products.map(product => ({
           productNumber: product.productNumber, // ProductId
-          chargePlanId: product.chargePlanId, // Internal GUID for ChargePlanId
+          chargePlanId: product.chargePlanId, // Use correct GUID for ChargePlanId
           name: product.name,
           charges: product.charges
             .filter(charge => charge.isLastVersion) // Only take the latest version of charges
             .map(charge => ({
-              id: charge.id, // Use the internal GUID for chargeId
+              id: charge.id, // Use internal GUID for chargeId
               name: charge.name,
               effectiveStartDate: charge.effectiveStartDate,
               ready4invoicing: charge.customFields.ready4invoicing === "true" || charge.customFields.ready4invoicing === "1"
@@ -354,8 +354,8 @@ app.post('/toggle-invoicing-status', async (req, res) => {
     `&AccountId=${encodeURIComponent(accountId)}` +
     `&InvoiceAccountId=${encodeURIComponent(invoiceAccountId)}` +
     `&ProductId=${encodeURIComponent(productId)}` +
-    `&ChargePlanId=${encodeURIComponent(chargePlanId)}` + // Using internal GUID
-    `&ChargeId=${encodeURIComponent(chargeId)}` +         // Using internal GUID
+    `&ChargePlanId=${encodeURIComponent(chargePlanId)}` + // Using internal GUID for ChargePlanId
+    `&ChargeId=${encodeURIComponent(chargeId)}` +         // Using internal GUID for chargeId
     `&LegalEntity=${encodeURIComponent('Caspeco AB')}` +
     `&IsReady4Invoicing=${encodeURIComponent(ready4invoicing)}` +
     `&apikey=${encodeURIComponent(process.env.YOUNIUM_API_KEY)}`;
