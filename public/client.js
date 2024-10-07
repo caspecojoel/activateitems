@@ -58,74 +58,64 @@ function fetchAndUpdateBadge(t) {
 
       if (!orgNo || !hubspotId) {
         console.warn('Missing orgNo or hubspotId, cannot fetch Younium data.');
-        const badgeData = {
+        return [{
           text: 'Invalid card data',
           color: 'red',
           icon: iconUrl,
-          callback: onBtnClick,
           refresh: false
-        };
-        t.notifyParent('card-detail-badges');
-        return [badgeData];
+        }];
       }
 
       return fetchYouniumData(orgNo, hubspotId)
         .then(function (youniumData) {
           if (!youniumData) {
             console.error('Younium data is null or undefined after API call');
-            throw new Error('Younium data is null or undefined');
+            return [{
+              text: 'Error loading status',
+              color: 'red',
+              icon: iconUrl,
+              refresh: false
+            }];
           }
 
-          let badgeData;
           if (youniumData.name === 'Invalid hubspot or orgnummer') {
             console.error('Invalid Younium data received: Invalid hubspot or orgnummer');
-            badgeData = {
+            return [{
               text: 'Invalid ID',
               color: 'red',
               icon: iconUrl,
-              callback: onBtnClick,
               refresh: false
-            };
-          } else {
-            const status = getActivationStatus(youniumData);
-            console.log('Status from getActivationStatus:', status);
-            badgeData = {
-              text: status.text,
-              color: status.color,
-              icon: iconUrl,
-              callback: onBtnClick,
-              refresh: false
-            };
+            }];
           }
 
-          // Update the badge and notify Trello
-          console.log('Badge updated successfully.');
-          t.notifyParent('card-detail-badges');
-          return [badgeData];
+          const status = getActivationStatus(youniumData);
+          console.log('Status from getActivationStatus:', status);
+
+          return [{
+            text: status.text,
+            color: status.color,
+            icon: iconUrl,
+            refresh: false
+          }];
         })
         .catch(function (err) {
           console.error('Error fetching or processing Younium data:', err);
-          const badgeData = {
+          return [{
             text: 'Error loading status',
             color: 'red',
             icon: iconUrl,
-            callback: onBtnClick,
             refresh: false
-          };
-          t.notifyParent('card-detail-badges');
-          return [badgeData];
+          }];
         });
     })
     .catch(function (error) {
       console.error('Error while fetching card data:', error);
-      const badgeData = {
+      return [{
         text: 'Error loading card',
         color: 'red',
         icon: iconUrl,
         refresh: false
-      };
-      t.notifyParent('card-detail-badges');
-      return [badgeData];
+      }];
     });
 }
 
@@ -387,9 +377,9 @@ TrelloPowerUp.initialize({
     // Return a "Loading..." badge immediately while fetching fresh data asynchronously
     fetchAndUpdateBadge(t)
       .then(badgeData => {
-        // Notify Trello to refresh with new data once fetched
-        t.set('card', 'shared', 'badgeData', badgeData)
-          .then(() => t.notifyParent('card-detail-badges'));
+        // Notify Trello with the updated badge data after fetching
+        console.log('Badge updated successfully.');
+        t.notifyParent('card-detail-badges');
       });
 
     // Immediately return a "Loading..." badge
