@@ -3,7 +3,7 @@ const getCustomFieldValue = (fields, fieldId) => {
   if (!field) {
     console.log(`Custom field with ID ${fieldId} not found in fields:`, fields);
   }
-  return field?.value?.text || field?.value?.number || field?.value?.string || field?.value?.checked || '';
+  return field?.value?.text || field?.value?.number || '';
 };
 
 // Function to get activation status
