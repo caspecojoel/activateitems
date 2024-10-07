@@ -330,17 +330,16 @@ const onBtnClick = (t, opts) => {
   });
 };
 
-// Initialize Trello Power-Up with dynamic card-detail-badge
 TrelloPowerUp.initialize({
   'card-detail-badges': (t, options) => {
-    // Return a placeholder immediately to avoid timeout
+    // Immediately return a loading badge
     let loadingBadge = {
       text: 'Loading...',
       color: 'yellow',
       icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico'
     };
-    
-    // Fetch Younium data asynchronously
+
+    // Fetch the badge data and update asynchronously
     t.card('all')
       .then(card => {
         const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
@@ -365,31 +364,33 @@ TrelloPowerUp.initialize({
               callback: onBtnClick,
             };
           })
+          .then(updatedBadge => {
+            // Store the updated badge data
+            return t.set('card', 'shared', 'badgeData', updatedBadge)
+              .then(() => {
+                t.notifyParent('card-detail-badges');
+              });
+          })
           .catch(err => {
             console.error('Error processing Younium data:', err);
-            return {
+            let errorBadge = {
               text: 'Error loading status',
               color: 'red',
               icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-              callback: onBtnClick,
+              callback: onBtnClick
             };
+            return t.set('card', 'shared', 'badgeData', errorBadge)
+              .then(() => {
+                t.notifyParent('card-detail-badges');
+              });
           });
-      })
-      .then(updatedBadge => {
-        // Notify Trello to update the badge once the data is ready
-        t.set('card', 'shared', 'badgeData', updatedBadge)
-          .then(() => t.notifyParent('card-detail-badges'));
-      })
-      .catch(err => {
-        console.error('Error setting badge data:', err);
       });
 
-    // Return the initial loading badge
     return [loadingBadge];
   },
 
   'card-badges': (t, options) => {
-    // Fetch the updated badge data when needed
+    // Fetch stored badge data for use in card badges
     return t.get('card', 'shared', 'badgeData')
       .then(badgeData => badgeData ? [badgeData] : []);
   }
