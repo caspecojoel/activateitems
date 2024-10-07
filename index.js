@@ -103,12 +103,12 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
         },
         products: youniumOrder.products.map(product => ({
           productNumber: product.productNumber, // ProductId
-          chargePlanNumber: product.chargePlanNumber, // ChargePlanId
+          chargePlanId: product.chargePlanId, // Internal GUID for ChargePlanId
           name: product.name,
           charges: product.charges
             .filter(charge => charge.isLastVersion) // Only take the latest version of charges
             .map(charge => ({
-              chargeNumber: charge.chargeNumber, // Use chargeNumber instead of id
+              id: charge.id, // Use the internal GUID for chargeId
               name: charge.name,
               effectiveStartDate: charge.effectiveStartDate,
               ready4invoicing: charge.customFields.ready4invoicing === "true" || charge.customFields.ready4invoicing === "1"
@@ -341,7 +341,7 @@ registerTrelloWebhook();
 
 app.post('/toggle-invoicing-status', async (req, res) => {
   console.log('Received request to toggle invoicing status:', req.body);
-  const { chargeId, chargeNumber, orderId, accountId, invoiceAccountId, productId, chargePlanId, ready4invoicing } = req.body;
+  const { chargeId, orderId, accountId, invoiceAccountId, productId, chargePlanId, ready4invoicing } = req.body;
 
   // Ensure the chargePlanId and chargeId correspond to the latest versions
   if (!chargePlanId || !chargeId) {

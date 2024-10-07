@@ -91,18 +91,18 @@ const isDataEqual = (data1, data2) => {
   return JSON.stringify(data1) === JSON.stringify(data2);
 };
 
-const handleToggleButtonClick = async (chargeNumber, currentStatus, productName, youniumData) => {
+const handleToggleButtonClick = async (chargeId, currentStatus, productName, youniumData) => {
   const action = currentStatus ? 'inactivate' : 'activate';
   const confirmationMessage = `Are you sure you want to ${action} ${productName}?`;
 
-  console.log(`Button clicked to ${action} product: ${productName}, Charge Number: ${chargeNumber}, Current status: ${currentStatus}`);
+  console.log(`Button clicked to ${action} product: ${productName}, Charge Number: ${chargeId}, Current status: ${currentStatus}`);
 
   if (!confirm(confirmationMessage)) {
     console.log(`User cancelled the ${action} action.`);
     return;
   }
 
-  console.log(`Proceeding to ${action} charge: ${chargeNumber}`);
+  console.log(`Proceeding to ${action} charge: ${chargeId}`);
 
   // Retrieve orgNo and hubspotId from the DOM elements
   const orgNo = document.getElementById('org-number').textContent.trim();
@@ -120,12 +120,12 @@ const handleToggleButtonClick = async (chargeNumber, currentStatus, productName,
     return;
   }
 
-  // Find the selected product and charge based on the chargeNumber
+  // Find the selected product and charge based on the chargeId
   let selectedProduct = null;
   let selectedCharge = null;
 
   for (const product of youniumData.products) {
-    const charge = product.charges.find(c => c.chargeNumber === chargeNumber);
+    const charge = product.charges.find(c => c.chargeId === chargeId);
     if (charge) {
       selectedProduct = product;
       selectedCharge = charge;
@@ -134,20 +134,19 @@ const handleToggleButtonClick = async (chargeNumber, currentStatus, productName,
   }
 
   if (!selectedProduct || !selectedCharge) {
-    console.error(`Error: No product or charge found for Charge Number: ${chargeNumber} in refreshed data`);
-    alert(`Error: No product or charge found for Charge Number: ${chargeNumber}`);
+    console.error(`Error: No product or charge found for Charge Number: ${chargeId} in refreshed data`);
+    alert(`Error: No product or charge found for Charge Number: ${chargeId}`);
     return;
   }
 
   // Prepare the request body with internal IDs (GUIDs)
   const requestBody = {
-    chargeId: selectedCharge.id, // Use internal GUID
-    chargeNumber: selectedCharge.chargeNumber,
+    chargeId: selectedCharge.id, // Use internal GUID for chargeId
     orderId: youniumData.id,
     accountId: youniumData.account.accountNumber,
     invoiceAccountId: youniumData.invoiceAccount.accountNumber,
     productId: selectedProduct.productNumber,
-    chargePlanId: selectedProduct.chargePlanId, // Use internal GUID
+    chargePlanId: selectedProduct.chargePlanId, // Use internal GUID for chargePlanId
     ready4invoicing: currentStatus ? "0" : "1"
   };
 
@@ -192,7 +191,7 @@ const handleToggleButtonClick = async (chargeNumber, currentStatus, productName,
       const data = await response.json();
 
       if (data.success) {
-        console.log(`Successfully updated Charge ${chargeNumber} status to ${requestBody.ready4invoicing === "1" ? 'Ready' : 'Not Ready'} for invoicing`);
+        console.log(`Successfully updated Charge ${chargeId} status to ${requestBody.ready4invoicing === "1" ? 'Ready' : 'Not Ready'} for invoicing`);
         // Refresh the UI with updated data
         fetchLatestYouniumData(3, 2000, orgNo, hubspotId);
       } else {
@@ -248,7 +247,7 @@ const updateModalWithYouniumData = (youniumData) => {
           <td>${effectiveStartDate}</td>
           <td>${isActivated ? 'Ready for invoicing' : 'Not ready for invoicing'}</td>
           <td class="button-container">
-            <button class="${buttonClass}" data-charge-number="${charge.chargeNumber}" data-product-name="${product.name || ''}">
+            <button class="${buttonClass}" data-charge-number="${charge.chargeId}" data-product-name="${product.name || ''}">
               ${buttonText}
             </button>
           </td>
@@ -266,11 +265,11 @@ const updateModalWithYouniumData = (youniumData) => {
 // Add event listener for toggle buttons
 document.addEventListener('click', function (event) {
   if (event.target && event.target.tagName === 'BUTTON') {
-    const chargeNumber = event.target.getAttribute('data-charge-number');
+    const chargeId = event.target.getAttribute('data-charge-number');
     const productName = event.target.getAttribute('data-product-name');
     const currentStatus = event.target.textContent.trim() === "Mark as not ready"; // Determine current status based on the button text
 
-    handleToggleButtonClick(chargeNumber, currentStatus, productName, youniumData);
+    handleToggleButtonClick(chargeId, currentStatus, productName, youniumData);
   }
 });
 
