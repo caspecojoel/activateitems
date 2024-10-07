@@ -94,31 +94,27 @@ const isDataEqual = (data1, data2) => {
 };
 
 const handleToggleButtonClick = async (chargeId, currentStatus, productName, youniumData) => {
-  const action = currentStatus ? 'inactivate' : 'activate';
-  const confirmationMessage = `Are you sure you want to ${action} ${productName}?`;
+  console.log(`Button clicked to ${currentStatus ? 'inactivate' : 'activate'} product: ${productName}, Charge ID: ${chargeId}, Current status: ${currentStatus}`);
 
-  console.log(`Button clicked to ${action} product: ${productName}, Charge ID: ${chargeId}, Current status: ${currentStatus}`);
-
-  if (!confirm(confirmationMessage)) {
-    console.log(`User cancelled the ${action} action.`);
+  if (!chargeId) {
+    console.error('Error: Charge ID is undefined or null.');
     return;
   }
 
-  console.log(`Proceeding to ${action} charge: ${chargeId}`);
+  console.log(`Proceeding to ${currentStatus ? 'inactivate' : 'activate'} charge: ${chargeId}`);
 
   // Retrieve orgNo and hubspotId from the DOM elements
   const orgNo = document.getElementById('org-number').textContent.trim();
   const hubspotId = document.getElementById('hubspot-id').textContent.trim();
-  console.log('Retrieved OrgNo:', orgNo);
-  console.log('Retrieved HubspotId:', hubspotId);
 
   // Attempt to refresh Younium data before proceeding
   try {
     youniumData = await fetchYouniumData(orgNo, hubspotId);
+    console.log('Refreshed Younium Data:', youniumData);
+
     if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
       throw new Error('Failed to fetch updated Younium data');
     }
-    console.log('Fetched updated Younium data:', youniumData);
   } catch (error) {
     console.error('Error refreshing Younium data:', error);
     alert('Failed to refresh Younium data. Please try again.');
@@ -129,7 +125,6 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
   let selectedProduct = null;
   let selectedCharge = null;
 
-  console.log('Searching for product and charge with Charge ID:', chargeId);
   for (const product of youniumData.products) {
     const charge = product.charges.find(c => c.id === chargeId);
     if (charge) {
@@ -141,17 +136,13 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
 
   if (!selectedProduct || !selectedCharge) {
     console.error(`Error: No product or charge found for Charge ID: ${chargeId} in refreshed data`);
-    console.log('Younium data products:', youniumData.products);
     alert(`Error: No product or charge found for Charge ID: ${chargeId}`);
     return;
   }
 
-  console.log('Found selected product:', selectedProduct);
-  console.log('Found selected charge:', selectedCharge);
-
   // Prepare the request body with internal IDs (GUIDs)
   const requestBody = {
-    chargeId: selectedCharge.id,
+    chargeId: selectedCharge.id,  // Correctly mapped
     orderId: youniumData.id,
     accountId: youniumData.account.accountNumber,
     invoiceAccountId: youniumData.invoiceAccount.accountNumber,
@@ -222,7 +213,6 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
 const updateModalWithYouniumData = (youniumData) => {
   console.log('Updating modal with updated Younium data:', youniumData);
 
-  // Validate that youniumData and required fields are present
   if (!youniumData || !youniumData.account || !youniumData.products) {
     console.error('Invalid Younium data provided to update modal:', youniumData);
     alert('Failed to update the modal. Missing or invalid Younium data.');
@@ -239,7 +229,6 @@ const updateModalWithYouniumData = (youniumData) => {
   youniumData.products.forEach(product => {
     if (product.charges && Array.isArray(product.charges)) {
       product.charges.forEach(charge => {
-        // Check if the charge is ready for invoicing based on the new ready4invoicing values
         const isActivated = charge.ready4invoicing === true || charge.ready4invoicing === "1" || charge.ready4invoicing === "true";
 
         const buttonClass = isActivated ? 'inactivate-button' : 'activate-button';
