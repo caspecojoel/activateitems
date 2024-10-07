@@ -332,14 +332,13 @@ const onBtnClick = (t, opts) => {
 
 TrelloPowerUp.initialize({
   'card-detail-badges': (t, options) => {
-    // Immediately return a loading badge
+    // Your current card-detail-badges code remains here
     let loadingBadge = {
       text: 'Loading...',
       color: 'yellow',
       icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico'
     };
 
-    // Fetch the badge data and update asynchronously
     t.card('all')
       .then(card => {
         const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
@@ -365,7 +364,6 @@ TrelloPowerUp.initialize({
             };
           })
           .then(updatedBadge => {
-            // Store the updated badge data
             return t.set('card', 'shared', 'badgeData', updatedBadge)
               .then(() => {
                 t.notifyParent('card-detail-badges');
@@ -390,8 +388,10 @@ TrelloPowerUp.initialize({
   },
 
   'card-badges': (t, options) => {
-    // Fetch stored badge data for use in card badges
-    return t.get('card', 'shared', 'badgeData')
-      .then(badgeData => badgeData ? [badgeData] : []);
-  }
+    // Provide an empty badge array, just to satisfy the capability requirement
+    return [];
+  },
+
+  // Other capabilities can go here...
 });
+
