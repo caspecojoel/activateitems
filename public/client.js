@@ -247,7 +247,7 @@ const updateModalWithYouniumData = (youniumData) => {
           <td>${effectiveStartDate}</td>
           <td>${isActivated ? 'Ready for invoicing' : 'Not ready for invoicing'}</td>
           <td class="button-container">
-            <button class="${buttonClass}" data-charge-number="${charge.chargeId}" data-product-name="${product.name || ''}">
+            <button class="${buttonClass}" data-charge-id="${charge.chargeId}" data-product-name="${product.name || ''}">
               ${buttonText}
             </button>
           </td>
@@ -260,12 +260,10 @@ const updateModalWithYouniumData = (youniumData) => {
   });
 };
 
-
-
 // Add event listener for toggle buttons
 document.addEventListener('click', function (event) {
   if (event.target && event.target.tagName === 'BUTTON') {
-    const chargeId = event.target.getAttribute('data-charge-number');
+    const chargeId = event.target.getAttribute('data-charge-id');
     const productName = event.target.getAttribute('data-product-name');
     const currentStatus = event.target.textContent.trim() === "Mark as not ready"; // Determine current status based on the button text
 
