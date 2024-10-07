@@ -1,23 +1,19 @@
 // Function to get custom field value
-function getCustomFieldValue(fields, fieldId) {
+const getCustomFieldValue = (fields, fieldId) => {
   const field = fields.find(f => f.idCustomField === fieldId);
   return field?.value?.text || field?.value?.number || '';
-}
-
-const orgNoFieldId = '66deaa1c355f14009a688b5d';
-const hubspotIdFieldId = '66e2a183ccc0da772098ab1e';
-const iconUrl = 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico';
+};
 
 // Function to get activation status
 const getActivationStatus = (youniumData) => {
   console.log('getActivationStatus received:', youniumData);
   if (!youniumData) {
     console.log('youniumData is null or undefined');
-    return { status: 'error', text: 'No data available', color: 'red' };
+    return { status: 'error', text: 'No data available' };
   }
   if (!youniumData.products || !Array.isArray(youniumData.products)) {
     console.log('youniumData.products is undefined or not an array');
-    return { status: 'error', text: 'No products data available', color: 'red' };
+    return { status: 'error', text: 'No products data available' };
   }
 
   let totalCharges = 0;
@@ -46,73 +42,46 @@ const getActivationStatus = (youniumData) => {
   }
 };
 
-function fetchAndUpdateBadge(t) {
-  return new Promise((resolve, reject) => {
-    const fetchTimeout = setTimeout(() => {
-      reject(new Error('Fetch timed out'));
-    }, 8000); // 8 seconds timeout
+const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
+  let lastData = null;
+  const tryFetch = (attemptNumber) => {
+    fetchYouniumData(orgNo, hubspotId)
+      .then(updatedYouniumData => {
+        console.log(`Attempt ${attemptNumber}: Updated Younium data received:`, updatedYouniumData);
+        console.log('isLastVersion:', updatedYouniumData.isLastVersion);
 
-    t.card('all')
-      .then(function (card) {
-        clearTimeout(fetchTimeout);
-        const orgNo = getCustomFieldValue(card.customFieldItems, orgNoFieldId);
-        const hubspotId = getCustomFieldValue(card.customFieldItems, hubspotIdFieldId);
-
-        console.log('Fetched Card:', card);
-        console.log('OrgNo:', orgNo);
-        console.log('HubSpotId:', hubspotId);
-
-        if (!orgNo || !hubspotId) {
-          console.warn('Missing orgNo or hubspotId, cannot fetch Younium data.');
-          return [{
-            text: 'Invalid card data',
-            color: 'red',
-            icon: iconUrl,
-            refresh: 60
-          }];
+        if (!updatedYouniumData || updatedYouniumData.name === 'Invalid hubspot or orgnummer') {
+          console.error('Failed to fetch valid updated Younium data:', updatedYouniumData);
+          alert('Failed to fetch valid updated data. Please verify Hubspot ID and Organization Number.');
+          return;
         }
 
-        return fetchYouniumData(orgNo, hubspotId);
+        if (!updatedYouniumData.isLastVersion && !isDataEqual(lastData, updatedYouniumData)) {
+          lastData = updatedYouniumData;
+          if (attemptNumber < retries) {
+            console.warn(`Fetched data might not be the latest version. Retrying in ${delay} ms...`);
+            setTimeout(() => tryFetch(attemptNumber + 1), delay);
+          } else {
+            console.warn('Failed to confirm the latest version after multiple retries. Proceeding with the most recent data.');
+            updateModalWithYouniumData(updatedYouniumData);
+          }
+        } else {
+          console.log('Latest data version confirmed or no changes detected.');
+          updateModalWithYouniumData(updatedYouniumData);
+        }
       })
-      .then(function (youniumData) {
-        if (!youniumData) {
-          console.error('Younium data is null or undefined after API call');
-          return [{
-            text: 'Error loading status',
-            color: 'red',
-            icon: iconUrl,
-            refresh: 60
-          }];
+      .catch(fetchError => {
+        console.error('Error fetching updated Younium data:', fetchError);
+        if (attemptNumber < retries) {
+          setTimeout(() => tryFetch(attemptNumber + 1), delay);
+        } else {
+          alert('Error fetching updated data. Please try again later.');
         }
-
-        if (youniumData.name === 'Invalid hubspot or orgnummer') {
-          console.error('Invalid Younium data received: Invalid hubspot or orgnummer');
-          return [{
-            text: 'Invalid ID',
-            color: 'red',
-            icon: iconUrl,
-            refresh: 60
-          }];
-        }
-
-        const status = getActivationStatus(youniumData);
-        console.log('Status from getActivationStatus:', status);
-
-        return [{
-          text: status.text,
-          color: status.color,
-          icon: iconUrl,
-          refresh: 60
-        }];
-      })
-      .then(resolve)
-      .catch(function (error) {
-        clearTimeout(fetchTimeout);
-        console.error('Error while fetching card data or Younium data:', error);
-        reject(error);
       });
-  });
-}
+  };
+
+  tryFetch(1);
+};
 
 // Helper function to compare two Younium data objects
 const isDataEqual = (data1, data2) => {
@@ -280,6 +249,8 @@ const updateModalWithYouniumData = (youniumData) => {
   });
 };
 
+
+
 // Add event listener for toggle buttons
 document.addEventListener('click', function (event) {
   if (event.target && event.target.tagName === 'BUTTON') {
@@ -303,31 +274,16 @@ const fetchYouniumData = (orgNo, hubspotId) => {
     });
   }
 
-  const apiUrl = `https://activateitems-d22e28f2e719.herokuapp.com/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`;
-
-  return new Promise((resolve, reject) => {
-    const fetchTimeout = setTimeout(() => {
-      reject(new Error('API request timed out'));
-    }, 7000); // 7 seconds timeout
-
-    fetch(apiUrl)
-      .then(response => {
-        clearTimeout(fetchTimeout);
-        if (!response.ok) {
-          throw new Error(`API request failed with status ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        console.log('Younium API response data:', data);
-        resolve(data);
-      })
-      .catch(err => {
-        clearTimeout(fetchTimeout);
-        console.error('Error fetching Younium data:', err);
-        reject(err);
-      });
-  });
+  return fetch(`/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`)
+    .then(response => response.json())
+    .then(data => {
+      console.log('Younium API response data:', data);
+      return data;
+    })
+    .catch(err => {
+      console.error('Error fetching Younium data:', err);
+      return null;
+    });
 };
 
 const onBtnClick = (t, opts) => {
@@ -336,8 +292,8 @@ const onBtnClick = (t, opts) => {
   return t.card('all').then(card => {
     console.log('Card data:', card);
 
-    const hubspotId = getCustomFieldValue(card.customFieldItems, hubspotIdFieldId);
-    const orgNo = getCustomFieldValue(card.customFieldItems, orgNoFieldId);
+    const hubspotId = getCustomFieldValue(card.customFieldItems, '66e2a183ccc0da772098ab1e');
+    const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
     console.log('HubSpot ID:', hubspotId);
     console.log('Org Number:', orgNo);
 
@@ -356,9 +312,9 @@ const onBtnClick = (t, opts) => {
           return t.modal({
             title: 'Ready for invoicing',
             url: externalUrl,
-            height: 1000,
-            width: 1000,
-            fullscreen: false,
+            height: 1000,  // Set the height (1000px in this case)
+            width: 1000,   // You can also set the width as needed
+            fullscreen: false, // Set to true if you want the modal to take up the full screen
             mouseEvent: opts.mouseEvent
           });
 
@@ -374,68 +330,42 @@ const onBtnClick = (t, opts) => {
   });
 };
 
+// Initialize Trello Power-Up with dynamic card-detail-badge
 TrelloPowerUp.initialize({
-  'card-detail-badges': async function (t, options) {
-    console.log('card-detail-badges function called');
+  'card-detail-badges': (t, options) => {
+    return t.card('all')
+      .then(card => {
+        const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
+        const hubspotId = getCustomFieldValue(card.customFieldItems, '66e2a183ccc0da772098ab1e');
 
-    try {
-      // Fetch the card data (orgNo and hubspotId)
-      const card = await t.card('all');
-      const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
-      const hubspotId = getCustomFieldValue(card.customFieldItems, '66e2a183ccc0da772098ab1e');
+        return fetchYouniumData(orgNo, hubspotId)
+          .then(youniumData => {
+            if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
+              return [{
+                text: 'Invalid ID',
+                color: 'red',
+                icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+                callback: onBtnClick
+              }];
+            }
 
-      // Ensure we have valid orgNo and hubspotId
-      if (!orgNo || !hubspotId) {
-        console.error('Missing orgNo or hubspotId, cannot fetch Younium data');
-        return [{
-          text: 'Invalid card data',
-          color: 'red',
-          icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico'
-        }];
-      }
-
-      // Fetch Younium data
-      const youniumData = await fetchYouniumData(orgNo, hubspotId);
-
-      // Handle invalid data from Younium
-      if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
-        return [{
-          text: 'Invalid ID',
-          color: 'red',
-          icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico'
-        }];
-      }
-
-      // Process activation status
-      const status = getActivationStatus(youniumData);
-      return [{
-        text: status.text,
-        color: status.color,
-        icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico'
-      }];
-    } catch (error) {
-      // Handle errors in fetching or processing data
-      console.error('Error fetching or processing Younium data:', error);
-      return [{
-        text: 'Error loading status',
-        color: 'red',
-        icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico'
-      }];
-    }
+            const status = getActivationStatus(youniumData);
+            return [{
+              text: status.text,
+              color: status.color,
+              icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+              callback: onBtnClick
+            }];
+          })
+          .catch(err => {
+            console.error('Error processing Younium data:', err);
+            return [{
+              text: 'Error loading status',
+              color: 'red',
+              icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+              callback: onBtnClick
+            }];
+          });
+      });
   }
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
