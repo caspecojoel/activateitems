@@ -179,6 +179,11 @@ th {
     cursor: wait;
 }
 
+.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
 /* Styling for the products table */
 #products-table {
     width: 100%;

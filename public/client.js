@@ -112,14 +112,20 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
   });
 
   // Update the clicked button's text to "Wait..." and add a spinner
-  clickedButton.textContent = 'Wait...';
-  clickedButton.classList.add('spinner');
+  clickedButton.innerHTML = 'Wait... <span class="spinner"></span>';
+  clickedButton.classList.add('processing');
 
   console.log(`Proceeding to ${action} charge: ${chargeId}`);
 
   // Retrieve orgNo and hubspotId from the DOM elements
-  const orgNo = document.getElementById('org-number').textContent.trim();
-  const hubspotId = document.getElementById('hubspot-id').textContent.trim();
+  const orgNo = document.getElementById('org-number')?.textContent.trim();
+  const hubspotId = document.getElementById('hubspot-id')?.textContent.trim();
+
+  if (!orgNo || !hubspotId) {
+    console.error('Error retrieving orgNo or hubspotId from the DOM.');
+    alert('Failed to retrieve necessary data. Please try again.');
+    return;
+  }
 
   // Attempt to refresh Younium data before proceeding
   try {
@@ -191,16 +197,17 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
       if (data.success) {
         console.log(`Successfully updated Charge ${chargeId} status to ${requestBody.ready4invoicing === "1" ? 'Ready' : 'Not Ready'} for invoicing`);
 
-        // Update button immediately after a successful 200 response
-        clickedButton.textContent = currentStatus ? 'Ready' : 'Unready';
+        // Update button and status immediately after a successful 200 response
+        clickedButton.innerHTML = requestBody.ready4invoicing === "1" ? 'Unready' : 'Ready';
         clickedButton.classList.toggle('activate-button');
         clickedButton.classList.toggle('inactivate-button');
-        clickedButton.classList.remove('spinner');
-        clickedButton.disabled = false;
+        clickedButton.classList.remove('processing');
 
         // Update the status in the table immediately
         const statusCell = clickedButton.closest('tr').querySelector('td:nth-child(4)');
-        statusCell.textContent = requestBody.ready4invoicing === "1" ? 'Ready for invoicing' : 'Not ready for invoicing';
+        if (statusCell) {
+          statusCell.textContent = requestBody.ready4invoicing === "1" ? 'Ready for invoicing' : 'Not ready for invoicing';
+        }
 
         // Re-enable all other buttons
         allButtons.forEach(button => {
@@ -232,11 +239,12 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
     button.classList.remove('disabled');
   });
 
-  // Reset the clicked button
-  clickedButton.textContent = currentStatus ? 'Ready' : 'Unready';
-  clickedButton.classList.remove('spinner');
+  // Reset the clicked button if the update fails
+  clickedButton.innerHTML = currentStatus ? 'Ready' : 'Unready';
+  clickedButton.classList.remove('processing');
   clickedButton.disabled = false;
 };
+
 
 const updateModalWithYouniumData = (youniumData) => {
   console.log('Updating modal with updated Younium data:', youniumData);
