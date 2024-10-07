@@ -383,26 +383,34 @@ TrelloPowerUp.initialize({
       text: 'Loading...',
       color: 'blue',
       icon: iconUrl,
-      refresh: 10 // Set refresh to 10 seconds
+      refresh: 10 // Refresh quickly until the real data is ready
     }];
-
-    // Return a loading badge while we wait for data
-    return fetchAndUpdateBadge(t)
+    
+    // Start fetching the final badge data asynchronously
+    fetchAndUpdateBadge(t)
       .then(badgeData => {
         console.log('Badge data fetched:', badgeData);
-        return badgeData; // Return updated badge directly
+
+        // Update the card badges with the fetched data
+        t.notifyParent('card-detail-badges');
       })
       .catch(error => {
         console.error('Error fetching badge data:', error);
-        return [{
+
+        // Set an error badge to indicate the issue
+        t.set('card', 'shared', 'badgeData', [{
           text: 'Error loading',
           color: 'red',
           icon: iconUrl,
           refresh: 60 // Retry after 60 seconds
-        }];
+        }]);
+        t.notifyParent('card-detail-badges');
       });
+
+    return loadingBadge;
   }
 });
+
 
 
 
