@@ -189,6 +189,19 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
     ready4invoicing: currentStatus ? "0" : "1"
   };
 
+  // Construct the URL dynamically
+  const activationUrl = `https://cas-test.loveyourq.se/dev/UpdateReady4Invoicing` +
+  `?OrderId=${encodeURIComponent(requestBody.orderId)}` +
+  `&AccountId=${encodeURIComponent(requestBody.accountId)}` +
+  `&InvoiceAccountId=${encodeURIComponent(requestBody.invoiceAccountId)}` +
+  `&ProductId=${encodeURIComponent(requestBody.productId)}` +
+  `&ChargeId=${encodeURIComponent(requestBody.chargeId)}` +
+  `&LegalEntity=${encodeURIComponent('Caspeco AB')}` +
+  `&IsReady4Invoicing=${encodeURIComponent(requestBody.ready4invoicing)}` +
+  `&apikey=${encodeURIComponent(process.env.YOUNIUM_API_KEY)}`;
+
+  // Log the constructed URL
+  console.log('Constructed Activation URL:', activationUrl);
   console.log('Request body being sent to /toggle-invoicing-status:', requestBody);
   
   // Retry logic with detailed logs
