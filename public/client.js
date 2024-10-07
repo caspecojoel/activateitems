@@ -4,6 +4,8 @@ function getCustomFieldValue(fields, fieldId) {
   return field?.value?.text || field?.value?.number || '';
 }
 
+const orgNoFieldId = '66deaa1c355f14009a688b5d';
+const hubspotIdFieldId = '66e2a183ccc0da772098ab1e';
 const iconUrl = 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico';
 
 // Function to get activation status
@@ -88,7 +90,7 @@ function fetchAndUpdateBadge(t) {
             refresh: false
           };
           return t.set('card', 'private', 'badgeData', badgeData);
-        });        
+        });      
     });
 }
 
@@ -282,7 +284,7 @@ const fetchYouniumData = (orgNo, hubspotId) => {
   }
 
   // Use the correct API endpoint
-  const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(youniumData))}&hubspotId=${encodeURIComponent(hubspotId)}&orgNo=${encodeURIComponent(orgNo)}`;
+  const apiUrl = `https://activateitems-d22e28f2e719.herokuapp.com/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`;
 
   return fetch(apiUrl)
     .then(response => {
@@ -301,15 +303,14 @@ const fetchYouniumData = (orgNo, hubspotId) => {
     });
 };
 
-
 const onBtnClick = (t, opts) => {
   console.log('Button clicked on card:', opts);
 
   return t.card('all').then(card => {
     console.log('Card data:', card);
 
-    const hubspotId = getCustomFieldValue(card.customFieldItems, '66e2a183ccc0da772098ab1e');
-    const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
+    const hubspotId = getCustomFieldValue(card.customFieldItems, hubspotIdFieldId);
+    const orgNo = getCustomFieldValue(card.customFieldItems, orgNoFieldId);
     console.log('HubSpot ID:', hubspotId);
     console.log('Org Number:', orgNo);
 
@@ -328,9 +329,9 @@ const onBtnClick = (t, opts) => {
           return t.modal({
             title: 'Ready for invoicing',
             url: externalUrl,
-            height: 1000,  // Set the height (1000px in this case)
-            width: 1000,   // You can also set the width as needed
-            fullscreen: false, // Set to true if you want the modal to take up the full screen
+            height: 1000,
+            width: 1000,
+            fullscreen: false,
             mouseEvent: opts.mouseEvent
           });
 
@@ -345,6 +346,7 @@ const onBtnClick = (t, opts) => {
     });
   });
 };
+
 
 TrelloPowerUp.initialize({
   'card-detail-badges': function(t, options) {
