@@ -378,27 +378,39 @@ const onBtnClick = (t, opts) => {
   });
 };
 
-
 TrelloPowerUp.initialize({
   'card-detail-badges': function(t, options) {
-    return t.get('card', 'private', 'badgeData')
-      .then(function(badgeData) {
-        if (badgeData) {
-          // Return badge data without clearing it
-          return [badgeData];
-        } else {
-          // Start fetching data asynchronously
-          fetchAndUpdateBadge(t);
-          // Return loading badge with refresh
-          return [{
-            text: 'Loading...',
-            color: 'blue',
-            icon: iconUrl,
-            refresh: 2 // Refresh every 2 seconds until data is ready
-          }];
-        }
+    // Always start fetching data asynchronously to ensure badge is up to date
+    return fetchAndUpdateBadge(t)
+      .then(() => {
+        // Once fetching is done, get the updated badge data
+        return t.get('card', 'private', 'badgeData')
+          .then(function(badgeData) {
+            if (badgeData) {
+              // Return the most recent badge data
+              return [badgeData];
+            } else {
+              // Fallback if for some reason badgeData is not set correctly
+              return [{
+                text: 'Loading...',
+                color: 'blue',
+                icon: iconUrl,
+                refresh: 2 // Refresh every 2 seconds until data is ready
+              }];
+            }
+          });
+      })
+      .catch(function(error) {
+        console.error('Error updating the badge:', error);
+        return [{
+          text: 'Error loading status',
+          color: 'red',
+          icon: iconUrl,
+          refresh: false
+        }];
       });
   }
 });
+
 
 
