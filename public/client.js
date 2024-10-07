@@ -4,7 +4,7 @@ const getCustomFieldValue = (fields, fieldId) => {
   return field?.value?.text || field?.value?.number || '';
 };
 
-// Function to get activation status
+// Modify getActivationStatus function to return the count of ready products
 const getActivationStatus = (youniumData) => {
   console.log('getActivationStatus received:', youniumData);
   if (!youniumData) {
@@ -32,13 +32,13 @@ const getActivationStatus = (youniumData) => {
   console.log('Activated charges:', activatedCharges);
 
   if (totalCharges === 0) {
-    return { status: 'none', text: 'No charges found', color: 'yellow' };
+    return { status: 'none', text: '0 produkter redo', color: 'yellow' };
   } else if (activatedCharges === totalCharges) {
-    return { status: 'all', text: 'All products ready', color: 'green' };
+    return { status: 'all', text: `${activatedCharges} produkter redo`, color: 'green' };
   } else if (activatedCharges > 0) {
-    return { status: 'partial', text: `${activatedCharges}/${totalCharges} products ready`, color: 'lime' };
+    return { status: 'partial', text: `${activatedCharges} produkter redo`, color: 'lime' };
   } else {
-    return { status: 'none', text: 'No products ready', color: 'red' };
+    return { status: 'none', text: '0 produkter redo', color: 'red' };
   }
 };
 
@@ -300,12 +300,6 @@ const onBtnClick = (t, opts) => {
     return t.member('fullName').then(member => {
       const userName = member.fullName;
 
-      // Set button to loading state
-      t.attach({
-        icon: 'https://activateitems-d22e28f2e719.herokuapp.com/loading.gif', // Replace with actual loading spinner URL
-        text: 'Loading...'
-      });
-
       // Fetch Younium data and display in popup
       return fetchYouniumData(orgNo, hubspotId)
         .then(youniumData => {
@@ -315,24 +309,18 @@ const onBtnClick = (t, opts) => {
 
           const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(youniumData))}&hubspotId=${encodeURIComponent(hubspotId)}&orgNo=${encodeURIComponent(orgNo)}`;
 
-          // Reset button state before opening modal
-          t.attach(null);
-
           return t.modal({
             title: 'Ready for invoicing',
             url: externalUrl,
-            height: 1000,
-            width: 1000,
-            fullscreen: false,
+            height: 1000,  // Set the height (1000px in this case)
+            width: 1000,   // You can also set the width as needed
+            fullscreen: false, // Set to true if you want the modal to take up the full screen
             mouseEvent: opts.mouseEvent
           });
+
         })
         .catch(err => {
           console.error('Error fetching Younium data or displaying popup:', err);
-          
-          // Reset button state on error
-          t.attach(null);
-
           return t.alert({
             message: 'Failed to load Younium data. Please try again later.',
             duration: 5
@@ -350,34 +338,54 @@ TrelloPowerUp.initialize({
         const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
         const hubspotId = getCustomFieldValue(card.customFieldItems, '66e2a183ccc0da772098ab1e');
 
-        return fetchYouniumData(orgNo, hubspotId)
+        // Initially return a loading badge
+        const loadingBadge = {
+          text: 'Laddar',
+          color: 'blue',
+          icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+          callback: onBtnClick
+        };
+
+        // Return the loading badge immediately
+        t.set('card', 'shared', 'youniumBadge', loadingBadge);
+
+        // Then fetch the data and update the badge
+        fetchYouniumData(orgNo, hubspotId)
           .then(youniumData => {
+            let badge;
             if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
-              return [{
+              badge = {
                 text: 'Invalid ID',
                 color: 'red',
                 icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
                 callback: onBtnClick
-              }];
+              };
+            } else {
+              const status = getActivationStatus(youniumData);
+              badge = {
+                text: status.text,
+                color: status.color,
+                icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+                callback: onBtnClick
+              };
             }
-
-            const status = getActivationStatus(youniumData);
-            return [{
-              text: status.text,
-              color: status.color,
-              icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-              callback: onBtnClick
-            }];
+            // Update the badge with the fetched data
+            return t.set('card', 'shared', 'youniumBadge', badge);
           })
           .catch(err => {
             console.error('Error processing Younium data:', err);
-            return [{
+            const errorBadge = {
               text: 'Error loading status',
               color: 'red',
               icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
               callback: onBtnClick
-            }];
+            };
+            return t.set('card', 'shared', 'youniumBadge', errorBadge);
           });
+
+        // Return a function that reads the latest badge state
+        return t.get('card', 'shared', 'youniumBadge')
+          .then(badge => badge ? [badge] : []);
       });
   }
 });
