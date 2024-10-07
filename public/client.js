@@ -378,65 +378,25 @@ TrelloPowerUp.initialize({
   'card-detail-badges': async function (t, options) {
     console.log('card-detail-badges function called');
 
-    // Immediately return a "Loading..." badge
-    t.set('card', 'shared', 'isFetchingBadge', true);
-    let loadingBadge = [{
-      text: 'Loading...',
-      color: 'blue',
-      icon: iconUrl,
-    }];
+    try {
+      // Fetch the badge data
+      const badgeData = await fetchAndUpdateBadge(t);
+      console.log('Badge data fetched:', badgeData);
 
-    // Start fetching data
-    fetchAndUpdateBadge(t)
-      .then(badgeData => {
-        console.log('Badge data fetched:', badgeData);
-
-        // Set the fetched badge data to be used
-        t.set('card', 'shared', 'badgeData', badgeData);
-        t.set('card', 'shared', 'isFetchingBadge', false);
-        
-        // Manually trigger a re-fetch to update the badge in Trello
-        t.closeOverlay().then(() => {
-          t.navigate({
-            url: '/',
-            accentColor: '#ffffff',
-            height: '200px'
-          });
-        });
-      })
-      .catch(error => {
-        console.error('Error fetching badge data:', error);
-        
-        // Set error badge data
-        let errorBadge = [{
-          text: 'Error loading',
-          color: 'red',
-          icon: iconUrl,
-        }];
-        t.set('card', 'shared', 'badgeData', errorBadge);
-        t.set('card', 'shared', 'isFetchingBadge', false);
-      });
-
-    return loadingBadge;
-  },
-  'card-badges': async function (t, options) {
-    const isFetchingBadge = await t.get('card', 'shared', 'isFetchingBadge');
-
-    if (isFetchingBadge) {
+      // Return the final badge once data is ready
+      return badgeData;
+    } catch (error) {
+      console.error('Error fetching badge data:', error);
+      
+      // Return an error badge in case of failure
       return [{
-        text: 'Loading...',
-        color: 'blue',
+        text: 'Error loading',
+        color: 'red',
         icon: iconUrl,
+        refresh: 60 // Retry fetching after 60 seconds
       }];
     }
-
-    const badgeData = await t.get('card', 'shared', 'badgeData');
-    return badgeData || [{
-      text: 'Data not available',
-      color: 'red',
-      icon: iconUrl,
-    }];
-  },
+  }
 });
 
 
