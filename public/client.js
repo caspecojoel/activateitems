@@ -1,5 +1,4 @@
 // Add these variables at the top of your client.js file
-let youniumData = null;
 let isLoading = false;
 
 const getCustomFieldValue = (fields, fieldId) => {
@@ -353,7 +352,7 @@ document.addEventListener('click', function (event) {
 });
 
 
-// Function to fetch Younium data
+// Modify the existing fetchYouniumData function
 const fetchYouniumData = (orgNo, hubspotId) => {
   console.log('Fetching Younium data for:', { orgNo, hubspotId });
 
@@ -377,6 +376,7 @@ const fetchYouniumData = (orgNo, hubspotId) => {
     });
 };
 
+// Modify the existing onBtnClick function
 const onBtnClick = (t, opts) => {
   console.log('Button clicked on card:', opts);
 
@@ -468,6 +468,14 @@ TrelloPowerUp.initialize({
           .then(data => {
             youniumData = data;
             isLoading = false;
+            // Refresh the badge to update its appearance
+            t.card('id')
+              .then(function(card) {
+                return t.set(card.id, 'shared', 'youniumDataLoaded', true);
+              })
+              .then(function() {
+                return t.closePopup();
+              });
           })
           .catch(err => {
             console.error('Error prefetching Younium data:', err);
@@ -477,11 +485,14 @@ TrelloPowerUp.initialize({
     });
 
     // Return the badge
-    return [{
-      text: youniumData ? 'View invoicing status' : 'Load invoicing status',
-      color: youniumData ? 'blue' : 'orange',
-      icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-      callback: onBtnClick
-    }];
+    return t.get('card', 'shared', 'youniumDataLoaded')
+      .then(function(youniumDataLoaded) {
+        return [{
+          text: youniumDataLoaded ? 'View invoicing status' : 'Load invoicing status',
+          color: youniumDataLoaded ? 'blue' : 'orange',
+          icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+          callback: onBtnClick
+        }];
+      });
   }
 });
