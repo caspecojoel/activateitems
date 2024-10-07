@@ -1,6 +1,3 @@
-// Add these variables at the top of your client.js file
-let isLoading = false;
-
 const getCustomFieldValue = (fields, fieldId) => {
   const field = fields.find(f => f.idCustomField === fieldId);
   if (!field) {
@@ -352,7 +349,7 @@ document.addEventListener('click', function (event) {
 });
 
 
-// Modify the existing fetchYouniumData function
+// Function to fetch Younium data
 const fetchYouniumData = (orgNo, hubspotId) => {
   console.log('Fetching Younium data for:', { orgNo, hubspotId });
 
@@ -376,7 +373,6 @@ const fetchYouniumData = (orgNo, hubspotId) => {
     });
 };
 
-// Modify the existing onBtnClick function
 const onBtnClick = (t, opts) => {
   console.log('Button clicked on card:', opts);
 
@@ -391,108 +387,45 @@ const onBtnClick = (t, opts) => {
     return t.member('fullName').then(member => {
       const userName = member.fullName;
 
-      if (youniumData) {
-        // If data is already loaded, show the modal immediately
-        return showModal(t, youniumData, hubspotId, orgNo, opts);
-      } else if (isLoading) {
-        // If data is still loading, show a loading modal
-        return showLoadingModal(t, opts);
-      } else {
-        // If data hasn't started loading yet, start loading and show a loading modal
-        isLoading = true;
-        fetchYouniumData(orgNo, hubspotId)
-          .then(data => {
-            youniumData = data;
-            isLoading = false;
-            // Update the modal with the loaded data
-            t.modal({
-              url: getModalUrl(youniumData, hubspotId, orgNo),
-              height: 1000,
-              width: 1000,
-              fullscreen: false,
-            });
-          })
-          .catch(err => {
-            console.error('Error fetching Younium data:', err);
-            isLoading = false;
-            t.alert({
-              message: 'Failed to load Younium data. Please try again later.',
-              duration: 5
-            });
+      // Fetch Younium data and display in the modal
+      return fetchYouniumData(orgNo, hubspotId)
+        .then(youniumData => {
+          if (!youniumData) {
+            throw new Error('Failed to fetch Younium data');
+          }
+
+          const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(youniumData))}&hubspotId=${encodeURIComponent(hubspotId)}&orgNo=${encodeURIComponent(orgNo)}`;
+
+          return t.modal({
+            title: 'Ready for Invoicing Details',
+            url: externalUrl,
+            height: 1000,  // Adjust the height as needed
+            width: 1000,   // Adjust the width as needed
+            fullscreen: false,
+            mouseEvent: opts.mouseEvent
           });
-        return showLoadingModal(t, opts);
-      }
+
+        })
+        .catch(err => {
+          console.error('Error fetching Younium data or displaying popup:', err);
+          return t.alert({
+            message: 'Failed to load Younium data. Please try again later.',
+            duration: 5
+          });
+        });
     });
   });
 };
 
-// New function to show the modal
-const showModal = (t, data, hubspotId, orgNo, opts) => {
-  return t.modal({
-    title: 'Ready for Invoicing Details',
-    url: getModalUrl(data, hubspotId, orgNo),
-    height: 1000,
-    width: 1000,
-    fullscreen: false,
-    mouseEvent: opts.mouseEvent
-  });
-};
-
-// New function to show a loading modal
-const showLoadingModal = (t, opts) => {
-  return t.modal({
-    title: 'Loading Invoicing Details',
-    url: 'https://activateitems-d22e28f2e719.herokuapp.com/loading.html',
-    height: 200,
-    width: 400,
-    fullscreen: false,
-    mouseEvent: opts.mouseEvent
-  });
-};
-
-// New function to get the modal URL
-const getModalUrl = (data, hubspotId, orgNo) => {
-  return `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(data))}&hubspotId=${encodeURIComponent(hubspotId)}&orgNo=${encodeURIComponent(orgNo)}`;
-};
-
-// Modify the existing card-detail-badges to start loading data when the badge is added
+// Initialize Trello Power-Up with a static card-detail-badge
 TrelloPowerUp.initialize({
   'card-detail-badges': (t, options) => {
-    // Start loading data when the badge is added
-    t.card('all').then(card => {
-      const hubspotId = getCustomFieldValue(card.customFieldItems, '66e2a183ccc0da772098ab1e');
-      const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
-      if (!youniumData && !isLoading) {
-        isLoading = true;
-        fetchYouniumData(orgNo, hubspotId)
-          .then(data => {
-            youniumData = data;
-            isLoading = false;
-            // Refresh the badge to update its appearance
-            t.card('id')
-              .then(function(card) {
-                return t.set(card.id, 'shared', 'youniumDataLoaded', true);
-              })
-              .then(function() {
-                return t.closePopup();
-              });
-          })
-          .catch(err => {
-            console.error('Error prefetching Younium data:', err);
-            isLoading = false;
-          });
-      }
-    });
-
-    // Return the badge
-    return t.get('card', 'shared', 'youniumDataLoaded')
-      .then(function(youniumDataLoaded) {
-        return [{
-          text: youniumDataLoaded ? 'View invoicing status' : 'Load invoicing status',
-          color: youniumDataLoaded ? 'blue' : 'orange',
-          icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-          callback: onBtnClick
-        }];
-      });
+    // Return a static badge
+    return [{
+      text: 'View invoicing status',
+      color: 'blue',
+      icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+      callback: onBtnClick
+    }];
   }
 });
