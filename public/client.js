@@ -409,7 +409,7 @@ const onBtnClick = (t, opts) => {
         .catch(err => {
           console.error('Error fetching Younium data or displaying popup:', err);
           return t.alert({
-            message: 'Failed to load Younium data. Please try again later.',
+            message: 'Failed to load Younium data. Try again later.',
             duration: 5
           });
         });
