@@ -331,59 +331,73 @@ const onBtnClick = (t, opts) => {
 };
 
 TrelloPowerUp.initialize({
-  'card-detail-badges': (t, options) => {
-    // Your current card-detail-badges code remains here
+  'card-detail-badges': async (t, options) => {
+    // Initial loading badge while data is being fetched
     let loadingBadge = {
       text: 'Loading...',
       color: 'yellow',
       icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico'
     };
 
-    t.card('all')
-      .then(card => {
-        const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
-        const hubspotId = getCustomFieldValue(card.customFieldItems, '66e2a183ccc0da772098ab1e');
+    try {
+      // Fetch card details
+      const card = await t.card('all');
+      const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
+      const hubspotId = getCustomFieldValue(card.customFieldItems, '66e2a183ccc0da772098ab1e');
 
-        return fetchYouniumData(orgNo, hubspotId)
-          .then(youniumData => {
-            if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
-              return {
-                text: 'Invalid ID',
-                color: 'red',
-                icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-                callback: onBtnClick,
-              };
-            }
+      if (!orgNo || !hubspotId) {
+        throw new Error('Invalid organization number or HubSpot ID');
+      }
 
-            const status = getActivationStatus(youniumData);
-            return {
-              text: status.text,
-              color: status.color,
-              icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-              callback: onBtnClick,
-            };
-          })
-          .then(updatedBadge => {
-            return t.set('card', 'shared', 'badgeData', updatedBadge)
-              .then(() => {
-                t.notifyParent('card-detail-badges');
-              });
-          })
-          .catch(err => {
-            console.error('Error processing Younium data:', err);
-            let errorBadge = {
-              text: 'Error loading status',
-              color: 'red',
-              icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-              callback: onBtnClick
-            };
-            return t.set('card', 'shared', 'badgeData', errorBadge)
-              .then(() => {
-                t.notifyParent('card-detail-badges');
-              });
-          });
-      });
+      // Fetch Younium data
+      const youniumData = await fetchYouniumData(orgNo, hubspotId);
 
+      if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
+        const invalidBadge = {
+          text: 'Invalid ID',
+          color: 'red',
+          icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+          callback: onBtnClick
+        };
+
+        // Set invalid ID badge and notify parent
+        await t.set('card', 'shared', 'badgeData', invalidBadge);
+        t.notifyParent('card-detail-badges');
+        return [invalidBadge];
+      }
+
+      // Get activation status and create updated badge
+      const status = getActivationStatus(youniumData);
+      const updatedBadge = {
+        text: status.text,
+        color: status.color,
+        icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+        callback: onBtnClick
+      };
+
+      // Set updated badge and notify parent
+      await t.set('card', 'shared', 'badgeData', updatedBadge);
+      t.notifyParent('card-detail-badges');
+      return [updatedBadge];
+
+    } catch (err) {
+      console.error('Error processing Younium data:', err);
+
+      // Error badge if anything fails
+      const errorBadge = {
+        text: 'Error loading status',
+        color: 'red',
+        icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+        callback: onBtnClick
+      };
+
+      // Set error badge and notify parent
+      await t.set('card', 'shared', 'badgeData', errorBadge);
+      t.notifyParent('card-detail-badges');
+      return [errorBadge];
+    }
+
+    // Return the loading badge while data is being processed
     return [loadingBadge];
   },
 
@@ -394,4 +408,5 @@ TrelloPowerUp.initialize({
 
   // Other capabilities can go here...
 });
+
 
