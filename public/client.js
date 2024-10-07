@@ -1,6 +1,8 @@
-// Function to get custom field value
 const getCustomFieldValue = (fields, fieldId) => {
   const field = fields.find(f => f.idCustomField === fieldId);
+  if (!field) {
+    console.log(`Custom field with ID ${fieldId} not found in fields:`, fields);
+  }
   return field?.value?.text || field?.value?.number || '';
 };
 
@@ -107,6 +109,8 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
   // Retrieve orgNo and hubspotId from the DOM elements
   const orgNo = document.getElementById('org-number').textContent.trim();
   const hubspotId = document.getElementById('hubspot-id').textContent.trim();
+  console.log('Retrieved OrgNo:', orgNo);
+  console.log('Retrieved HubspotId:', hubspotId);
 
   // Attempt to refresh Younium data before proceeding
   try {
@@ -114,6 +118,7 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
     if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
       throw new Error('Failed to fetch updated Younium data');
     }
+    console.log('Fetched updated Younium data:', youniumData);
   } catch (error) {
     console.error('Error refreshing Younium data:', error);
     alert('Failed to refresh Younium data. Please try again.');
@@ -124,6 +129,7 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
   let selectedProduct = null;
   let selectedCharge = null;
 
+  console.log('Searching for product and charge with Charge ID:', chargeId);
   for (const product of youniumData.products) {
     const charge = product.charges.find(c => c.id === chargeId);
     if (charge) {
@@ -135,27 +141,31 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
 
   if (!selectedProduct || !selectedCharge) {
     console.error(`Error: No product or charge found for Charge ID: ${chargeId} in refreshed data`);
+    console.log('Younium data products:', youniumData.products);
     alert(`Error: No product or charge found for Charge ID: ${chargeId}`);
     return;
   }
 
+  console.log('Found selected product:', selectedProduct);
+  console.log('Found selected charge:', selectedCharge);
+
   // Prepare the request body with internal IDs (GUIDs)
   const requestBody = {
-    chargeId: selectedCharge.id, // Use internal GUID for chargeId
+    chargeId: selectedCharge.id,
     orderId: youniumData.id,
     accountId: youniumData.account.accountNumber,
     invoiceAccountId: youniumData.invoiceAccount.accountNumber,
     productId: selectedProduct.productNumber,
-    chargePlanId: selectedProduct.chargePlanId, // Use internal GUID for chargePlanId
+    chargePlanId: selectedProduct.chargePlanId,
     ready4invoicing: currentStatus ? "0" : "1"
   };
 
   console.log('Request body being sent to /toggle-invoicing-status:', requestBody);
-
-  // Implement retry logic with initial delay
+  
+  // Retry logic with detailed logs
   const maxRetries = 3;
-  const initialDelay = 200; // 0.2 seconds initial delay
-  const retryDelay = 1000; // 1 second between retries
+  const initialDelay = 200;
+  const retryDelay = 1000;
 
   console.log(`Waiting ${initialDelay / 1000} seconds before first attempt...`);
   await new Promise(resolve => setTimeout(resolve, initialDelay));
@@ -176,7 +186,7 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Error response text:', errorText);
-        
+
         if (response.status === 400 && errorText.includes('No latest version of subscription')) {
           if (attempt < maxRetries) {
             console.log(`Retrying in ${retryDelay}ms... (Attempt ${attempt + 1} of ${maxRetries})`);
@@ -184,7 +194,7 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
             continue;
           }
         }
-        
+
         throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
 
@@ -192,14 +202,13 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
 
       if (data.success) {
         console.log(`Successfully updated Charge ${chargeId} status to ${requestBody.ready4invoicing === "1" ? 'Ready' : 'Not Ready'} for invoicing`);
-        // Refresh the UI with updated data
         fetchLatestYouniumData(3, 2000, orgNo, hubspotId);
       } else {
         console.error('Failed to update the charge status:', data.message, data.details);
         alert(`Failed to update status: ${data.message}`);
       }
 
-      return; // Exit the retry loop if successful
+      return;
     } catch (error) {
       console.error(`Error updating the charge status (Attempt ${attempt}):`, error);
       if (attempt === maxRetries) {
@@ -207,7 +216,8 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
       }
     }
   }
-}
+};
+
 
 const updateModalWithYouniumData = (youniumData) => {
   console.log('Updating modal with updated Younium data:', youniumData);
@@ -259,14 +269,36 @@ const updateModalWithYouniumData = (youniumData) => {
   });
 };
 
-// Update the event listener for toggle buttons
+// Add event listener for toggle buttons
 document.addEventListener('click', function (event) {
+  console.log('Click event detected:', event);  // Log the click event
+
+  // Check if the target is a button element
   if (event.target && event.target.tagName === 'BUTTON') {
+    console.log('Button element clicked:', event.target);
+
+    // Retrieve the `data-charge-id` and `data-product-name` attributes
     const chargeId = event.target.getAttribute('data-charge-id');
     const productName = event.target.getAttribute('data-product-name');
-    const currentStatus = event.target.textContent.trim() === "Unready";
+    const currentStatus = event.target.textContent.trim() === "Mark as not ready";
 
-    handleToggleButtonClick(chargeId, currentStatus, productName, youniumData);
+    // Log the values retrieved to ensure they are correct
+    console.log('Charge ID:', chargeId);
+    console.log('Product Name:', productName);
+    console.log('Current Status:', currentStatus);
+
+    // Check if chargeId is undefined or null to find the root cause
+    if (!chargeId) {
+      console.error('Error: Charge ID is undefined or null. Please check if data-charge-id is correctly set on the button element:', event.target);
+      return;  // Stop further execution if chargeId is missing
+    }
+
+    // Call the function to handle the click
+    try {
+      handleToggleButtonClick(chargeId, currentStatus, productName, youniumData);
+    } catch (error) {
+      console.error('Error while handling button click:', error);
+    }
   }
 });
 
