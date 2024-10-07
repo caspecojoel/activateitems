@@ -389,7 +389,7 @@ function fetchAndUpdateBadge(t) {
 
       return fetchYouniumData(orgNo, hubspotId)
         .then(function(youniumData) {
-          var badgeData;
+          let badgeData;
           if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
             badgeData = {
               text: 'Invalid ID',
@@ -407,46 +407,45 @@ function fetchAndUpdateBadge(t) {
             };
           }
 
-          // Store badge data
-          return t.set('card', 'private', 'badgeData', badgeData).then(function() {
-            // Refresh badges
-            t.refresh();
+          // Update the badge by notifying Trello to re-run the capability handler
+          t.set('card', 'private', 'badgeData', badgeData).then(function() {
+            t.notifyParent('card-detail-badges');
           });
         })
         .catch(function(err) {
           console.error('Error fetching Younium data:', err);
-          var badgeData = {
+          const badgeData = {
             text: 'Error loading status',
             color: 'red',
             icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
             callback: onBtnClick
           };
-          return t.set('card', 'private', 'badgeData', badgeData).then(function() {
-            t.refresh();
+          t.set('card', 'private', 'badgeData', badgeData).then(function() {
+            t.notifyParent('card-detail-badges');
           });
         });
     });
 }
 
-
-// Initialize Trello Power-Up with updated card-detail-badges
 TrelloPowerUp.initialize({
   'card-detail-badges': function(t, options) {
     return t.get('card', 'private', 'badgeData').then(function(badgeData) {
       if (badgeData && badgeData.text) {
-        return [badgeData];
-      } else {
-        // Badge data is invalid or missing, remove it and fetch new data
+        // Return the updated badge data and remove it to fetch fresh data next time
         return t.remove('card', 'private', 'badgeData').then(function() {
-          fetchAndUpdateBadge(t);
-          return [{
-            text: 'Loading...',
-            color: 'blue',
-            icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-            refresh: 10 // Optional
-          }];
+          return [badgeData];
         });
+      } else {
+        // Start fetching data asynchronously
+        fetchAndUpdateBadge(t);
+        // Return placeholder badge immediately
+        return [{
+          text: 'Loading...',
+          color: 'blue',
+          icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+          refresh: 10 // Optional
+        }];
       }
-    });    
+    });
   }
 });
