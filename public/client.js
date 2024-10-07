@@ -330,16 +330,10 @@ const onBtnClick = (t, opts) => {
   });
 };
 
+// Initialize Trello Power-Up with dynamic card-detail-badge
 TrelloPowerUp.initialize({
   'card-detail-badges': (t, options) => {
-    // Your current card-detail-badges code remains here
-    let loadingBadge = {
-      text: 'Loading...',
-      color: 'yellow',
-      icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico'
-    };
-
-    t.card('all')
+    return t.card('all')
       .then(card => {
         const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
         const hubspotId = getCustomFieldValue(card.customFieldItems, '66e2a183ccc0da772098ab1e');
@@ -347,51 +341,31 @@ TrelloPowerUp.initialize({
         return fetchYouniumData(orgNo, hubspotId)
           .then(youniumData => {
             if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
-              return {
+              return [{
                 text: 'Invalid ID',
                 color: 'red',
                 icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-                callback: onBtnClick,
-              };
+                callback: onBtnClick
+              }];
             }
 
             const status = getActivationStatus(youniumData);
-            return {
+            return [{
               text: status.text,
               color: status.color,
               icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-              callback: onBtnClick,
-            };
-          })
-          .then(updatedBadge => {
-            return t.set('card', 'shared', 'badgeData', updatedBadge)
-              .then(() => {
-                t.notifyParent('card-detail-badges');
-              });
+              callback: onBtnClick
+            }];
           })
           .catch(err => {
             console.error('Error processing Younium data:', err);
-            let errorBadge = {
+            return [{
               text: 'Error loading status',
               color: 'red',
               icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
               callback: onBtnClick
-            };
-            return t.set('card', 'shared', 'badgeData', errorBadge)
-              .then(() => {
-                t.notifyParent('card-detail-badges');
-              });
+            }];
           });
       });
-
-    return [loadingBadge];
-  },
-
-  'card-badges': (t, options) => {
-    // Provide an empty badge array, just to satisfy the capability requirement
-    return [];
-  },
-
-  // Other capabilities can go here...
+  }
 });
-
