@@ -312,17 +312,32 @@ const onBtnClick = (t, opts) => {
     return t.member('fullName').then(member => {
       const userName = member.fullName;
 
-      // Construct the external URL for the modal
-      const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(youniumData))}&hubspotId=${encodeURIComponent(hubspotId)}&orgNo=${encodeURIComponent(orgNo)}`;
+      // Fetch Younium data and display in the modal
+      return fetchYouniumData(orgNo, hubspotId)
+        .then(youniumData => {
+          if (!youniumData) {
+            throw new Error('Failed to fetch Younium data');
+          }
 
-      return t.modal({
-        title: 'Ready for invoicing',
-        url: externalUrl,
-        height: 1000,  // Set the height (1000px in this case)
-        width: 1000,   // You can also set the width as needed
-        fullscreen: false, // Set to true if you want the modal to take up the full screen
-        mouseEvent: opts.mouseEvent
-      });
+          const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(youniumData))}&hubspotId=${encodeURIComponent(hubspotId)}&orgNo=${encodeURIComponent(orgNo)}`;
+
+          return t.modal({
+            title: 'Ready for Invoicing Details',
+            url: externalUrl,
+            height: 1000,  // Adjust the height as needed
+            width: 1000,   // Adjust the width as needed
+            fullscreen: false,
+            mouseEvent: opts.mouseEvent
+          });
+
+        })
+        .catch(err => {
+          console.error('Error fetching Younium data or displaying popup:', err);
+          return t.alert({
+            message: 'Failed to load Younium data. Please try again later.',
+            duration: 5
+          });
+        });
     });
   });
 };
@@ -332,7 +347,7 @@ TrelloPowerUp.initialize({
   'card-detail-badges': (t, options) => {
     // Return a static badge
     return [{
-      text: 'View Invoicing Status',
+      text: 'View invoicing status',
       color: 'blue',
       icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
       callback: onBtnClick
