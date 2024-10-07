@@ -77,7 +77,7 @@
         }
     
         // Wait for the data message from the Trello Power-Up context
-        window.TrelloPowerUp.iframe().listen('message', function(event) {
+        window.TrelloPowerUp.iframe().on('message', function(event) {
             if (event.message === 'updateModalContent') {
                 // Hide loading spinner
                 domElements.loadingSpinner.style.display = 'none';
