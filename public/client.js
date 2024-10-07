@@ -94,27 +94,31 @@ const isDataEqual = (data1, data2) => {
 };
 
 const handleToggleButtonClick = async (chargeId, currentStatus, productName, youniumData) => {
-  console.log(`Button clicked to ${currentStatus ? 'inactivate' : 'activate'} product: ${productName}, Charge ID: ${chargeId}, Current status: ${currentStatus}`);
+  const action = currentStatus ? 'inactivate' : 'activate';
+  const confirmationMessage = `Are you sure you want to ${action} ${productName}?`;
 
-  if (!chargeId) {
-    console.error('Error: Charge ID is undefined or null.');
+  console.log(`Button clicked to ${action} product: ${productName}, Charge ID: ${chargeId}, Current status: ${currentStatus}`);
+
+  if (!confirm(confirmationMessage)) {
+    console.log(`User cancelled the ${action} action.`);
     return;
   }
 
-  console.log(`Proceeding to ${currentStatus ? 'inactivate' : 'activate'} charge: ${chargeId}`);
+  console.log(`Proceeding to ${action} charge: ${chargeId}`);
 
   // Retrieve orgNo and hubspotId from the DOM elements
   const orgNo = document.getElementById('org-number').textContent.trim();
   const hubspotId = document.getElementById('hubspot-id').textContent.trim();
+  console.log('Retrieved OrgNo:', orgNo);
+  console.log('Retrieved HubspotId:', hubspotId);
 
   // Attempt to refresh Younium data before proceeding
   try {
     youniumData = await fetchYouniumData(orgNo, hubspotId);
-    console.log('Refreshed Younium Data:', youniumData);
-
     if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
       throw new Error('Failed to fetch updated Younium data');
     }
+    console.log('Fetched updated Younium data:', youniumData);
   } catch (error) {
     console.error('Error refreshing Younium data:', error);
     alert('Failed to refresh Younium data. Please try again.');
@@ -125,6 +129,7 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
   let selectedProduct = null;
   let selectedCharge = null;
 
+  console.log('Searching for product and charge with Charge ID:', chargeId);
   for (const product of youniumData.products) {
     const charge = product.charges.find(c => c.id === chargeId);
     if (charge) {
@@ -136,13 +141,17 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
 
   if (!selectedProduct || !selectedCharge) {
     console.error(`Error: No product or charge found for Charge ID: ${chargeId} in refreshed data`);
+    console.log('Younium data products:', youniumData.products);
     alert(`Error: No product or charge found for Charge ID: ${chargeId}`);
     return;
   }
 
+  console.log('Found selected product:', selectedProduct);
+  console.log('Found selected charge:', selectedCharge);
+
   // Prepare the request body with internal IDs (GUIDs)
   const requestBody = {
-    chargeId: selectedCharge.id,  // Correctly mapped
+    chargeId: selectedCharge.id,
     orderId: youniumData.id,
     accountId: youniumData.account.accountNumber,
     invoiceAccountId: youniumData.invoiceAccount.accountNumber,
@@ -209,10 +218,10 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
   }
 };
 
-
 const updateModalWithYouniumData = (youniumData) => {
   console.log('Updating modal with updated Younium data:', youniumData);
 
+  // Validate that youniumData and required fields are present
   if (!youniumData || !youniumData.account || !youniumData.products) {
     console.error('Invalid Younium data provided to update modal:', youniumData);
     alert('Failed to update the modal. Missing or invalid Younium data.');
@@ -239,6 +248,9 @@ const updateModalWithYouniumData = (youniumData) => {
 
         // Populate the table row
         const row = document.createElement('tr');
+        // Inside the charges.forEach loop in updateModalWithYouniumData
+        console.log(`Setting button with Charge ID: ${charge.id} and Product Name: ${product.name}`);
+
         row.innerHTML = `
           <td>${product.name || 'N/A'}</td>
           <td>${charge.name || 'N/A'}</td>
@@ -260,36 +272,21 @@ const updateModalWithYouniumData = (youniumData) => {
 
 // Add event listener for toggle buttons
 document.addEventListener('click', function (event) {
-  console.log('Click event detected:', event);  // Log the click event
-
-  // Check if the target is a button element
   if (event.target && event.target.tagName === 'BUTTON') {
-    console.log('Button element clicked:', event.target);
-
-    // Retrieve the `data-charge-id` and `data-product-name` attributes
     const chargeId = event.target.getAttribute('data-charge-id');
     const productName = event.target.getAttribute('data-product-name');
-    const currentStatus = event.target.textContent.trim() === "Mark as not ready";
+    const currentStatus = event.target.textContent.trim() === "Unready"; // Determine current status based on the button text
 
-    // Log the values retrieved to ensure they are correct
+    console.log('Click event detected:', event);
+    console.log('Button element clicked:', event.target);
     console.log('Charge ID:', chargeId);
     console.log('Product Name:', productName);
     console.log('Current Status:', currentStatus);
 
-    // Check if chargeId is undefined or null to find the root cause
-    if (!chargeId) {
-      console.error('Error: Charge ID is undefined or null. Please check if data-charge-id is correctly set on the button element:', event.target);
-      return;  // Stop further execution if chargeId is missing
-    }
-
-    // Call the function to handle the click
-    try {
-      handleToggleButtonClick(chargeId, currentStatus, productName, youniumData);
-    } catch (error) {
-      console.error('Error while handling button click:', error);
-    }
+    handleToggleButtonClick(chargeId, currentStatus, productName, youniumData);
   }
 });
+
 
 // Function to fetch Younium data
 const fetchYouniumData = (orgNo, hubspotId) => {
