@@ -168,6 +168,17 @@ th {
     100% { transform: rotate(360deg); }
 }
 
+.disabled-button {
+    cursor: not-allowed;
+    opacity: 0.5;
+    pointer-events: none;
+}
+  
+.processing-button {
+    background-color: grey;
+    cursor: wait;
+}
+
 /* Styling for the products table */
 #products-table {
     width: 100%;
