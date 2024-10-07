@@ -343,7 +343,6 @@ app.post('/toggle-invoicing-status', async (req, res) => {
   console.log('Received request to toggle invoicing status:', req.body);
   const { chargeId, orderId, accountId, invoiceAccountId, productId, chargePlanId, ready4invoicing } = req.body;
 
-  // Ensure the chargePlanId and chargeId correspond to the latest versions
   if (!chargePlanId || !chargeId) {
     console.error('Invalid chargePlanId or chargeId provided.');
     return res.status(400).json({ success: false, message: 'Invalid chargePlanId or chargeId provided' });
@@ -354,8 +353,8 @@ app.post('/toggle-invoicing-status', async (req, res) => {
     `&AccountId=${encodeURIComponent(accountId)}` +
     `&InvoiceAccountId=${encodeURIComponent(invoiceAccountId)}` +
     `&ProductId=${encodeURIComponent(productId)}` +
-    `&ChargePlanId=${encodeURIComponent(chargePlanId)}` + // Using internal GUID
-    `&ChargeId=${encodeURIComponent(chargeId)}` +         // Using internal GUID
+    `&ChargePlanId=${encodeURIComponent(chargePlanId)}` +
+    `&ChargeId=${encodeURIComponent(chargeId)}` +
     `&LegalEntity=${encodeURIComponent('Caspeco AB')}` +
     `&IsReady4Invoicing=${encodeURIComponent(ready4invoicing)}` +
     `&apikey=${encodeURIComponent(process.env.YOUNIUM_API_KEY)}`;
@@ -377,37 +376,37 @@ app.post('/toggle-invoicing-status', async (req, res) => {
     console.log('Received response from Younium API:', response.status, response.data);
 
     if (response.status === 200) {
-      res.json({ success: true, message: 'Status updated successfully' });
+      res.json({ success: true, message: 'Status updated successfully', activationUrl: activationUrl });
     } else {
-      console.error('Unexpected response status:', response.status);
-      res.status(response.status).json({ success: false, message: 'Failed to update status', details: response.data });
+      res.status(response.status).json({ success: false, message: 'Failed to update status', details: response.data, activationUrl: activationUrl });
     }
   } catch (error) {
     console.error('Error updating the charge status:', error);
     if (error.response) {
-      console.error('Error response from Younium API:', error.response.status, error.response.data);
-      res.status(error.response.status).json({ 
-        success: false, 
-        message: 'Error from Younium API', 
-        details: error.response.data 
+      res.status(error.response.status).json({
+        success: false,
+        message: 'Error from Younium API',
+        details: error.response.data,
+        activationUrl: activationUrl
       });
     } else if (error.request) {
-      console.error('No response received from Younium API');
-      res.status(500).json({ 
-        success: false, 
-        message: 'No response from Younium API', 
-        details: 'The request was made but no response was received' 
+      res.status(500).json({
+        success: false,
+        message: 'No response from Younium API',
+        details: 'The request was made but no response was received',
+        activationUrl: activationUrl
       });
     } else {
-      console.error('Error setting up the request:', error.message);
-      res.status(500).json({ 
-        success: false, 
-        message: 'Internal server error', 
-        details: error.message 
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        details: error.message,
+        activationUrl: activationUrl
       });
     }
   }
 });
+
 
 // Error handling
 app.use((req, res, next) => {
