@@ -88,32 +88,38 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
 
       console.log(`Processing Younium order with ID: ${youniumOrder.id}, Version: ${youniumOrder.version}`);
 
+      // Ensure the account and invoiceAccount exist before accessing properties
+      if (!youniumOrder.account || !youniumOrder.invoiceAccount) {
+        console.error('Account or Invoice Account data is missing in Younium order:', youniumOrder);
+        return null;
+      }
+
       // Processing the order
       return {
         id: youniumOrder.id, // OrderId
         status: youniumOrder.status,
         description: youniumOrder.description,
         account: {
-          accountNumber: youniumOrder.account.accountNumber, // AccountId
-          name: youniumOrder.account.name,
+          accountNumber: youniumOrder.account.accountNumber || 'N/A', // AccountId
+          name: youniumOrder.account.name || 'N/A',
         },
         invoiceAccount: {
-          accountNumber: youniumOrder.invoiceAccount.accountNumber, // InvoiceAccountId
-          name: youniumOrder.invoiceAccount.name,
+          accountNumber: youniumOrder.invoiceAccount.accountNumber || 'N/A', // InvoiceAccountId
+          name: youniumOrder.invoiceAccount.name || 'N/A',
         },
-        products: youniumOrder.products.map(product => ({
-          productNumber: product.productNumber, // ProductId
-          chargePlanId: product.chargePlanId, // Use correct GUID for ChargePlanId
-          name: product.name,
+        products: youniumOrder.products ? youniumOrder.products.map(product => ({
+          productNumber: product.productNumber || 'N/A', // ProductId
+          chargePlanId: product.chargePlanId || 'N/A', // Use correct GUID for ChargePlanId
+          name: product.name || 'N/A',
           charges: product.charges
             .filter(charge => charge.isLastVersion) // Only take the latest version of charges
             .map(charge => ({
-              id: charge.id, // Use internal GUID for chargeId
-              name: charge.name,
-              effectiveStartDate: charge.effectiveStartDate,
-              ready4invoicing: charge.customFields.ready4invoicing === "true" || charge.customFields.ready4invoicing === "1"
+              id: charge.id || 'N/A', // Use internal GUID for chargeId
+              name: charge.name || 'N/A',
+              effectiveStartDate: charge.effectiveStartDate || 'N/A',
+              ready4invoicing: charge.customFields?.ready4invoicing === "true" || charge.customFields?.ready4invoicing === "1"
             }))
-        }))
+        })) : []
       };
     }
 
