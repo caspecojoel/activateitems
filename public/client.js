@@ -4,7 +4,7 @@
 const getCustomFieldValue = (fields, fieldId) => {
   const field = fields.find(f => f.idCustomField === fieldId);
   if (!field) {
-    console.log(`Custom field with ID ${fieldId} not found in fields:`, fields);
+    console.log(`Custom field with ID '${fieldId}' not found in fields:`, fields);
   }
   return field?.value?.text || field?.value?.number || '';
 };
@@ -45,6 +45,38 @@ const getActivationStatus = (youniumData) => {
   } else {
     return { status: 'none', text: 'No products ready', color: 'red' };
   }
+};
+
+// Function to fetch Younium data
+const fetchYouniumData = (orgNo, hubspotId) => {
+  console.log('Fetching Younium data for:', { orgNo, hubspotId });
+
+  if (!orgNo || !hubspotId) {
+    console.warn('Invalid hubspotId or orgNo');
+    return Promise.resolve({
+      name: 'Invalid hubspot or orgnummer',
+      accountNumber: null,
+    });
+  }
+
+  return fetch(`/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`)
+    .then(response => response.json())
+    .then(data => {
+      console.log('Younium API response data:', data);
+      return data;
+    })
+    .catch(err => {
+      console.error('Error fetching Younium data:', err);
+      return null;
+    });
+};
+
+// Helper function to compare two Younium data objects
+const isDataEqual = (data1, data2) => {
+  // Implement a deep comparison of relevant fields
+  // Return true if the data is effectively the same, false otherwise
+  // This is a simplified example, adjust based on your data structure
+  return JSON.stringify(data1) === JSON.stringify(data2);
 };
 
 // Function to fetch the latest Younium data with retry logic
@@ -100,12 +132,56 @@ const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
   return tryFetch(1);
 };
 
-// Helper function to compare two Younium data objects
-const isDataEqual = (data1, data2) => {
-  // Implement a deep comparison of relevant fields
-  // Return true if the data is effectively the same, false otherwise
-  // This is a simplified example, adjust based on your data structure
-  return JSON.stringify(data1) === JSON.stringify(data2);
+// Function to update the modal with Younium data
+const updateModalWithYouniumData = (youniumData) => {
+  console.log('Updating modal with updated Younium data:', youniumData);
+
+  // Validate that youniumData and required fields are present
+  if (!youniumData || !youniumData.account || !youniumData.products) {
+    console.error('Invalid Younium data provided to update modal:', youniumData);
+    alert('Failed to update the modal. Missing or invalid Younium data.');
+    return;
+  }
+
+  // Update the modal elements with the new data
+  document.getElementById('account-name').textContent = youniumData.account.name || 'N/A';
+  document.getElementById('order-status').textContent = youniumData.status || 'N/A';
+  document.getElementById('order-description').textContent = youniumData.description || 'N/A';
+  document.getElementById('products-container').innerHTML = '';
+
+  // Iterate over the products to populate the table
+  youniumData.products.forEach(product => {
+    if (product.charges && Array.isArray(product.charges)) {
+      product.charges.forEach(charge => {
+        const isActivated = charge.ready4invoicing === true || charge.ready4invoicing === "1" || charge.ready4invoicing === "true";
+
+        const buttonClass = isActivated ? 'inactivate-button' : 'activate-button';
+        const buttonText = isActivated ? 'Unready' : 'Ready';
+
+        // Format the effective start date (if available)
+        const effectiveStartDate = charge.effectiveStartDate ? new Date(charge.effectiveStartDate).toLocaleDateString() : 'N/A';
+
+        // Populate the table row
+        const row = document.createElement('tr');
+        console.log(`Setting button with Charge ID: ${charge.id} and Product Name: ${product.name}`);
+
+        row.innerHTML = `
+          <td>${product.name || 'N/A'}</td>
+          <td>${charge.name || 'N/A'}</td>
+          <td>${effectiveStartDate}</td>
+          <td>${isActivated ? 'Ready for invoicing' : 'Not ready for invoicing'}</td>
+          <td class="button-container">
+            <button class="${buttonClass}" data-charge-id="${charge.id}" data-product-name="${product.name || ''}">
+              ${buttonText}
+            </button>
+          </td>
+        `;
+        document.getElementById('products-container').appendChild(row);
+      });
+    } else {
+      console.error('Invalid charges data for product:', product);
+    }
+  });
 };
 
 // Function to handle toggle button clicks
@@ -294,100 +370,6 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
   allButtons.forEach(btn => btn.disabled = false);
 };
 
-// Function to update the modal with latest Younium data
-const updateModalWithYouniumData = (youniumData) => {
-  console.log('Updating modal with updated Younium data:', youniumData);
-
-  // Validate that youniumData and required fields are present
-  if (!youniumData || !youniumData.account || !youniumData.products) {
-    console.error('Invalid Younium data provided to update modal:', youniumData);
-    alert('Failed to update the modal. Missing or invalid Younium data.');
-    return;
-  }
-
-  // Update the modal elements with the new data
-  document.getElementById('account-name').textContent = youniumData.account.name || 'N/A';
-  document.getElementById('order-status').textContent = youniumData.status || 'N/A';
-  document.getElementById('order-description').textContent = youniumData.description || 'N/A';
-  document.getElementById('products-container').innerHTML = '';
-
-  // Iterate over the products to populate the table
-  youniumData.products.forEach(product => {
-    if (product.charges && Array.isArray(product.charges)) {
-      product.charges.forEach(charge => {
-        const isActivated = charge.ready4invoicing === true || charge.ready4invoicing === "1" || charge.ready4invoicing === "true";
-
-        const buttonClass = isActivated ? 'inactivate-button' : 'activate-button';
-        const buttonText = isActivated ? 'Unready' : 'Ready';
-
-        // Format the effective start date (if available)
-        const effectiveStartDate = charge.effectiveStartDate ? new Date(charge.effectiveStartDate).toLocaleDateString() : 'N/A';
-
-        // Populate the table row
-        const row = document.createElement('tr');
-        console.log(`Setting button with Charge ID: ${charge.id} and Product Name: ${product.name}`);
-
-        row.innerHTML = `
-          <td>${product.name || 'N/A'}</td>
-          <td>${charge.name || 'N/A'}</td>
-          <td>${effectiveStartDate}</td>
-          <td>${isActivated ? 'Ready for invoicing' : 'Not ready for invoicing'}</td>
-          <td class="button-container">
-            <button class="${buttonClass}" data-charge-id="${charge.id}" data-product-name="${product.name || ''}">
-              ${buttonText}
-            </button>
-          </td>
-        `;
-        document.getElementById('products-container').appendChild(row);
-      });
-    } else {
-      console.error('Invalid charges data for product:', product);
-    }
-  });
-};
-
-// Event listener for toggle buttons
-document.addEventListener('click', function (event) {
-  if (event.target && event.target.tagName === 'BUTTON') {
-    const chargeId = event.target.getAttribute('data-charge-id');
-    console.log('Charge ID:', chargeId); // This should now log the correct ID from the button
-    const productName = event.target.getAttribute('data-product-name');
-    const currentStatus = event.target.textContent.trim() === "Unready"; // Determine current status based on the button text
-
-    console.log('Click event detected:', event);
-    console.log('Button element clicked:', event.target);
-    console.log('Charge ID:', chargeId);
-    console.log('Product Name:', productName);
-    console.log('Current Status:', currentStatus);
-
-    handleToggleButtonClick(chargeId, currentStatus, productName, youniumData);
-  }
-});
-
-// Function to fetch Younium data
-const fetchYouniumData = (orgNo, hubspotId) => {
-  console.log('Fetching Younium data for:', { orgNo, hubspotId });
-
-  if (!orgNo || !hubspotId) {
-    console.warn('Invalid hubspotId or orgNo');
-    return Promise.resolve({
-      name: 'Invalid hubspot or orgnummer',
-      accountNumber: null,
-    });
-  }
-
-  return fetch(`/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`)
-    .then(response => response.json())
-    .then(data => {
-      console.log('Younium API response data:', data);
-      return data;
-    })
-    .catch(err => {
-      console.error('Error fetching Younium data:', err);
-      return null;
-    });
-};
-
 // Function to initialize Trello Power-Up
 const onBtnClick = (t, opts) => {
   console.log('Button clicked on card:', opts);
@@ -399,6 +381,15 @@ const onBtnClick = (t, opts) => {
     const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
     console.log('HubSpot ID:', hubspotId);
     console.log('Org Number:', orgNo);
+
+    // Check if hubspotId and orgNo are present
+    if (!hubspotId || !orgNo) {
+      console.error('Missing HubSpot ID or Org Number in card fields.');
+      return t.alert({
+        message: 'Missing HubSpot ID or Org Number in the card. Please ensure these fields are filled.',
+        duration: 5
+      });
+    }
 
     return t.member('fullName').then(member => {
       const userName = member.fullName;
@@ -446,7 +437,7 @@ TrelloPowerUp.initialize({
   }
 });
 
-// Function to handle DOMContentLoaded event
+// Function to handle DOMContentLoaded event and initialize the page
 const initializePage = () => {
   // Show the overall loading overlay
   const loadingOverlay = document.getElementById('loading-overlay');
@@ -562,3 +553,21 @@ const initializePage = () => {
 
 // Add event listener for DOMContentLoaded to initialize the page
 document.addEventListener('DOMContentLoaded', initializePage);
+
+// Event listener for toggle buttons
+document.addEventListener('click', function (event) {
+  if (event.target && event.target.tagName === 'BUTTON') {
+    const chargeId = event.target.getAttribute('data-charge-id');
+    console.log('Charge ID:', chargeId); // This should now log the correct ID from the button
+    const productName = event.target.getAttribute('data-product-name');
+    const currentStatus = event.target.textContent.trim() === "Unready"; // Determine current status based on the button text
+
+    console.log('Click event detected:', event);
+    console.log('Button element clicked:', event.target);
+    console.log('Charge ID:', chargeId);
+    console.log('Product Name:', productName);
+    console.log('Current Status:', currentStatus);
+
+    handleToggleButtonClick(chargeId, currentStatus, productName, youniumData);
+  }
+});
