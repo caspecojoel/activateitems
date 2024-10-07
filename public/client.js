@@ -116,7 +116,7 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
   const button = document.querySelector(`button[data-charge-id="${chargeId}"]`);
   if (button) {
     button.disabled = true; // Disable the button to prevent multiple clicks
-    button.innerHTML = '<span class="spinner"></span> Wait...';
+    button.innerHTML = '<span class="spinner"></span>  Wait...';
   }
 
   // Disable all other buttons while processing
@@ -189,19 +189,6 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
     ready4invoicing: currentStatus ? "0" : "1"
   };
 
-  // Construct the URL dynamically
-  const activationUrl = `https://cas-test.loveyourq.se/dev/UpdateReady4Invoicing` +
-  `?OrderId=${encodeURIComponent(requestBody.orderId)}` +
-  `&AccountId=${encodeURIComponent(requestBody.accountId)}` +
-  `&InvoiceAccountId=${encodeURIComponent(requestBody.invoiceAccountId)}` +
-  `&ProductId=${encodeURIComponent(requestBody.productId)}` +
-  `&ChargeId=${encodeURIComponent(requestBody.chargeId)}` +
-  `&LegalEntity=${encodeURIComponent('Caspeco AB')}` +
-  `&IsReady4Invoicing=${encodeURIComponent(requestBody.ready4invoicing)}` +
-  `&apikey=${encodeURIComponent(process.env.YOUNIUM_API_KEY)}`;
-
-  // Log the constructed URL
-  console.log('Constructed Activation URL:', activationUrl);
   console.log('Request body being sent to /toggle-invoicing-status:', requestBody);
   
   // Retry logic with detailed logs
@@ -422,7 +409,7 @@ const onBtnClick = (t, opts) => {
         .catch(err => {
           console.error('Error fetching Younium data or displaying popup:', err);
           return t.alert({
-            message: 'Failed to load Younium data. Try again later.',
+            message: 'Failed to load Younium data. Please try again later.',
             duration: 5
           });
         });

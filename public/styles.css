@@ -161,7 +161,7 @@ th {
     border-top-color: #fff;
     animation: spin 1s ease-in-out infinite;
     margin-left: 5px;
-    margin-right: 2px;
+    margin-right: 4px;
   }
   
   @keyframes spin {
