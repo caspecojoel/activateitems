@@ -4,7 +4,7 @@ const getCustomFieldValue = (fields, fieldId) => {
   return field?.value?.text || field?.value?.number || '';
 };
 
-// Modify getActivationStatus function to return the count of ready products
+// Function to get activation status
 const getActivationStatus = (youniumData) => {
   console.log('getActivationStatus received:', youniumData);
   if (!youniumData) {
