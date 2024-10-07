@@ -1,29 +1,23 @@
+// client.js
+
+// Define field IDs
+const orgNoFieldId = '66deaa1c355f14009a688b5d'; // Replace with your actual OrgNo field ID
+const hubspotIdFieldId = '66e2a183ccc0da772098ab1e'; // Replace with your actual HubSpot ID field ID
+const iconUrl = 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico'; // Replace with your actual icon URL
+
 // Function to get custom field value
 function getCustomFieldValue(fields, fieldId) {
   const field = fields.find(f => f.idCustomField === fieldId);
   return field?.value?.text || field?.value?.number || '';
 }
 
-// Define custom field IDs
-const orgNoFieldId = '66deaa1c355f14009a688b5d';
-const hubspotIdFieldId = '66e2a183ccc0da772098ab1e';
-
-// Define the icon URL
-const iconUrl = 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico';
-
-/**
- * Function to determine activation status based on Younium data
- * @param {Object} youniumData - The data fetched from Younium API
- * @returns {Object} - Status object containing status, text, and color
- */
+// Function to get activation status
 const getActivationStatus = (youniumData) => {
   console.log('getActivationStatus received:', youniumData);
-  
   if (!youniumData) {
     console.log('youniumData is null or undefined');
     return { status: 'error', text: 'No data available', color: 'red' };
   }
-  
   if (!youniumData.products || !Array.isArray(youniumData.products)) {
     console.log('youniumData.products is undefined or not an array');
     return { status: 'error', text: 'No products data available', color: 'red' };
@@ -36,9 +30,7 @@ const getActivationStatus = (youniumData) => {
     if (product.charges && Array.isArray(product.charges)) {
       totalCharges += product.charges.length;
       activatedCharges += product.charges.filter(charge => 
-        charge.ready4invoicing === true || 
-        charge.ready4invoicing === "true" || 
-        charge.ready4invoicing === "1"
+        charge.ready4invoicing === true || charge.ready4invoicing === "true" || charge.ready4invoicing === "1"
       ).length;      
     }
   });
@@ -51,22 +43,47 @@ const getActivationStatus = (youniumData) => {
   } else if (activatedCharges === totalCharges) {
     return { status: 'all', text: 'All products ready', color: 'green' };
   } else if (activatedCharges > 0) {
-    return { 
-      status: 'partial', 
-      text: `${activatedCharges}/${totalCharges} products ready`, 
-      color: 'lime' 
-    };
+    return { status: 'partial', text: `${activatedCharges}/${totalCharges} products ready`, color: 'lime' };
   } else {
     return { status: 'none', text: 'No products ready', color: 'red' };
   }
 };
 
-/**
- * Function to fetch Younium data and update the badge accordingly
- * @param {Object} t - Trello Power-Up client
- */
+// Function to fetch Younium data
+const fetchYouniumData = (orgNo, hubspotId) => {
+  console.log('Fetching Younium data for:', { orgNo, hubspotId });
+
+  if (!orgNo || !hubspotId) {
+    console.warn('Invalid hubspotId or orgNo');
+    return Promise.resolve({
+      name: 'Invalid hubspot or orgnummer',
+      accountNumber: null,
+    });
+  }
+
+  // Use the correct API endpoint
+  const apiUrl = `https://activateitems-d22e28f2e719.herokuapp.com/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`;
+
+  return fetch(apiUrl)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('Younium API response data:', data);
+      return data;
+    })
+    .catch(err => {
+      console.error('Error fetching Younium data:', err);
+      return null;
+    });
+};
+
+// Function to fetch and update badge data
 function fetchAndUpdateBadge(t) {
-  return t.card('all')
+  t.card('all')
     .then(function(card) {
       const orgNo = getCustomFieldValue(card.customFieldItems, orgNoFieldId);
       const hubspotId = getCustomFieldValue(card.customFieldItems, hubspotIdFieldId);
@@ -113,289 +130,7 @@ function fetchAndUpdateBadge(t) {
     });
 }
 
-// Helper function to compare two Younium data objects
-const isDataEqual = (data1, data2) => {
-  // Implement a deep comparison of relevant fields
-  // Return true if the data is effectively the same, false otherwise
-  // This is a simplified example, adjust based on your data structure
-  return JSON.stringify(data1) === JSON.stringify(data2);
-};
-
-/**
- * Function to handle toggle button clicks for activation/inactivation
- * @param {String} chargeNumber - The charge number to toggle
- * @param {Boolean} currentStatus - Current status of the charge
- * @param {String} productName - Name of the product
- * @param {Object} youniumData - The current Younium data
- */
-const handleToggleButtonClick = async (chargeNumber, currentStatus, productName, youniumData) => {
-  const action = currentStatus ? 'inactivate' : 'activate';
-  const confirmationMessage = `Are you sure you want to ${action} ${productName}?`;
-
-  console.log(`Button clicked to ${action} product: ${productName}, Charge Number: ${chargeNumber}, Current status: ${currentStatus}`);
-
-  if (!confirm(confirmationMessage)) {
-    console.log(`User cancelled the ${action} action.`);
-    return;
-  }
-
-  console.log(`Proceeding to ${action} charge: ${chargeNumber}`);
-
-  // Retrieve orgNo and hubspotId from the DOM elements
-  const orgNoElement = document.getElementById('org-number');
-  const hubspotIdElement = document.getElementById('hubspot-id');
-
-  if (!orgNoElement || !hubspotIdElement) {
-    console.error('org-number or hubspot-id element not found in the DOM.');
-    alert('Required data elements are missing.');
-    return;
-  }
-
-  const orgNo = orgNoElement.textContent.trim();
-  const hubspotId = hubspotIdElement.textContent.trim();
-
-  // Attempt to refresh Younium data before proceeding
-  try {
-    youniumData = await fetchYouniumData(orgNo, hubspotId);
-    if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
-      throw new Error('Failed to fetch updated Younium data');
-    }
-  } catch (error) {
-    console.error('Error refreshing Younium data:', error);
-    alert('Failed to refresh Younium data. Please try again.');
-    return;
-  }
-
-  // Re-validate the charge exists in the refreshed data
-  const product = youniumData.products.find(p => p.charges.some(c => c.chargeNumber === chargeNumber));
-  if (!product) {
-    console.error(`Error: No product found for Charge Number: ${chargeNumber} in refreshed data`);
-    alert(`Error: No product found for Charge Number: ${chargeNumber} in refreshed data`);
-    return;
-  }
-
-  // Prepare the request body with refreshed data
-  const requestBody = {
-    chargeNumber,
-    orderId: youniumData.id,
-    accountId: youniumData.account.accountNumber,
-    invoiceAccountId: youniumData.invoiceAccount.accountNumber,
-    productId: product.productNumber,
-    chargePlanId: product.chargePlanNumber,
-    ready4invoicing: currentStatus ? "0" : "1"
-  };
-
-  console.log('Request body being sent to /toggle-invoicing-status:', requestBody);
-
-  // Implement retry logic with initial delay
-  const maxRetries = 3;
-  const initialDelay = 2000; // 2 seconds initial delay
-  const retryDelay = 2000; // 2 seconds between retries
-
-  console.log(`Waiting ${initialDelay / 1000} seconds before first attempt...`);
-  await new Promise(resolve => setTimeout(resolve, initialDelay));
-
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      console.log(`Attempting to update charge status (Attempt ${attempt} of ${maxRetries})...`);
-      const response = await fetch('/toggle-invoicing-status', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      console.log('Received response status:', response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error response text:', errorText);
-        
-        if (response.status === 400 && errorText.includes('No latest version of subscription')) {
-          if (attempt < maxRetries) {
-            console.log(`Retrying in ${retryDelay}ms... (Attempt ${attempt + 1} of ${maxRetries})`);
-            await new Promise(resolve => setTimeout(resolve, retryDelay));
-            continue;
-          }
-        }
-        
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-      }
-
-      const data = await response.json();
-
-      if (data.success) {
-        console.log(`Successfully updated Charge ${chargeNumber} status to ${requestBody.ready4invoicing === "1" ? 'Ready' : 'Not Ready'} for invoicing`);
-        // Refresh the UI with updated data
-        fetchAndUpdateBadge(trelloPowerUpInstance); // Pass the Trello Power-Up instance
-      } else {
-        console.error('Failed to update the charge status:', data.message, data.details);
-        alert(`Failed to update status: ${data.message}`);
-      }
-
-      return; // Exit the retry loop if successful
-    } catch (error) {
-      console.error(`Error updating the charge status (Attempt ${attempt}):`, error);
-      if (attempt === maxRetries) {
-        alert(`Error updating status: ${error.message}`);
-      }
-    }
-  }
-};
-
-/**
- * Function to update the modal with Younium data
- * @param {Object} youniumData - The data fetched from Younium API
- */
-const updateModalWithYouniumData = (youniumData) => {
-  console.log('Updating modal with updated Younium data:', youniumData);
-
-  // Validate that youniumData and required fields are present
-  if (!youniumData || !youniumData.account || !youniumData.products) {
-    console.error('Invalid Younium data provided to update modal:', youniumData);
-    alert('Failed to update the modal. Missing or invalid Younium data.');
-    return;
-  }
-
-  // Update the modal elements with the new data
-  const accountNameElement = document.getElementById('account-name');
-  const orderStatusElement = document.getElementById('order-status');
-  const orderDescriptionElement = document.getElementById('order-description');
-  const productsContainer = document.getElementById('products-container');
-
-  if (!accountNameElement || !orderStatusElement || !orderDescriptionElement || !productsContainer) {
-    console.error('One or more required DOM elements are missing.');
-    alert('Failed to update the modal. Required elements are missing.');
-    return;
-  }
-
-  accountNameElement.textContent = youniumData.account.name || 'N/A';
-  orderStatusElement.textContent = youniumData.status || 'N/A';
-  orderDescriptionElement.textContent = youniumData.description || 'N/A';
-  productsContainer.innerHTML = '';
-
-  // Iterate over the products to populate the table
-  youniumData.products.forEach(product => {
-    if (product.charges && Array.isArray(product.charges)) {
-      product.charges.forEach(charge => {
-        // Check if the charge is ready for invoicing based on the new ready4invoicing values
-        const isActivated = charge.ready4invoicing === true || charge.ready4invoicing === "1" || charge.ready4invoicing === "true";
-
-        const buttonClass = isActivated ? 'inactivate-button' : 'activate-button';
-        const buttonText = isActivated ? 'Unready' : 'Ready';
-
-        // Format the effective start date (if available)
-        const effectiveStartDate = charge.effectiveStartDate ? new Date(charge.effectiveStartDate).toLocaleDateString() : 'N/A';
-
-        // Populate the table row
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${product.name || 'N/A'}</td>
-          <td>${charge.name || 'N/A'}</td>
-          <td>${effectiveStartDate}</td>
-          <td>${isActivated ? 'Ready for invoicing' : 'Not ready for invoicing'}</td>
-          <td class="button-container">
-            <button class="${buttonClass}" data-charge-number="${charge.chargeNumber}" data-product-name="${product.name || ''}">
-              ${buttonText}
-            </button>
-          </td>
-        `;
-        productsContainer.appendChild(row);
-      });
-    } else {
-      console.error('Invalid charges data for product:', product);
-    }
-  });
-};
-
-// Define a global variable to hold the Trello Power-Up instance for use in handleToggleButtonClick
-let trelloPowerUpInstance = null;
-
-// Add event listener for toggle buttons
-document.addEventListener('click', function (event) {
-  if (event.target && event.target.tagName === 'BUTTON') {
-    const chargeNumber = event.target.getAttribute('data-charge-number');
-    const productName = event.target.getAttribute('data-product-name');
-    const buttonText = event.target.textContent.trim();
-    
-    // Determine current status based on the button text
-    // Adjust the condition based on your actual button text
-    const currentStatus = buttonText === "Unready" || buttonText === "Mark as not ready";
-
-    // Retrieve orgNo and hubspotId from the DOM elements
-    const orgNoElement = document.getElementById('org-number');
-    const hubspotIdElement = document.getElementById('hubspot-id');
-
-    if (!orgNoElement || !hubspotIdElement) {
-      console.error('org-number or hubspot-id element not found in the DOM.');
-      alert('Required data elements are missing.');
-      return;
-    }
-
-    const orgNo = orgNoElement.textContent.trim();
-    const hubspotId = hubspotIdElement.textContent.trim();
-
-    // Fetch the latest Younium data before handling the toggle
-    fetchYouniumData(orgNo, hubspotId)
-      .then(youniumData => {
-        if (youniumData) {
-          handleToggleButtonClick(chargeNumber, currentStatus, productName, youniumData);
-        } else {
-          console.error('Failed to fetch Younium data for toggle action.');
-          alert('Failed to load necessary data for this action.');
-        }
-      })
-      .catch(err => {
-        console.error('Error fetching Younium data for toggle:', err);
-        alert('Failed to load necessary data for this action.');
-      });
-  }
-});
-
-/**
- * Function to fetch Younium data from the API
- * @param {String} orgNo - Organization number
- * @param {String} hubspotId - HubSpot ID
- * @returns {Promise<Object|null>} - Returns the fetched data or null on failure
- */
-const fetchYouniumData = (orgNo, hubspotId) => {
-  console.log('Fetching Younium data for:', { orgNo, hubspotId });
-
-  if (!orgNo || !hubspotId) {
-    console.warn('Invalid hubspotId or orgNo');
-    return Promise.resolve({
-      name: 'Invalid hubspot or orgnummer',
-      accountNumber: null,
-    });
-  }
-
-  // Use the correct API endpoint
-  const apiUrl = `https://activateitems-d22e28f2e719.herokuapp.com/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`;
-
-  return fetch(apiUrl)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`API request failed with status ${response.status}`);
-      }
-      return response.json();
-    })
-    .then(data => {
-      console.log('Younium API response data:', data);
-      return data;
-    })
-    .catch(err => {
-      console.error('Error fetching Younium data:', err);
-      return null;
-    });
-};
-
-/**
- * Callback function for badge button clicks
- * @param {Object} t - Trello Power-Up client
- * @param {Object} opts - Options passed by Trello
- * @returns {Promise} - Returns a promise that resolves when the modal or alert is handled
- */
+// Function to handle the button click on the badge
 const onBtnClick = (t, opts) => {
   console.log('Button clicked on card:', opts);
 
@@ -422,9 +157,9 @@ const onBtnClick = (t, opts) => {
           return t.modal({
             title: 'Ready for invoicing',
             url: externalUrl,
-            height: 1000,  // Set the height (1000px in this case)
-            width: 1000,   // You can also set the width as needed
-            fullscreen: false, // Set to true if you want the modal to take up the full screen
+            height: 1000,
+            width: 1000,
+            fullscreen: false,
             mouseEvent: opts.mouseEvent
           });
 
@@ -440,42 +175,9 @@ const onBtnClick = (t, opts) => {
   });
 };
 
-/**
- * Function to fetch the latest Younium data and update the badge
- * @param {Number} retries - Number of retry attempts
- * @param {Number} delay - Delay between retries in milliseconds
- * @param {String} orgNo - Organization number
- * @param {String} hubspotId - HubSpot ID
- */
-const fetchLatestYouniumData = async (retries, delay, orgNo, hubspotId) => {
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    try {
-      console.log(`Fetching latest Younium data (Attempt ${attempt} of ${retries})...`);
-      const youniumData = await fetchYouniumData(orgNo, hubspotId);
-      if (youniumData) {
-        updateModalWithYouniumData(youniumData);
-        fetchAndUpdateBadge(trelloPowerUpInstance); // Update badge with new data
-        return;
-      } else {
-        throw new Error('No data returned from Younium API');
-      }
-    } catch (error) {
-      console.error(`Error fetching latest Younium data (Attempt ${attempt}):`, error);
-      if (attempt < retries) {
-        console.log(`Retrying in ${delay}ms...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-      } else {
-        alert('Failed to fetch the latest Younium data after multiple attempts.');
-      }
-    }
-  }
-};
-
 // Initialize Trello Power-Up
 TrelloPowerUp.initialize({
   'card-detail-badges': function(t, options) {
-    trelloPowerUpInstance = t; // Store the Trello Power-Up instance globally
-
     return t.get('card', 'private', 'badgeData')
       .then(function(badgeData) {
         if (badgeData) {
