@@ -379,25 +379,52 @@ TrelloPowerUp.initialize({
     console.log('card-detail-badges function called');
 
     try {
-      // Fetch the badge data
-      const badgeData = await fetchAndUpdateBadge(t);
-      console.log('Badge data fetched:', badgeData);
+      // Fetch the card data (orgNo and hubspotId)
+      const card = await t.card('all');
+      const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
+      const hubspotId = getCustomFieldValue(card.customFieldItems, '66e2a183ccc0da772098ab1e');
 
-      // Return the final badge once data is ready
-      return badgeData;
-    } catch (error) {
-      console.error('Error fetching badge data:', error);
-      
-      // Return an error badge in case of failure
+      // Ensure we have valid orgNo and hubspotId
+      if (!orgNo || !hubspotId) {
+        console.error('Missing orgNo or hubspotId, cannot fetch Younium data');
+        return [{
+          text: 'Invalid card data',
+          color: 'red',
+          icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico'
+        }];
+      }
+
+      // Fetch Younium data
+      const youniumData = await fetchYouniumData(orgNo, hubspotId);
+
+      // Handle invalid data from Younium
+      if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
+        return [{
+          text: 'Invalid ID',
+          color: 'red',
+          icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico'
+        }];
+      }
+
+      // Process activation status
+      const status = getActivationStatus(youniumData);
       return [{
-        text: 'Error loading',
+        text: status.text,
+        color: status.color,
+        icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico'
+      }];
+    } catch (error) {
+      // Handle errors in fetching or processing data
+      console.error('Error fetching or processing Younium data:', error);
+      return [{
+        text: 'Error loading status',
         color: 'red',
-        icon: iconUrl,
-        refresh: 60 // Retry fetching after 60 seconds
+        icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico'
       }];
     }
   }
 });
+
 
 
 
