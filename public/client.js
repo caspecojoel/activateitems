@@ -377,43 +377,41 @@ const onBtnClick = (t, opts) => {
   console.log('Button clicked on card:', opts);
 
   return t.card('all').then(card => {
-    console.log('Card data:', card);
+      console.log('Card data:', card);
 
-    const hubspotId = getCustomFieldValue(card.customFieldItems, '66e2a183ccc0da772098ab1e');
-    const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
-    console.log('HubSpot ID:', hubspotId);
-    console.log('Org Number:', orgNo);
+      const hubspotId = getCustomFieldValue(card.customFieldItems, '66e2a183ccc0da772098ab1e');
+      const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
+      console.log('HubSpot ID:', hubspotId);
+      console.log('Org Number:', orgNo);
 
-    return t.member('fullName').then(member => {
-      const userName = member.fullName;
-
-      // Fetch Younium data and display in the modal
-      return fetchYouniumData(orgNo, hubspotId)
-        .then(youniumData => {
+      // Step 1: Open the modal with a skeleton loader
+      return t.modal({
+          title: 'Ready for Invoicing Details',
+          url: '/loading-modal.html',  // URL for the skeleton loader modal
+          height: 500,
+          width: 500,
+          fullscreen: false,
+          mouseEvent: opts.mouseEvent
+      }).then(() => {
+          // Step 2: Fetch the Younium data in the background
+          return fetchYouniumData(orgNo, hubspotId);
+      }).then(youniumData => {
           if (!youniumData) {
-            throw new Error('Failed to fetch Younium data');
+              throw new Error('Failed to fetch Younium data');
           }
 
+          // Step 3: Update the modal to show actual content with fetched data
           const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(youniumData))}&hubspotId=${encodeURIComponent(hubspotId)}&orgNo=${encodeURIComponent(orgNo)}`;
-
-          return t.modal({
-            title: 'Ready for Invoicing Details',
-            url: externalUrl,
-            height: 1000,  // Adjust the height as needed
-            width: 1000,   // Adjust the width as needed
-            fullscreen: false,
-            mouseEvent: opts.mouseEvent
-          });
-
-        })
-        .catch(err => {
+          
+          // Update the modal to show the fetched data instead of the skeleton loader
+          return t.updateModal({ url: externalUrl });
+      }).catch(err => {
           console.error('Error fetching Younium data or displaying popup:', err);
           return t.alert({
-            message: 'Failed to load Younium data. Please try again later.',
-            duration: 5
+              message: 'Failed to load Younium data. Please try again later.',
+              duration: 5
           });
-        });
-    });
+      });
   });
 };
 

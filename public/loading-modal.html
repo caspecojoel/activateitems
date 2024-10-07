@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading Invoicing Status</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .skeleton {
+            background: linear-gradient(-90deg, #f0f0f0 0%, #e0e0e0 50%, #f0f0f0 100%);
+            background-size: 400% 400%;
+            animation: shimmer 1.2s ease-in-out infinite;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .skeleton-row {
+            margin-bottom: 15px;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="loading-spinner" class="loading">Loading order details...</div>
+        <div class="form-section">
+            <div class="skeleton skeleton-row" style="width: 70%;"></div>
+            <div class="skeleton skeleton-row" style="width: 50%;"></div>
+            <div class="skeleton skeleton-row" style="width: 90%;"></div>
+            <div class="skeleton skeleton-row" style="width: 60%;"></div>
+            <div class="skeleton skeleton-row" style="width: 80%;"></div>
+        </div>
+    </div>
+</body>
+</html>
