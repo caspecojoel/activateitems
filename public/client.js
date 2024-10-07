@@ -1,3 +1,6 @@
+// client.js
+
+// Utility function to get custom field values
 const getCustomFieldValue = (fields, fieldId) => {
   const field = fields.find(f => f.idCustomField === fieldId);
   if (!field) {
@@ -6,7 +9,7 @@ const getCustomFieldValue = (fields, fieldId) => {
   return field?.value?.text || field?.value?.number || '';
 };
 
-// Function to get activation status
+// Function to determine activation status
 const getActivationStatus = (youniumData) => {
   console.log('getActivationStatus received:', youniumData);
   if (!youniumData) {
@@ -44,10 +47,11 @@ const getActivationStatus = (youniumData) => {
   }
 };
 
+// Function to fetch the latest Younium data with retry logic
 const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
   let lastData = null;
   const tryFetch = (attemptNumber) => {
-    fetchYouniumData(orgNo, hubspotId)
+    return fetchYouniumData(orgNo, hubspotId)
       .then(updatedYouniumData => {
         console.log(`Attempt ${attemptNumber}: Updated Younium data received:`, updatedYouniumData);
         console.log('isLastVersion:', updatedYouniumData.isLastVersion);
@@ -55,44 +59,56 @@ const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
         if (!updatedYouniumData || updatedYouniumData.name === 'Invalid hubspot or orgnummer') {
           console.error('Failed to fetch valid updated Younium data:', updatedYouniumData);
           alert('Failed to fetch valid updated data. Please verify Hubspot ID and Organization Number.');
-          return;
+          return null;
         }
 
         if (!updatedYouniumData.isLastVersion && !isDataEqual(lastData, updatedYouniumData)) {
           lastData = updatedYouniumData;
           if (attemptNumber < retries) {
             console.warn(`Fetched data might not be the latest version. Retrying in ${delay} ms...`);
-            setTimeout(() => tryFetch(attemptNumber + 1), delay);
+            return new Promise((resolve) => {
+              setTimeout(() => {
+                resolve(tryFetch(attemptNumber + 1));
+              }, delay);
+            });
           } else {
             console.warn('Failed to confirm the latest version after multiple retries. Proceeding with the most recent data.');
             updateModalWithYouniumData(updatedYouniumData);
+            return updatedYouniumData;
           }
         } else {
           console.log('Latest data version confirmed or no changes detected.');
           updateModalWithYouniumData(updatedYouniumData);
+          return updatedYouniumData;
         }
       })
       .catch(fetchError => {
         console.error('Error fetching updated Younium data:', fetchError);
         if (attemptNumber < retries) {
-          setTimeout(() => tryFetch(attemptNumber + 1), delay);
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              resolve(tryFetch(attemptNumber + 1));
+            }, delay);
+          });
         } else {
           alert('Error fetching updated data. Please try again later.');
+          return null;
         }
       });
   };
 
-  tryFetch(1);
+  return tryFetch(1);
 };
 
 // Helper function to compare two Younium data objects
 const isDataEqual = (data1, data2) => {
   // Implement a deep comparison of relevant fields
   // Return true if the data is effectively the same, false otherwise
-  // This is a simplified example, you'll need to adjust based on your data structure
+  // This is a simplified example, adjust based on your data structure
   return JSON.stringify(data1) === JSON.stringify(data2);
 };
 
+// Function to handle toggle button clicks
 const handleToggleButtonClick = async (chargeId, currentStatus, productName, youniumData) => {
   const action = currentStatus ? 'inactivate' : 'activate';
   const confirmationMessage = `Are you sure you want to ${action} ${productName}?`;
@@ -278,6 +294,7 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
   allButtons.forEach(btn => btn.disabled = false);
 };
 
+// Function to update the modal with latest Younium data
 const updateModalWithYouniumData = (youniumData) => {
   console.log('Updating modal with updated Younium data:', youniumData);
 
@@ -308,7 +325,6 @@ const updateModalWithYouniumData = (youniumData) => {
 
         // Populate the table row
         const row = document.createElement('tr');
-        // Inside the charges.forEach loop in updateModalWithYouniumData
         console.log(`Setting button with Charge ID: ${charge.id} and Product Name: ${product.name}`);
 
         row.innerHTML = `
@@ -330,7 +346,7 @@ const updateModalWithYouniumData = (youniumData) => {
   });
 };
 
-// Add event listener for toggle buttons
+// Event listener for toggle buttons
 document.addEventListener('click', function (event) {
   if (event.target && event.target.tagName === 'BUTTON') {
     const chargeId = event.target.getAttribute('data-charge-id');
@@ -347,7 +363,6 @@ document.addEventListener('click', function (event) {
     handleToggleButtonClick(chargeId, currentStatus, productName, youniumData);
   }
 });
-
 
 // Function to fetch Younium data
 const fetchYouniumData = (orgNo, hubspotId) => {
@@ -373,6 +388,7 @@ const fetchYouniumData = (orgNo, hubspotId) => {
     });
 };
 
+// Function to initialize Trello Power-Up
 const onBtnClick = (t, opts) => {
   console.log('Button clicked on card:', opts);
 
@@ -429,3 +445,120 @@ TrelloPowerUp.initialize({
     }];
   }
 });
+
+// Function to handle DOMContentLoaded event
+const initializePage = () => {
+  // Show the overall loading overlay
+  const loadingOverlay = document.getElementById('loading-overlay');
+  if (loadingOverlay) {
+    loadingOverlay.style.display = 'flex';
+  }
+
+  // Parse the URL and get Younium data
+  const urlParams = new URLSearchParams(window.location.search);
+  let youniumData = null;
+
+  // Map DOM elements for reusability
+  const domElements = {
+    hubspotId: document.getElementById('hubspot-id'),
+    orgNumber: document.getElementById('org-number'),
+    accountName: document.getElementById('account-name'),
+    accountNumber: document.getElementById('account-number'),
+    orderId: document.getElementById('order-id'),
+    orderStatus: document.getElementById('order-status'),
+    orderDescription: document.getElementById('order-description'),
+    productsContainer: document.getElementById('products-container')
+  };
+
+  // Function to clear loading placeholders
+  const clearLoading = () => {
+    Object.values(domElements).forEach(element => {
+      if (element.classList.contains('loading-placeholder')) {
+        element.classList.remove('loading-placeholder');
+        element.innerHTML = ''; // Clear existing loading content
+      }
+    });
+    // Clear products table loading row
+    const loadingRow = document.querySelector('#products-container tr');
+    if (loadingRow && loadingRow.querySelector('.spinner')) {
+      loadingRow.remove();
+    }
+  };
+
+  // Function to populate Younium data
+  const populateData = (data) => {
+    if (!data) {
+      alert('Failed to fetch Younium data.');
+      return;
+    }
+
+    // Populate Younium Account and Order data if the elements exist
+    if (domElements.hubspotId) domElements.hubspotId.textContent = urlParams.get('hubspotId') || 'N/A';
+    if (domElements.orgNumber) domElements.orgNumber.textContent = urlParams.get('orgNo') || 'N/A';
+    if (domElements.accountName) domElements.accountName.textContent = data.account?.name || 'N/A';
+    if (domElements.accountNumber) domElements.accountNumber.textContent = data.account?.accountNumber || 'N/A';
+    if (domElements.orderId) domElements.orderId.textContent = data.id || 'N/A';
+    if (domElements.orderStatus) domElements.orderStatus.textContent = data.status || 'N/A';
+    if (domElements.orderDescription) domElements.orderDescription.textContent = data.description || 'N/A';
+
+    // Populate the products table
+    domElements.productsContainer.innerHTML = ''; // Clear existing content
+    data.products.sort((a, b) => a.name.localeCompare(b.name)); // Sort products alphabetically
+
+    data.products.forEach(product => {
+      product.charges.sort((a, b) => a.name.localeCompare(b.name)); // Sort charges alphabetically
+
+      product.charges.forEach(charge => {
+        const isActivated = charge.ready4invoicing === true || charge.ready4invoicing === "true" || charge.ready4invoicing === "1";
+        const buttonClass = isActivated ? 'inactivate-button' : 'activate-button';
+        const buttonText = isActivated ? 'Unready' : 'Ready';
+
+        // Format the effective start date (if available)
+        const effectiveStartDate = charge.effectiveStartDate ? new Date(charge.effectiveStartDate).toLocaleDateString() : 'N/A';
+
+        // Populate the table row
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${product.name || 'N/A'}</td>
+          <td>${charge.name || 'N/A'}</td>
+          <td>${effectiveStartDate}</td>
+          <td>${isActivated ? 'Ready for invoicing' : 'Not ready for invoicing'}</td>
+          <td class="button-container">
+            <button class="${buttonClass}" data-charge-id="${charge.id}" data-product-name="${product.name || ''}">
+              ${buttonText}
+            </button>
+          </td>
+        `;
+        domElements.productsContainer.appendChild(row);
+      });
+    });
+  };
+
+  // Function to hide the loading overlay
+  const hideLoading = () => {
+    if (loadingOverlay) {
+      loadingOverlay.style.display = 'none';
+    }
+  };
+
+  // Fetch Younium data
+  const fetchData = async () => {
+    try {
+      const fetchedData = await fetchLatestYouniumData(3, 2000, urlParams.get('orgNo'), urlParams.get('hubspotId'));
+      youniumData = fetchedData;
+      populateData(youniumData);
+    } catch (error) {
+      console.error('Error fetching Younium data:', error);
+      alert('Failed to fetch Younium data.');
+    } finally {
+      clearLoading();
+      hideLoading();
+    }
+  };
+
+  // Initiate data fetching
+  fetchData();
+};
+
+// Add event listener for DOMContentLoaded to initialize the page
+document.addEventListener('DOMContentLoaded', initializePage);
