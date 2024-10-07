@@ -1,3 +1,9 @@
+// Function to get custom field value
+function getCustomFieldValue(fields, fieldId) {
+  const field = fields.find(f => f.idCustomField === fieldId);
+  return field?.value?.text || field?.value?.number || '';
+}
+
 // Function to fetch and update badge data
 function fetchAndUpdateBadge(t) {
   // Fetch data asynchronously
