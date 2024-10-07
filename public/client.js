@@ -249,6 +249,8 @@ const updateModalWithYouniumData = (youniumData) => {
   });
 };
 
+
+
 // Add event listener for toggle buttons
 document.addEventListener('click', function (event) {
   if (event.target && event.target.tagName === 'BUTTON') {
@@ -328,84 +330,42 @@ const onBtnClick = (t, opts) => {
   });
 };
 
-// Function to fetch data and update the badge asynchronously
-async function fetchAndUpdateBadge(t) {
-  try {
-    const card = await t.card('all');
-    const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
-    const hubspotId = getCustomFieldValue(card.customFieldItems, '66e2a183ccc0da772098ab1e');
-
-    if (!orgNo || !hubspotId) {
-      console.warn('Invalid organization number or HubSpot ID');
-      return;
-    }
-
-    // Fetch the Younium data
-    const youniumData = await fetchYouniumData(orgNo, hubspotId);
-
-    // Prepare badge data based on fetched information
-    let updatedBadge;
-
-    if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
-      updatedBadge = {
-        text: 'Invalid ID',
-        color: 'red',
-        icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-        callback: onBtnClick,
-      };
-    } else {
-      // Get activation status
-      const status = getActivationStatus(youniumData);
-      updatedBadge = {
-        text: status.text,
-        color: status.color,
-        icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-        callback: onBtnClick,
-      };
-    }
-
-    // Save the updated badge data in Trello and notify the parent to refresh the badge display
-    await t.set('card', 'shared', 'badgeData', updatedBadge);
-    t.notifyParent('card-detail-badges');
-
-  } catch (err) {
-    console.error('Error fetching or updating Younium data:', err);
-
-    // Fallback badge in case of error
-    const errorBadge = {
-      text: 'Error loading status',
-      color: 'red',
-      icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-      callback: onBtnClick,
-    };
-    await t.set('card', 'shared', 'badgeData', errorBadge);
-    t.notifyParent('card-detail-badges');
-  }
-}
-
-// Initialize Trello Power-Up
+// Initialize Trello Power-Up with dynamic card-detail-badge
 TrelloPowerUp.initialize({
   'card-detail-badges': (t, options) => {
-    // Return the loading badge immediately
-    const loadingBadge = {
-      text: 'Loading data...',
-      color: 'yellow',
-      icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-      // Optionally, you can add a callback to allow manual refresh
-      callback: onBtnClick,
-    };
+    return t.card('all')
+      .then(card => {
+        const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
+        const hubspotId = getCustomFieldValue(card.customFieldItems, '66e2a183ccc0da772098ab1e');
 
-    // Start fetching data asynchronously
-    fetchAndUpdateBadge(t);
+        return fetchYouniumData(orgNo, hubspotId)
+          .then(youniumData => {
+            if (!youniumData || youniumData.name === 'Invalid hubspot or orgnummer') {
+              return [{
+                text: 'Invalid ID',
+                color: 'red',
+                icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+                callback: onBtnClick
+              }];
+            }
 
-    // Return the loading badge
-    return [loadingBadge];
-  },
-
-  'card-badges': (t, options) => {
-    // Provide an empty badge array to satisfy capability requirements
-    return [];
-  },
-
-  // Include other capabilities as needed
+            const status = getActivationStatus(youniumData);
+            return [{
+              text: status.text,
+              color: status.color,
+              icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+              callback: onBtnClick
+            }];
+          })
+          .catch(err => {
+            console.error('Error processing Younium data:', err);
+            return [{
+              text: 'Error loading status',
+              color: 'red',
+              icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+              callback: onBtnClick
+            }];
+          });
+      });
+  }
 });
