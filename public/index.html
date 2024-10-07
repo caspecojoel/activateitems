@@ -78,7 +78,7 @@
         // Listen for messages from the parent iframe to receive Younium data
         window.addEventListener('message', (event) => {
             // Ensure that the message is coming from a trusted source
-            if (event.origin !== 'https://activateitems-d22e28f2e719.herokuapp.com' && event.origin !== 'https://trello.com') {
+            if (event.origin !== 'https://your-trusted-domain.com' && event.origin !== 'https://trello.com') {
                 console.warn('Untrusted origin:', event.origin);
                 return;
             }
@@ -136,7 +136,6 @@
             }
         });
     </script>
-    
     <script src="/client.js"></script>
 </body>
 </html>
