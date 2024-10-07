@@ -400,8 +400,8 @@ const onBtnClick = (t, opts) => {
               throw new Error('Failed to fetch Younium data');
           }
 
-          // Step 3: Use `window.postMessage` to send the fetched data to the modal for updating
-          t.getIframe().contentWindow.postMessage({
+          // Step 3: Use `window.parent.postMessage` to send the fetched data to the modal for updating
+          window.parent.postMessage({
               type: 'updateYouniumData',
               data: youniumData
           }, '*');
