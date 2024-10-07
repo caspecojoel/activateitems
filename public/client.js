@@ -47,7 +47,7 @@ const getActivationStatus = (youniumData) => {
 };
 
 function fetchAndUpdateBadge(t) {
-  t.card('all')
+  return t.card('all')
     .then(function(card) {
       const orgNo = getCustomFieldValue(card.customFieldItems, orgNoFieldId);
       const hubspotId = getCustomFieldValue(card.customFieldItems, hubspotIdFieldId);
@@ -65,9 +65,9 @@ function fetchAndUpdateBadge(t) {
           callback: onBtnClick,
           refresh: false
         };
-        return t.set('card', 'private', 'badgeData', badgeData).then(() => {
-          t.notifyParent('card-detail-badges');
-        });
+        return t.set('card', 'private', 'badgeData', badgeData)
+          .then(() => t.notifyParent('card-detail-badges'))
+          .then(() => badgeData);
       }
 
       return fetchYouniumData(orgNo, hubspotId)
@@ -100,9 +100,9 @@ function fetchAndUpdateBadge(t) {
           }
 
           // Store badge data and notify parent
-          return t.set('card', 'private', 'badgeData', badgeData).then(() => {
-            t.notifyParent('card-detail-badges');
-          });
+          return t.set('card', 'private', 'badgeData', badgeData)
+            .then(() => t.notifyParent('card-detail-badges'))
+            .then(() => badgeData);
         })
         .catch(function(err) {
           console.error('Error fetching or processing Younium data:', err);
@@ -113,17 +113,22 @@ function fetchAndUpdateBadge(t) {
             callback: onBtnClick,
             refresh: false
           };
-          return t.set('card', 'private', 'badgeData', badgeData).then(() => {
-            t.notifyParent('card-detail-badges');
-          });
-        });        
+          return t.set('card', 'private', 'badgeData', badgeData)
+            .then(() => t.notifyParent('card-detail-badges'))
+            .then(() => badgeData);
+        });
     })
     .catch(function(error) {
       console.error('Error while fetching card data:', error);
+      const badgeData = {
+        text: 'Error loading card',
+        color: 'red',
+        icon: iconUrl,
+        refresh: false
+      };
+      return badgeData;
     });
 }
-
-
 
 // Helper function to compare two Younium data objects
 const isDataEqual = (data1, data2) => {
@@ -411,6 +416,7 @@ TrelloPowerUp.initialize({
       });
   }
 });
+
 
 
 
