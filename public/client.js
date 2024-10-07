@@ -130,13 +130,13 @@ const handleToggleButtonClick = async (chargeNumber, currentStatus, productName,
 
   // Prepare the request body with refreshed data
   const requestBody = {
-    chargeNumber,
+    chargeNumber: selectedCharge.chargeNumber,
     orderId: youniumData.id,
     accountId: youniumData.account.accountNumber,
     invoiceAccountId: youniumData.invoiceAccount.accountNumber,
-    productId: product.productNumber,
-    chargePlanId: product.chargePlanNumber,
-    ready4invoicing: currentStatus ? "0" : "1"
+    productId: selectedProduct.productNumber,
+    chargePlanId: selectedProduct.chargePlanNumber, // Ensure this value is correct
+    ready4invoicing: !currentStatus,
   };
 
   console.log('Request body being sent to /toggle-invoicing-status:', requestBody);
