@@ -52,6 +52,7 @@ function fetchAndUpdateBadge(t) {
       const orgNo = getCustomFieldValue(card.customFieldItems, orgNoFieldId);
       const hubspotId = getCustomFieldValue(card.customFieldItems, hubspotIdFieldId);
 
+      console.log('Fetched Card:', card);  // Log the entire card object
       console.log('OrgNo:', orgNo);
       console.log('HubSpotId:', hubspotId);
 
@@ -72,11 +73,13 @@ function fetchAndUpdateBadge(t) {
       return fetchYouniumData(orgNo, hubspotId)
         .then(function(youniumData) {
           if (!youniumData) {
+            console.error('Younium data is null or undefined after API call');
             throw new Error('Younium data is null or undefined');
           }
 
           let badgeData;
           if (youniumData.name === 'Invalid hubspot or orgnummer') {
+            console.error('Invalid Younium data received: Invalid hubspot or orgnummer');
             badgeData = {
               text: 'Invalid ID',
               color: 'red',
@@ -86,6 +89,7 @@ function fetchAndUpdateBadge(t) {
             };
           } else {
             const status = getActivationStatus(youniumData);
+            console.log('Status from getActivationStatus:', status);
             badgeData = {
               text: status.text,
               color: status.color,
@@ -113,8 +117,12 @@ function fetchAndUpdateBadge(t) {
             t.notifyParent('card-detail-badges');
           });
         });        
+    })
+    .catch(function(error) {
+      console.error('Error while fetching card data:', error);
     });
 }
+
 
 
 // Helper function to compare two Younium data objects
