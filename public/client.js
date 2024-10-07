@@ -249,8 +249,6 @@ const updateModalWithYouniumData = (youniumData) => {
   });
 };
 
-
-
 // Add event listener for toggle buttons
 document.addEventListener('click', function (event) {
   if (event.target && event.target.tagName === 'BUTTON') {
@@ -339,10 +337,12 @@ TrelloPowerUp.initialize({
       icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico'
     };
 
-    // Asynchronously fetch Younium data and update badge
-    fetchAndUpdateBadge(t);
+    // Start a timer to repeatedly update the badge
+    setInterval(async () => {
+      await fetchAndUpdateBadge(t);
+    }, 5000); // Every 5 seconds
 
-    // Return the "Loading data..." badge immediately
+    // Return the "Loading data..." badge initially
     return [loadingBadge];
   },
 
@@ -405,3 +405,4 @@ async function fetchAndUpdateBadge(t) {
     t.notifyParent('card-detail-badges');
   }
 }
+
