@@ -278,7 +278,7 @@ const fetchYouniumData = (orgNo, hubspotId) => {
   }
 
   // Use the correct API endpoint
-  const apiUrl = `https://your-api-domain.com/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`;
+  const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(youniumData))}&hubspotId=${encodeURIComponent(hubspotId)}&orgNo=${encodeURIComponent(orgNo)}`;
 
   return fetch(apiUrl)
     .then(response => {
