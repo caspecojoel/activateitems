@@ -341,15 +341,24 @@ registerTrelloWebhook();
 
 app.post('/toggle-invoicing-status', async (req, res) => {
   console.log('Received request to toggle invoicing status:', req.body);
-  const { chargeNumber, orderId, accountId, invoiceAccountId, productId, chargePlanId, ready4invoicing } = req.body;
+  const { chargeId, chargeNumber, orderId, accountId, invoiceAccountId, productId, chargePlanId, ready4invoicing } = req.body;
 
-  // Ensure the chargePlanId and chargeNumber correspond to the latest versions
-  if (!chargePlanId || !chargeNumber) {
-    console.error('Invalid chargePlanId or chargeNumber provided.');
-    return res.status(400).json({ success: false, message: 'Invalid chargePlanId or chargeNumber provided' });
+  // Ensure the chargePlanId and chargeId correspond to the latest versions
+  if (!chargePlanId || !chargeId) {
+    console.error('Invalid chargePlanId or chargeId provided.');
+    return res.status(400).json({ success: false, message: 'Invalid chargePlanId or chargeId provided' });
   }
 
-  const activationUrl = `https://cas-test.loveyourq.se/dev/UpdateReady4Invoicing?OrderId=${orderId}&AccountId=${accountId}&InvoiceAccountId=${invoiceAccountId}&ProductId=${productId}&ChargePlanId=${chargePlanId}&ChargeId=${chargeNumber}&LegalEntity=Caspeco%20AB&IsReady4Invoicing=${ready4invoicing}&apikey=${process.env.YOUNIUM_API_KEY}`;
+  const activationUrl = `https://cas-test.loveyourq.se/dev/UpdateReady4Invoicing` +
+    `?OrderId=${encodeURIComponent(orderId)}` +
+    `&AccountId=${encodeURIComponent(accountId)}` +
+    `&InvoiceAccountId=${encodeURIComponent(invoiceAccountId)}` +
+    `&ProductId=${encodeURIComponent(productId)}` +
+    `&ChargePlanId=${encodeURIComponent(chargePlanId)}` + // Using internal GUID
+    `&ChargeId=${encodeURIComponent(chargeId)}` +         // Using internal GUID
+    `&LegalEntity=${encodeURIComponent('Caspeco AB')}` +
+    `&IsReady4Invoicing=${encodeURIComponent(ready4invoicing)}` +
+    `&apikey=${encodeURIComponent(process.env.YOUNIUM_API_KEY)}`;
 
   console.log('Constructed activation URL:', activationUrl);
 

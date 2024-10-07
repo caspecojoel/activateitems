@@ -120,22 +120,34 @@ const handleToggleButtonClick = async (chargeNumber, currentStatus, productName,
     return;
   }
 
-  // Re-validate the charge exists in the refreshed data
-  const product = youniumData.products.find(p => p.charges.some(c => c.chargeNumber === chargeNumber));
-  if (!product) {
-    console.error(`Error: No product found for Charge Number: ${chargeNumber} in refreshed data`);
-    alert(`Error: No product found for Charge Number: ${chargeNumber} in refreshed data`);
+  // Find the selected product and charge based on the chargeNumber
+  let selectedProduct = null;
+  let selectedCharge = null;
+
+  for (const product of youniumData.products) {
+    const charge = product.charges.find(c => c.chargeNumber === chargeNumber);
+    if (charge) {
+      selectedProduct = product;
+      selectedCharge = charge;
+      break;
+    }
+  }
+
+  if (!selectedProduct || !selectedCharge) {
+    console.error(`Error: No product or charge found for Charge Number: ${chargeNumber} in refreshed data`);
+    alert(`Error: No product or charge found for Charge Number: ${chargeNumber}`);
     return;
   }
 
-  // Prepare the request body with refreshed data
+  // Prepare the request body with internal IDs (GUIDs)
   const requestBody = {
-    chargeNumber,
+    chargeId: selectedCharge.id, // Use internal GUID
+    chargeNumber: selectedCharge.chargeNumber,
     orderId: youniumData.id,
     accountId: youniumData.account.accountNumber,
     invoiceAccountId: youniumData.invoiceAccount.accountNumber,
-    productId: product.productNumber,
-    chargePlanId: product.chargePlanNumber,
+    productId: selectedProduct.productNumber,
+    chargePlanId: selectedProduct.chargePlanId, // Use internal GUID
     ready4invoicing: currentStatus ? "0" : "1"
   };
 
@@ -143,8 +155,8 @@ const handleToggleButtonClick = async (chargeNumber, currentStatus, productName,
 
   // Implement retry logic with initial delay
   const maxRetries = 3;
-  const initialDelay = 200; // 3 seconds initial delay
-  const retryDelay = 1000; // 2 seconds between retries
+  const initialDelay = 200; // 0.2 seconds initial delay
+  const retryDelay = 1000; // 1 second between retries
 
   console.log(`Waiting ${initialDelay / 1000} seconds before first attempt...`);
   await new Promise(resolve => setTimeout(resolve, initialDelay));
@@ -196,7 +208,7 @@ const handleToggleButtonClick = async (chargeNumber, currentStatus, productName,
       }
     }
   }
-};
+}
 
 
 const updateModalWithYouniumData = (youniumData) => {
