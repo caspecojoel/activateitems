@@ -361,17 +361,33 @@ const fetchYouniumData = (orgNo, hubspotId) => {
     });
   }
 
-  return fetch(`/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`)
-    .then(response => response.json())
+  const controller = new AbortController(); // Create a new controller
+  const timeoutId = setTimeout(() => controller.abort(), 15000); // 15-second timeout
+
+  return fetch(`/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`, {
+    signal: controller.signal // Pass the signal to the fetch request
+  })
+    .then(response => {
+      clearTimeout(timeoutId); // Clear the timeout when the request completes
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
     .then(data => {
       console.log('Younium API response data:', data);
       return data;
     })
     .catch(err => {
-      console.error('Error fetching Younium data:', err);
+      if (err.name === 'AbortError') {
+        console.error('Error: Request timed out after 15 seconds');
+      } else {
+        console.error('Error fetching Younium data:', err);
+      }
       return null;
     });
 };
+
 
 const onBtnClick = (t, opts) => {
   console.log('Button clicked on card:', opts);
