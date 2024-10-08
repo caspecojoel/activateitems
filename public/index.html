@@ -16,7 +16,10 @@
             <!-- Section to display Younium details -->
             <div class="younium-details">
                 <div class="header-title">
-                    <h2 id="account-name">"account-name"</h2>
+                    <h2 id="account-name">"account-name"</h2> <!-- The placeholder account name will be replaced -->
+                </div>
+                <div class="form-group">
+                    <strong>Order Status:</strong> <span id="order-status"></span>
                 </div>
             </div>
 
@@ -36,29 +39,19 @@
                 </table>
             </div>
 
-            <!-- Order Status moved below the table -->
-            <div class="form-group">
-                <strong>Order Status:</strong> <span id="order-status"></span>
+            <!-- IDs and Order Information -->
+            <div class="id-info">
+                <p><strong>HubSpot ID:</strong> <span id="hubspot-id"></span></p>
+                <p><strong>Org Number:</strong> <span id="org-number"></span></p>
+                <p><strong>Order ID:</strong> <span id="order-id"></span></p>
+                <p><strong>Account Number:</strong> <span id="account-number"></span></p>
+                <p><strong>Order Description:</strong> <span id="order-description"></span></p>
             </div>
 
-            <!-- More Info Button -->
-            <button id="more-info-btn">More Info</button>
-
-            <!-- IDs and Order Information - Initially Hidden -->
-            <div id="more-info" style="display: none;">
-                <div class="id-info">
-                    <p><strong>HubSpot ID:</strong> <span id="hubspot-id"></span></p>
-                    <p><strong>Org Number:</strong> <span id="org-number"></span></p>
-                    <p><strong>Order ID:</strong> <span id="order-id"></span></p>
-                    <p><strong>Account Number:</strong> <span id="account-number"></span></p>
-                    <p><strong>Order Description:</strong> <span id="order-description"></span></p>
-                </div>
-
-                <!-- New section for URLs -->
-                <div class="url-info">
-                    <p><strong>Get Orders URL:</strong> <span id="get-orders-url"></span></p>
-                    <p><strong>Activation URL:</strong> <span id="activation-url"></span></p>
-                </div>
+            <!-- New section for URLs -->
+            <div class="url-info">
+                <p><strong>Get Orders URL:</strong> <span id="get-orders-url"></span></p>
+                <p><strong>Activation URL:</strong> <span id="activation-url"></span></p>
             </div>
         </div>
     </div>
