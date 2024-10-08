@@ -250,12 +250,18 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
         if (data.success) {
           console.log(`Successfully updated Charge ${chargeId} status to ${requestBody.ready4invoicing === "1" ? 'Ready' : 'Not Ready'} for invoicing`);
 
-          // Update button text and color instantly
+          // Update button text and status column immediately
           if (button) {
             button.disabled = true; // Keep it disabled until fetchLatestYouniumData completes
             button.innerHTML = requestBody.ready4invoicing === "1" ? 'Unready' : 'Ready';
             button.classList.toggle('inactivate-button', requestBody.ready4invoicing === "1");
             button.classList.toggle('activate-button', requestBody.ready4invoicing !== "1");
+
+            // Update the status column text
+            const statusCell = button.closest('tr').querySelector('td:nth-child(4)'); // Adjust the index if necessary
+            if (statusCell) {
+              statusCell.textContent = requestBody.ready4invoicing === "1" ? 'Ready for invoicing' : 'Not ready for invoicing';
+            }
           }
 
           // Fetch latest data and wait until it's done before re-enabling buttons
@@ -304,6 +310,7 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
     });
   }
 };
+
 
 const updateModalWithYouniumData = (youniumData) => {
   console.log('Updating modal with updated Younium data:', youniumData);
