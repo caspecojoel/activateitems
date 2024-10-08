@@ -22,7 +22,7 @@ body {
     overflow-y: auto;
 }
 
-.h2 {
+.header-title h2 {
     font-family: 'Inter', sans-serif;
     font-size: 32px;
     font-weight: 700;
