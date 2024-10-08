@@ -425,29 +425,34 @@ const onBtnClick = (t, opts) => {
             throw new Error('Failed to fetch Younium data');
           }
 
-          // You can fetch the API key from the server-side and pass it here
-          const apiKey = 'your_api_key'; // Replace this with the actual key passed from the server
+          // Replace the placeholder API key with the actual one
+          const apiKey = 'g3dDu4ENgjbqvuorQQQz7eXeFsaZUE'; 
 
-          // Construct the URLs for Postman testing
-          const getOrdersUrl = `https://cas-test.loveyourq.se/dev/GetYouniumOrders?OrgNo=${encodeURIComponent(orgNo)}&HubspotDealId=${encodeURIComponent(hubspotId)}&apikey=${encodeURIComponent(apiKey)}`;
+          // Construct the Get Orders URL
+          const getOrdersUrl = `https://cas-test.loveyourq.se/dev/GetYouniumOrders?OrgNo=${orgNo}&HubspotDealId=${hubspotId}&apikey=${apiKey}`;
+          
+          // Construct the UpdateReady4Invoicing URL
+          const product = youniumData.products[0]; // Assuming the first product for example
+          const charge = product.charges[0]; // Assuming the first charge for example
+
           const activationUrl = `https://cas-test.loveyourq.se/dev/UpdateReady4Invoicing` +
-            `?OrderId=${encodeURIComponent(youniumData.id)}` +
-            `&AccountId=${encodeURIComponent(youniumData.account.accountNumber)}` +
-            `&InvoiceAccountId=${encodeURIComponent(youniumData.invoiceAccount.accountNumber)}` +
-            `&ProductId=${encodeURIComponent(youniumData.products[0].productNumber)}` +
-            `&ChargePlanId=${encodeURIComponent(youniumData.products[0].chargePlanId)}` +
-            `&ChargeId=${encodeURIComponent(youniumData.products[0].charges[0].id)}` +
+            `?OrderId=${youniumData.id}` +
+            `&AccountId=${youniumData.account.accountNumber}` +
+            `&InvoiceAccountId=${youniumData.invoiceAccount.accountNumber}` +
+            `&ProductId=${product.productNumber}` +
+            `&ChargePlanId=${product.chargePlanId}` +
+            `&ChargeId=${charge.id}` +
             `&LegalEntity=${encodeURIComponent('Caspeco AB')}` +
-            `&IsReady4Invoicing=${encodeURIComponent('true')}` +
-            `&apikey=${encodeURIComponent(apiKey)}`;
+            `&IsReady4Invoicing=1` +
+            `&apikey=${apiKey}`;
 
+          // Log the URLs to the console for debugging
           console.log('Constructed Get Orders URL:', getOrdersUrl);
           console.log('Constructed Activation URL:', activationUrl);
 
-          // Display the URLs in the modal
+          // Now we display the URLs in the modal
           const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(youniumData))}` +
-            `&hubspotId=${encodeURIComponent(hubspotId)}&orgNo=${encodeURIComponent(orgNo)}` +
-            `&getOrdersUrl=${encodeURIComponent(getOrdersUrl)}&activationUrl=${encodeURIComponent(activationUrl)}`;
+            `&hubspotId=${hubspotId}&orgNo=${orgNo}&getOrdersUrl=${encodeURIComponent(getOrdersUrl)}&activationUrl=${encodeURIComponent(activationUrl)}`;
 
           return t.modal({
             title: 'Ready for Invoicing Details',
@@ -464,16 +469,13 @@ const onBtnClick = (t, opts) => {
 
           let errorMessage = 'Failed to load Younium data. Please try again later.';
 
+          // Customize the error message based on the error type
           if (err.name === 'AbortError') {
             errorMessage = 'Request timed out. Please check your connection and try again.';
           } else if (err.message.includes('Invalid hubspot or orgnummer')) {
             errorMessage = 'Invalid HubSpot ID or Organization Number. Please verify the data and try again.';
           } else if (err.message === 'Failed to fetch Younium data') {
             errorMessage = 'Unable to retrieve data. Please ensure Younium is available and try again.';
-          } else if (err.message.includes('Ghost Studio')) {
-            errorMessage = 'There seems to be an issue with Ghost Studio. Please try again later.';
-          } else if (err.message.includes('Younium')) {
-            errorMessage = 'There seems to be an issue with Younium. Please try again later.';
           }
 
           return t.alert({
@@ -484,6 +486,7 @@ const onBtnClick = (t, opts) => {
     });
   });
 };
+
 
 
 

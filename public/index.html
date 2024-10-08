@@ -50,8 +50,8 @@
 
             <!-- New section for URLs -->
             <div class="url-info">
-                <p><strong>Get Orders URL:</strong> <a id="get-orders-url" href="#" target="_blank">Copy/Get Orders URL</a></p>
-                <p><strong>Activation URL:</strong> <a id="activation-url" href="#" target="_blank">Copy/Activation URL</a></p>
+                <p><strong>Get Orders URL:</strong> <span id="get-orders-url"></span></p>
+                <p><strong>Activation URL:</strong> <span id="activation-url"></span></p>
             </div>
         </div>
     </div>
@@ -77,6 +77,10 @@
             orderDescription: document.getElementById('order-description'),
             productsContainer: document.getElementById('products-container')
         };
+
+        // Inject the URLs as plain text into the span elements
+        if (domElements.getOrdersUrl) domElements.getOrdersUrl.textContent = decodeURIComponent(getOrdersUrl);
+        if (domElements.activationUrl) domElements.activationUrl.textContent = decodeURIComponent(activationUrl);
 
         // Ensure all DOM elements exist
         Object.keys(domElements).forEach(key => {
