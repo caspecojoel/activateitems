@@ -61,11 +61,11 @@
         // Parse the URL and get Younium data
         const urlParams = new URLSearchParams(window.location.search);
         const youniumData = JSON.parse(urlParams.get('youniumData'));
-
+    
         // Fetch the constructed URLs from the query string
         const getOrdersUrl = urlParams.get('getOrdersUrl');
         const activationUrl = urlParams.get('activationUrl');
-
+    
         // Map DOM elements for reusability
         const domElements = {
             hubspotId: document.getElementById('hubspot-id'),
@@ -75,9 +75,11 @@
             orderId: document.getElementById('order-id'),
             orderStatus: document.getElementById('order-status'),
             orderDescription: document.getElementById('order-description'),
-            productsContainer: document.getElementById('products-container')
+            productsContainer: document.getElementById('products-container'),
+            getOrdersUrl: document.getElementById('get-orders-url'),  // Add this line
+            activationUrl: document.getElementById('activation-url')  // Add this line
         };
-
+    
         // Inject the URLs as plain text into the span elements
         if (domElements.getOrdersUrl) domElements.getOrdersUrl.textContent = decodeURIComponent(getOrdersUrl);
         if (domElements.activationUrl) domElements.activationUrl.textContent = decodeURIComponent(activationUrl);
