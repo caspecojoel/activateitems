@@ -364,12 +364,15 @@ document.addEventListener('click', function (event) {
   }
 });
 
-// Add click event for "More Info" button
-domElements.moreInfoBtn.addEventListener('click', function(event) {
-  event.stopPropagation();  // Prevent this event from bubbling up and triggering the other event listeners
-  domElements.moreInfoSection.classList.toggle('show');
-});
-
+// Ensure more-info button exists before adding the event listener
+if (domElements.moreInfoBtn) {
+  domElements.moreInfoBtn.addEventListener('click', function(event) {
+      event.stopPropagation();  // Prevent this event from bubbling up and triggering the other event listeners
+      domElements.moreInfoSection.classList.toggle('show');
+  });
+} else {
+  console.error('More Info button not found in the DOM.');
+}
 
 // Function to fetch Younium data
 const fetchYouniumData = (orgNo, hubspotId) => {
