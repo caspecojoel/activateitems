@@ -44,10 +44,13 @@ const getActivationStatus = (youniumData) => {
   }
 };
 
-// Function to fetch the latest Younium data and update the modal
 const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
   return new Promise((resolve, reject) => {
     let lastData = null;
+
+    // Show spinner
+    const loadingSpinner = document.getElementById('loading-spinner');
+    loadingSpinner.style.display = 'block';
 
     // Disable all buttons while fetching
     const allButtons = document.querySelectorAll('.activate-button, .inactivate-button');
@@ -60,12 +63,11 @@ const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
       fetchYouniumData(orgNo, hubspotId)
         .then(updatedYouniumData => {
           console.log(`Attempt ${attemptNumber}: Updated Younium data received:`, updatedYouniumData);
-          console.log('isLastVersion:', updatedYouniumData.isLastVersion);
 
           if (!updatedYouniumData || updatedYouniumData.name === 'Invalid hubspot or orgnummer') {
             console.error('Failed to fetch valid updated Younium data:', updatedYouniumData);
             alert('Failed to fetch valid updated data. Please verify Hubspot ID and Organization Number.');
-            // Re-enable buttons
+            hideLoadingSpinner(); // Hide spinner on error
             allButtons.forEach(btn => {
               btn.disabled = false;
               btn.classList.remove('greyed-out');
@@ -82,7 +84,7 @@ const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
             } else {
               console.warn('Failed to confirm the latest version after multiple retries. Proceeding with the most recent data.');
               updateModalWithYouniumData(updatedYouniumData);
-              // Re-enable buttons
+              hideLoadingSpinner(); // Hide spinner after final data fetch
               allButtons.forEach(btn => {
                 btn.disabled = false;
                 btn.classList.remove('greyed-out');
@@ -92,41 +94,34 @@ const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
           } else {
             console.log('Latest data version confirmed or no changes detected.');
             updateModalWithYouniumData(updatedYouniumData);
-            // Re-enable buttons
+            hideLoadingSpinner(); // Hide spinner after data is updated
             allButtons.forEach(btn => {
               btn.disabled = false;
               btn.classList.remove('greyed-out');
             });
             resolve();
           }
-
         })
         .catch(fetchError => {
           console.error('Error fetching updated Younium data:', fetchError);
-
-          let errorMessage;
-          if (fetchError.message.includes('Ghost Studio')) {
-            errorMessage = 'Unable to retrieve data. The issue seems to be with Ghost Studio. Please try again later.';
-          } else {
-            errorMessage = 'Unable to retrieve data. The issue seems to be with Younium. Please try again later.';
-          }
-
-          if (attemptNumber < retries) {
-            setTimeout(() => tryFetch(attemptNumber + 1), delay);
-          } else {
-            alert(errorMessage); // Show appropriate error message after retries.
-            // Re-enable buttons
-            allButtons.forEach(btn => {
-              btn.disabled = false;
-              btn.classList.remove('greyed-out');
-            });
-            reject(fetchError);
-          }
+          hideLoadingSpinner(); // Hide spinner on error
+          alert('An error occurred while fetching data.');
+          allButtons.forEach(btn => {
+            btn.disabled = false;
+            btn.classList.remove('greyed-out');
+          });
+          reject(fetchError);
         });
     };
 
     tryFetch(1); // Start the first attempt
   });
+};
+
+// Helper to hide the loading spinner
+const hideLoadingSpinner = () => {
+  const loadingSpinner = document.getElementById('loading-spinner');
+  loadingSpinner.style.display = 'none';
 };
 
 // Helper function to compare two Younium data objects
