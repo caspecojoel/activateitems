@@ -449,6 +449,10 @@ const onBtnClick = (t, opts) => {
             errorMessage = 'Invalid HubSpot ID or Organization Number. Please verify the data and try again.';
           } else if (err.message === 'Failed to fetch Younium data') {
             errorMessage = 'Unable to retrieve data. Please ensure Younium is available and try again.';
+          } else if (err.message.includes('Ghost Studio')) {
+            errorMessage = 'There seems to be an issue with Ghost Studio. Please try again later.';
+          } else if (err.message.includes('Younium')) {
+            errorMessage = 'There seems to be an issue with Younium. Please try again later.';
           }
 
           return t.alert({
