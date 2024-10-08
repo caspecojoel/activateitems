@@ -44,12 +44,16 @@ const getActivationStatus = (youniumData) => {
   }
 };
 
+// Function to fetch the latest Younium data and update the modal
 const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
   let lastData = null;
 
   // Disable all buttons while fetching
   const allButtons = document.querySelectorAll('.activate-button, .inactivate-button');
-  allButtons.forEach(btn => btn.disabled = true);
+  allButtons.forEach(btn => {
+    btn.disabled = true;
+    btn.classList.add('greyed-out');
+  });
 
   const tryFetch = (attemptNumber) => {
     fetchYouniumData(orgNo, hubspotId)
@@ -78,7 +82,10 @@ const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
         }
 
         // Re-enable all buttons after fetching
-        allButtons.forEach(btn => btn.disabled = false);
+        allButtons.forEach(btn => {
+          btn.disabled = false;
+          btn.classList.remove('greyed-out');
+        });
       })
       .catch(fetchError => {
         console.error('Error fetching updated Younium data:', fetchError);
@@ -97,14 +104,15 @@ const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
         }
 
         // Re-enable all buttons even in case of error
-        allButtons.forEach(btn => btn.disabled = false);
+        allButtons.forEach(btn => {
+          btn.disabled = false;
+          btn.classList.remove('greyed-out');
+        });
       });
   };
 
   tryFetch(1); // Start the first attempt
 };
-
-
 
 // Helper function to compare two Younium data objects
 const isDataEqual = (data1, data2) => {
@@ -114,6 +122,7 @@ const isDataEqual = (data1, data2) => {
   return JSON.stringify(data1) === JSON.stringify(data2);
 };
 
+// Function to handle the toggle button click
 const handleToggleButtonClick = async (chargeId, currentStatus, productName, youniumData) => {
   const action = currentStatus ? 'inactivate' : 'activate';
   const confirmationMessage = `Are you sure you want to ${action} ${productName}?`;
@@ -142,7 +151,10 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
 
   // Disable all other buttons while processing
   const allButtons = document.querySelectorAll('.activate-button, .inactivate-button');
-  allButtons.forEach(btn => btn.disabled = true);
+  allButtons.forEach(btn => {
+    btn.disabled = true;
+    btn.classList.add('greyed-out');
+  });
 
   try {
     // Fetch the latest Younium data before proceeding
@@ -237,20 +249,37 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
             }
           }
 
-          // Enable all buttons after successful update
-          allButtons.forEach(btn => btn.disabled = false);
-
           // Fetch latest data in the background for consistency
-          fetchLatestYouniumData(3, 1000, orgNo, hubspotId);
+          await fetchLatestYouniumData(3, 1000, orgNo, hubspotId);
+
+          // Re-enable all buttons after everything is done
+          allButtons.forEach(btn => {
+            btn.disabled = false;
+            btn.classList.remove('greyed-out');
+          });
+
           break; // Exit loop after success
         } else {
           console.error('Failed to update the charge status:', data.message, data.details);
           alert(`Failed to update status: ${data.message}`);
+
+          // Re-enable buttons even in case of error
+          allButtons.forEach(btn => {
+            btn.disabled = false;
+            btn.classList.remove('greyed-out');
+          });
+
+          break; // Exit loop on failure
         }
       } catch (error) {
         console.error(`Error updating the charge status on attempt ${attempt}:`, error);
         if (attempt === maxRetries) {
           alert(`Error updating status: ${error.message}`);
+          // Re-enable buttons in case of final failure
+          allButtons.forEach(btn => {
+            btn.disabled = false;
+            btn.classList.remove('greyed-out');
+          });
         }
         attempt++;
       }
@@ -258,16 +287,20 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
   } catch (error) {
     console.error('Error during charge status update process:', error);
     alert('An error occurred. Please try again.');
+
+    // Re-enable buttons in case of failure
+    allButtons.forEach(btn => {
+      btn.disabled = false;
+      btn.classList.remove('greyed-out');
+    });
   } finally {
-    // Restore button state after process completes, regardless of success or failure
-    if (button) {
-      button.disabled = false;
-      button.innerHTML = currentStatus ? 'Unready' : 'Ready';
-    }
-    allButtons.forEach(btn => btn.disabled = false); // Re-enable all buttons
+    // Ensure buttons are re-enabled in case the fetchLatestYouniumData doesn't resolve
+    allButtons.forEach(btn => {
+      btn.disabled = false;
+      btn.classList.remove('greyed-out');
+    });
   }
 };
-
 
 const updateModalWithYouniumData = (youniumData) => {
   console.log('Updating modal with updated Younium data:', youniumData);
