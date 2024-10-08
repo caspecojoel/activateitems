@@ -233,37 +233,32 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
         if (data.success) {
           console.log(`Successfully updated Charge ${chargeId} status to ${requestBody.ready4invoicing === "1" ? 'Ready' : 'Not Ready'} for invoicing`);
 
-          // Do not re-enable buttons just yet. We will wait until the Younium data is fetched again to ensure it's the latest.
-          fetchLatestYouniumData(3, 1000, orgNo, hubspotId).then(() => {
-            // Enable buttons after everything is done
-            allButtons.forEach(btn => {
-              btn.disabled = false; 
-              btn.classList.remove('greyed-out'); // Optional: Remove the "greyed-out" effect
-            });
+          // Update button text and color instantly
+          if (button) {
+            button.disabled = false;
+            button.innerHTML = requestBody.ready4invoicing === "1" ? 'Unready' : 'Ready';
+            button.classList.toggle('inactivate-button', requestBody.ready4invoicing === "1");
+            button.classList.toggle('activate-button', requestBody.ready4invoicing !== "1");
 
-            // Update button text and color instantly
-            if (button) {
-              button.disabled = false;
-              button.innerHTML = requestBody.ready4invoicing === "1" ? 'Unready' : 'Ready';
-              button.classList.toggle('inactivate-button', requestBody.ready4invoicing === "1");
-              button.classList.toggle('activate-button', requestBody.ready4invoicing !== "1");
-
-              // Update the status column text
-              const statusCell = button.closest('tr').querySelector('td:nth-child(4)'); // Assuming the status column is the 4th column
-              if (statusCell) {
-                statusCell.textContent = requestBody.ready4invoicing === "1" ? 'Ready for invoicing' : 'Not ready for invoicing';
-              }
+            // Update the status column text
+            const statusCell = button.closest('tr').querySelector('td:nth-child(4)'); // Assuming the status column is the 4th column
+            if (statusCell) {
+              statusCell.textContent = requestBody.ready4invoicing === "1" ? 'Ready for invoicing' : 'Not ready for invoicing';
             }
+          }
+
+          // Enable all buttons after successful update
+          allButtons.forEach(btn => {
+            btn.disabled = false; 
+            btn.classList.remove('greyed-out'); // Optional: Remove the "greyed-out" effect
           });
+
+          // Fetch latest data in the background for consistency
+          fetchLatestYouniumData(3, 1000, orgNo, hubspotId);
+          break; // Exit loop after success
         } else {
           console.error('Failed to update the charge status:', data.message, data.details);
           alert(`Failed to update status: ${data.message}`);
-
-          // Re-enable buttons even in case of error
-          allButtons.forEach(btn => {
-            btn.disabled = false;
-            btn.classList.remove('greyed-out');
-          });
         }
       } catch (error) {
         console.error(`Error updating the charge status on attempt ${attempt}:`, error);
@@ -276,15 +271,16 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
   } catch (error) {
     console.error('Error during charge status update process:', error);
     alert('An error occurred. Please try again.');
-
-    // Re-enable buttons in case of failure
+  } finally {
+    // Restore button state after process completes, regardless of success or failure
+    if (button) {
+      button.disabled = false;
+      button.innerHTML = currentStatus ? 'Unready' : 'Ready';
+    }
     allButtons.forEach(btn => {
       btn.disabled = false;
-      btn.classList.remove('greyed-out');
+      btn.classList.remove('greyed-out'); // Remove the "greyed-out" effect
     });
-  } finally {
-    // Keep buttons disabled until Younium data is refetched and processed.
-    // Re-enable them only when fetchLatestYouniumData() resolves successfully.
   }
 };
 
