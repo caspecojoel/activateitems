@@ -424,9 +424,21 @@ const onBtnClick = (t, opts) => {
         })
         .catch(err => {
           console.error('Error fetching Younium data or displaying popup:', err);
+
+          let errorMessage = 'Failed to load Younium data. Please try again later.';
+
+          // Customize the error message based on the error type
+          if (err.name === 'AbortError') {
+            errorMessage = 'Request timed out. Please check your connection and try again.';
+          } else if (err.message.includes('Invalid hubspot or orgnummer')) {
+            errorMessage = 'Invalid HubSpot ID or Organization Number. Please verify the data and try again.';
+          } else if (err.message === 'Failed to fetch Younium data') {
+            errorMessage = 'Unable to retrieve data. Please ensure Younium is available and try again.';
+          }
+
           return t.alert({
-            message: 'Failed to load Younium data. Please try again later.',
-            duration: 5
+            message: errorMessage,
+            duration: 10 // Duration in seconds
           });
         });
     });
