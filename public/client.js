@@ -49,7 +49,10 @@ const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
 
   // Disable all buttons while fetching
   const allButtons = document.querySelectorAll('.activate-button, .inactivate-button');
-  allButtons.forEach(btn => btn.disabled = true);
+  allButtons.forEach(btn => {
+    btn.disabled = true; 
+    btn.classList.add('greyed-out'); // Optional: Add a class for a visual "greyed out" effect
+  });
 
   const tryFetch = (attemptNumber) => {
     fetchYouniumData(orgNo, hubspotId)
@@ -77,8 +80,11 @@ const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
           updateModalWithYouniumData(updatedYouniumData);
         }
 
-        // Re-enable all buttons after fetching
-        allButtons.forEach(btn => btn.disabled = false);
+        // Re-enable all buttons after fetching is complete
+        allButtons.forEach(btn => {
+          btn.disabled = false; 
+          btn.classList.remove('greyed-out'); // Optional: Remove the "greyed-out" effect
+        });
       })
       .catch(fetchError => {
         console.error('Error fetching updated Younium data:', fetchError);
@@ -96,15 +102,16 @@ const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
           alert(errorMessage); // Show appropriate error message after retries.
         }
 
-        // Re-enable all buttons even in case of error
-        allButtons.forEach(btn => btn.disabled = false);
+        // Re-enable all buttons after error
+        allButtons.forEach(btn => {
+          btn.disabled = false; 
+          btn.classList.remove('greyed-out');
+        });
       });
   };
 
   tryFetch(1); // Start the first attempt
 };
-
-
 
 // Helper function to compare two Younium data objects
 const isDataEqual = (data1, data2) => {
@@ -142,7 +149,10 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
 
   // Disable all other buttons while processing
   const allButtons = document.querySelectorAll('.activate-button, .inactivate-button');
-  allButtons.forEach(btn => btn.disabled = true);
+  allButtons.forEach(btn => {
+    btn.disabled = true; 
+    btn.classList.add('greyed-out'); // Optional: Add a class for visual "greyed-out" effect
+  });
 
   try {
     // Fetch the latest Younium data before proceeding
@@ -238,7 +248,10 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
           }
 
           // Enable all buttons after successful update
-          allButtons.forEach(btn => btn.disabled = false);
+          allButtons.forEach(btn => {
+            btn.disabled = false; 
+            btn.classList.remove('greyed-out'); // Optional: Remove the "greyed-out" effect
+          });
 
           // Fetch latest data in the background for consistency
           fetchLatestYouniumData(3, 1000, orgNo, hubspotId);
@@ -264,7 +277,10 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
       button.disabled = false;
       button.innerHTML = currentStatus ? 'Unready' : 'Ready';
     }
-    allButtons.forEach(btn => btn.disabled = false); // Re-enable all buttons
+    allButtons.forEach(btn => {
+      btn.disabled = false;
+      btn.classList.remove('greyed-out'); // Remove the "greyed-out" effect
+    });
   }
 };
 

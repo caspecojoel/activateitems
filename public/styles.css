@@ -31,6 +31,11 @@ body {
     color: #0C0656; /* The hash symbol is required for color codes */
 }
 
+.greyed-out {
+    opacity: 0.5;
+    pointer-events: none; /* Prevents the user from clicking */
+  }
+
 .description {
     font-size: 1.1em;
     text-align: center;
