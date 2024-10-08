@@ -378,7 +378,7 @@ const fetchYouniumData = (orgNo, hubspotId) => {
   }
 
   const controller = new AbortController(); // Create a new controller
-  const timeoutId = setTimeout(() => controller.abort(), 15000); // 15-second timeout
+  const timeoutId = setTimeout(() => controller.abort(), 20000); // 15-second timeout
 
   return fetch(`/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`, {
     signal: controller.signal // Pass the signal to the fetch request
