@@ -46,6 +46,7 @@ const getActivationStatus = (youniumData) => {
 
 const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
   let lastData = null;
+
   const tryFetch = (attemptNumber) => {
     fetchYouniumData(orgNo, hubspotId)
       .then(updatedYouniumData => {
@@ -74,16 +75,25 @@ const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
       })
       .catch(fetchError => {
         console.error('Error fetching updated Younium data:', fetchError);
+
+        let errorMessage;
+        if (fetchError.message.includes('Ghost Studio')) {
+          errorMessage = 'Unable to retrieve data. The issue seems to be with Ghost Studio. Please try again later.';
+        } else {
+          errorMessage = 'Unable to retrieve data. The issue seems to be with Younium. Please try again later.';
+        }
+
         if (attemptNumber < retries) {
           setTimeout(() => tryFetch(attemptNumber + 1), delay);
         } else {
-          alert('Error fetching updated data. Please try again later.');
+          alert(errorMessage); // Show appropriate error message after retries.
         }
       });
   };
 
-  tryFetch(1);
+  tryFetch(1); // Start the first attempt
 };
+
 
 // Helper function to compare two Younium data objects
 const isDataEqual = (data1, data2) => {
