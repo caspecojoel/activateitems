@@ -425,8 +425,11 @@ const onBtnClick = (t, opts) => {
             throw new Error('Failed to fetch Younium data');
           }
 
+          // You can fetch the API key from the server-side and pass it here
+          const apiKey = 'your_api_key'; // Replace this with the actual key passed from the server
+
           // Construct the URLs for Postman testing
-          const getOrdersUrl = `https://cas-test.loveyourq.se/dev/GetYouniumOrders?OrgNo=${encodeURIComponent(orgNo)}&HubspotDealId=${encodeURIComponent(hubspotId)}&apikey=${encodeURIComponent(process.env.YOUNIUM_API_KEY)}`;
+          const getOrdersUrl = `https://cas-test.loveyourq.se/dev/GetYouniumOrders?OrgNo=${encodeURIComponent(orgNo)}&HubspotDealId=${encodeURIComponent(hubspotId)}&apikey=${encodeURIComponent(apiKey)}`;
           const activationUrl = `https://cas-test.loveyourq.se/dev/UpdateReady4Invoicing` +
             `?OrderId=${encodeURIComponent(youniumData.id)}` +
             `&AccountId=${encodeURIComponent(youniumData.account.accountNumber)}` +
@@ -436,13 +439,14 @@ const onBtnClick = (t, opts) => {
             `&ChargeId=${encodeURIComponent(youniumData.products[0].charges[0].id)}` +
             `&LegalEntity=${encodeURIComponent('Caspeco AB')}` +
             `&IsReady4Invoicing=${encodeURIComponent('true')}` +
-            `&apikey=${encodeURIComponent(process.env.YOUNIUM_API_KEY)}`;
+            `&apikey=${encodeURIComponent(apiKey)}`;
 
           console.log('Constructed Get Orders URL:', getOrdersUrl);
           console.log('Constructed Activation URL:', activationUrl);
 
-          // Now we display the URLs in the modal
-          const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(youniumData))}&hubspotId=${encodeURIComponent(hubspotId)}&orgNo=${encodeURIComponent(orgNo)}` +
+          // Display the URLs in the modal
+          const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(youniumData))}` +
+            `&hubspotId=${encodeURIComponent(hubspotId)}&orgNo=${encodeURIComponent(orgNo)}` +
             `&getOrdersUrl=${encodeURIComponent(getOrdersUrl)}&activationUrl=${encodeURIComponent(activationUrl)}`;
 
           return t.modal({
@@ -460,7 +464,6 @@ const onBtnClick = (t, opts) => {
 
           let errorMessage = 'Failed to load Younium data. Please try again later.';
 
-          // Customize the error message based on the error type
           if (err.name === 'AbortError') {
             errorMessage = 'Request timed out. Please check your connection and try again.';
           } else if (err.message.includes('Invalid hubspot or orgnummer')) {
@@ -481,6 +484,7 @@ const onBtnClick = (t, opts) => {
     });
   });
 };
+
 
 
 // Initialize Trello Power-Up with a static card-detail-badge
