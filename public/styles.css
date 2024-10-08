@@ -29,7 +29,6 @@ body {
     line-height: 35.2px;
     text-align: left;
     color: #0C0656; /* The hash symbol is required for color codes */
-    margin-bottom: -3px !important;
 }
 
 .description {
