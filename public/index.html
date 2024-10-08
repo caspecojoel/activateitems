@@ -144,8 +144,9 @@
         });
 
         // Add click event for "More Info" button
-        domElements.moreInfoBtn.addEventListener('click', () => {
-            domElements.moreInfoSection.style.display = domElements.moreInfoSection.style.display === 'none' ? 'block' : 'none';
+        domElements.moreInfoBtn.addEventListener('click', function(event) {
+        event.stopPropagation();  // Prevent this event from bubbling up and triggering the other event listeners
+        domElements.moreInfoSection.style.display = domElements.moreInfoSection.style.display === 'none' ? 'block' : 'none';
         });
     </script>
 
