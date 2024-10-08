@@ -410,7 +410,7 @@ const onBtnClick = (t, opts) => {
   // Show a loading message using t.alert
   const loadingAlert = t.alert({
     message: 'Loading... Please wait while the invoicing status is being fetched.',
-    duration: 30 // Set a long duration, but we'll close it manually when done
+    duration: 30 // Set a long duration, but we'll hide it manually when done
   });
 
   return t.card('all').then(card => {
@@ -431,15 +431,11 @@ const onBtnClick = (t, opts) => {
             throw new Error('Failed to fetch Younium data');
           }
 
-          // Replace the placeholder API key with the actual one
+          // Construct the Get Orders and UpdateReady4Invoicing URLs as per your logic
           const apiKey = 'YOUR-API-KEY'; 
-
-          // Construct the Get Orders URL
           const getOrdersUrl = `https://cas-test.loveyourq.se/dev/GetYouniumOrders?OrgNo=${orgNo}&HubspotDealId=${hubspotId}&apikey=${apiKey}`;
-          
-          // Construct the UpdateReady4Invoicing URL
-          const product = youniumData.products[0]; // Assuming the first product for example
-          const charge = product.charges[0]; // Assuming the first charge for example
+          const product = youniumData.products[0]; 
+          const charge = product.charges[0]; 
 
           const activationUrl = `https://cas-test.loveyourq.se/dev/UpdateReady4Invoicing` +
             `?OrderId=${youniumData.id}` +
@@ -452,7 +448,7 @@ const onBtnClick = (t, opts) => {
             `&IsReady4Invoicing=1` +
             `&apikey=${apiKey}`;
 
-          // Log the URLs to the console for debugging
+          // Log the URLs for debugging
           console.log('Constructed Get Orders URL:', getOrdersUrl);
           console.log('Constructed Activation URL:', activationUrl);
 
@@ -461,7 +457,7 @@ const onBtnClick = (t, opts) => {
             `&hubspotId=${hubspotId}&orgNo=${orgNo}&getOrdersUrl=${encodeURIComponent(getOrdersUrl)}&activationUrl=${encodeURIComponent(activationUrl)}`;
 
           // Close the alert when the modal is ready to open
-          t.closeAlert();
+          t.hideAlert();
 
           return t.modal({
             title: 'Ready for Invoicing Details',
@@ -477,7 +473,7 @@ const onBtnClick = (t, opts) => {
           console.error('Error fetching Younium data or displaying popup:', err);
 
           // Close the loading alert if there was an error
-          t.closeAlert();
+          t.hideAlert();
 
           let errorMessage = 'Failed to load Younium data. Please try again later.';
 
@@ -498,6 +494,7 @@ const onBtnClick = (t, opts) => {
     });
   });
 };
+
 
 
 // Initialize Trello Power-Up with a static card-detail-badge
