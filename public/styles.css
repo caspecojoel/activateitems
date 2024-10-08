@@ -22,10 +22,14 @@ body {
     overflow-y: auto;
 }
 
-h2 {
-    text-align: center;
-    color: #0C0656;
-    margin-bottom: 20px; /* Space below the title */
+.h2 {
+    font-family: 'Inter', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 35.2px;
+    text-align: left;
+    color: #0C0656; /* The hash symbol is required for color codes */
+    margin-bottom: -3px !important;
 }
 
 .description {
