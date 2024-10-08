@@ -46,72 +46,87 @@ const getActivationStatus = (youniumData) => {
 
 // Function to fetch the latest Younium data and update the modal
 const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
-  let lastData = null;
+  return new Promise((resolve, reject) => {
+    let lastData = null;
 
-  // Disable all buttons while fetching
-  const allButtons = document.querySelectorAll('.activate-button, .inactivate-button');
-  allButtons.forEach(btn => {
-    btn.disabled = true;
-    btn.classList.add('greyed-out');
-  });
+    // Disable all buttons while fetching
+    const allButtons = document.querySelectorAll('.activate-button, .inactivate-button');
+    allButtons.forEach(btn => {
+      btn.disabled = true;
+      btn.classList.add('greyed-out');
+    });
 
-  const tryFetch = (attemptNumber) => {
-    fetchYouniumData(orgNo, hubspotId)
-      .then(updatedYouniumData => {
-        console.log(`Attempt ${attemptNumber}: Updated Younium data received:`, updatedYouniumData);
-        console.log('isLastVersion:', updatedYouniumData.isLastVersion);
+    const tryFetch = (attemptNumber) => {
+      fetchYouniumData(orgNo, hubspotId)
+        .then(updatedYouniumData => {
+          console.log(`Attempt ${attemptNumber}: Updated Younium data received:`, updatedYouniumData);
+          console.log('isLastVersion:', updatedYouniumData.isLastVersion);
 
-        if (!updatedYouniumData || updatedYouniumData.name === 'Invalid hubspot or orgnummer') {
-          console.error('Failed to fetch valid updated Younium data:', updatedYouniumData);
-          alert('Failed to fetch valid updated data. Please verify Hubspot ID and Organization Number.');
-          return;
-        }
+          if (!updatedYouniumData || updatedYouniumData.name === 'Invalid hubspot or orgnummer') {
+            console.error('Failed to fetch valid updated Younium data:', updatedYouniumData);
+            alert('Failed to fetch valid updated data. Please verify Hubspot ID and Organization Number.');
+            // Re-enable buttons
+            allButtons.forEach(btn => {
+              btn.disabled = false;
+              btn.classList.remove('greyed-out');
+            });
+            reject(new Error('Failed to fetch valid updated Younium data'));
+            return;
+          }
 
-        if (!updatedYouniumData.isLastVersion && !isDataEqual(lastData, updatedYouniumData)) {
-          lastData = updatedYouniumData;
+          if (!updatedYouniumData.isLastVersion && !isDataEqual(lastData, updatedYouniumData)) {
+            lastData = updatedYouniumData;
+            if (attemptNumber < retries) {
+              console.warn(`Fetched data might not be the latest version. Retrying in ${delay} ms...`);
+              setTimeout(() => tryFetch(attemptNumber + 1), delay);
+            } else {
+              console.warn('Failed to confirm the latest version after multiple retries. Proceeding with the most recent data.');
+              updateModalWithYouniumData(updatedYouniumData);
+              // Re-enable buttons
+              allButtons.forEach(btn => {
+                btn.disabled = false;
+                btn.classList.remove('greyed-out');
+              });
+              resolve();
+            }
+          } else {
+            console.log('Latest data version confirmed or no changes detected.');
+            updateModalWithYouniumData(updatedYouniumData);
+            // Re-enable buttons
+            allButtons.forEach(btn => {
+              btn.disabled = false;
+              btn.classList.remove('greyed-out');
+            });
+            resolve();
+          }
+
+        })
+        .catch(fetchError => {
+          console.error('Error fetching updated Younium data:', fetchError);
+
+          let errorMessage;
+          if (fetchError.message.includes('Ghost Studio')) {
+            errorMessage = 'Unable to retrieve data. The issue seems to be with Ghost Studio. Please try again later.';
+          } else {
+            errorMessage = 'Unable to retrieve data. The issue seems to be with Younium. Please try again later.';
+          }
+
           if (attemptNumber < retries) {
-            console.warn(`Fetched data might not be the latest version. Retrying in ${delay} ms...`);
             setTimeout(() => tryFetch(attemptNumber + 1), delay);
           } else {
-            console.warn('Failed to confirm the latest version after multiple retries. Proceeding with the most recent data.');
-            updateModalWithYouniumData(updatedYouniumData);
+            alert(errorMessage); // Show appropriate error message after retries.
+            // Re-enable buttons
+            allButtons.forEach(btn => {
+              btn.disabled = false;
+              btn.classList.remove('greyed-out');
+            });
+            reject(fetchError);
           }
-        } else {
-          console.log('Latest data version confirmed or no changes detected.');
-          updateModalWithYouniumData(updatedYouniumData);
-        }
-
-        // Re-enable all buttons after fetching
-        allButtons.forEach(btn => {
-          btn.disabled = false;
-          btn.classList.remove('greyed-out');
         });
-      })
-      .catch(fetchError => {
-        console.error('Error fetching updated Younium data:', fetchError);
+    };
 
-        let errorMessage;
-        if (fetchError.message.includes('Ghost Studio')) {
-          errorMessage = 'Unable to retrieve data. The issue seems to be with Ghost Studio. Please try again later.';
-        } else {
-          errorMessage = 'Unable to retrieve data. The issue seems to be with Younium. Please try again later.';
-        }
-
-        if (attemptNumber < retries) {
-          setTimeout(() => tryFetch(attemptNumber + 1), delay);
-        } else {
-          alert(errorMessage); // Show appropriate error message after retries.
-        }
-
-        // Re-enable all buttons even in case of error
-        allButtons.forEach(btn => {
-          btn.disabled = false;
-          btn.classList.remove('greyed-out');
-        });
-      });
-  };
-
-  tryFetch(1); // Start the first attempt
+    tryFetch(1); // Start the first attempt
+  });
 };
 
 // Helper function to compare two Younium data objects
@@ -237,22 +252,16 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
 
           // Update button text and color instantly
           if (button) {
-            button.disabled = false;
+            button.disabled = true; // Keep it disabled until fetchLatestYouniumData completes
             button.innerHTML = requestBody.ready4invoicing === "1" ? 'Unready' : 'Ready';
             button.classList.toggle('inactivate-button', requestBody.ready4invoicing === "1");
             button.classList.toggle('activate-button', requestBody.ready4invoicing !== "1");
-
-            // Update the status column text
-            const statusCell = button.closest('tr').querySelector('td:nth-child(4)'); // Assuming the status column is the 4th column
-            if (statusCell) {
-              statusCell.textContent = requestBody.ready4invoicing === "1" ? 'Ready for invoicing' : 'Not ready for invoicing';
-            }
           }
 
-          // Fetch latest data in the background for consistency
+          // Fetch latest data and wait until it's done before re-enabling buttons
           await fetchLatestYouniumData(3, 1000, orgNo, hubspotId);
 
-          // Re-enable all buttons after everything is done
+          // Now, re-enable all buttons after everything is done
           allButtons.forEach(btn => {
             btn.disabled = false;
             btn.classList.remove('greyed-out');
@@ -289,12 +298,6 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
     alert('An error occurred. Please try again.');
 
     // Re-enable buttons in case of failure
-    allButtons.forEach(btn => {
-      btn.disabled = false;
-      btn.classList.remove('greyed-out');
-    });
-  } finally {
-    // Ensure buttons are re-enabled in case the fetchLatestYouniumData doesn't resolve
     allButtons.forEach(btn => {
       btn.disabled = false;
       btn.classList.remove('greyed-out');
