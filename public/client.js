@@ -391,7 +391,7 @@ const fetchYouniumData = (orgNo, hubspotId) => {
   }
 
   const controller = new AbortController(); // Create a new controller
-  const timeoutId = setTimeout(() => controller.abort(), 20000); // 15-second timeout
+  const timeoutId = setTimeout(() => controller.abort(), 25000); // 15-second timeout
 
   return fetch(`/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`, {
     signal: controller.signal // Pass the signal to the fetch request
@@ -409,7 +409,7 @@ const fetchYouniumData = (orgNo, hubspotId) => {
     })
     .catch(err => {
       if (err.name === 'AbortError') {
-        console.error('Error: Request timed out after 15 seconds');
+        console.error('Error: Request timed out after 25 seconds');
       } else {
         console.error('Error fetching Younium data:', err);
       }
