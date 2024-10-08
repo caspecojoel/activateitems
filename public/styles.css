@@ -242,3 +242,37 @@ th {
     transition: background-color 0.3s ease-in-out;
 }
 
+/* Style for the "More Info" button */
+#more-info-btn {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 15px;
+    transition: background-color 0.3s ease;
+}
+
+#more-info-btn:hover {
+    background-color: #0056b3;
+}
+
+/* Style for the "More Info" section */
+#more-info {
+    padding: 20px;
+    border: 1px solid #ddd;
+    background-color: #f9f9f9;
+    margin-top: 10px;
+    border-radius: 8px;
+    display: none; /* Initially hidden */
+    transition: all 0.3s ease;
+}
+
+/* Add a fade-in effect when displaying the section */
+#more-info.show {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
