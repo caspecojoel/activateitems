@@ -425,7 +425,25 @@ const onBtnClick = (t, opts) => {
             throw new Error('Failed to fetch Younium data');
           }
 
-          const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(youniumData))}&hubspotId=${encodeURIComponent(hubspotId)}&orgNo=${encodeURIComponent(orgNo)}`;
+          // Construct the URLs for Postman testing
+          const getOrdersUrl = `https://cas-test.loveyourq.se/dev/GetYouniumOrders?OrgNo=${encodeURIComponent(orgNo)}&HubspotDealId=${encodeURIComponent(hubspotId)}&apikey=${encodeURIComponent(process.env.YOUNIUM_API_KEY)}`;
+          const activationUrl = `https://cas-test.loveyourq.se/dev/UpdateReady4Invoicing` +
+            `?OrderId=${encodeURIComponent(youniumData.id)}` +
+            `&AccountId=${encodeURIComponent(youniumData.account.accountNumber)}` +
+            `&InvoiceAccountId=${encodeURIComponent(youniumData.invoiceAccount.accountNumber)}` +
+            `&ProductId=${encodeURIComponent(youniumData.products[0].productNumber)}` +
+            `&ChargePlanId=${encodeURIComponent(youniumData.products[0].chargePlanId)}` +
+            `&ChargeId=${encodeURIComponent(youniumData.products[0].charges[0].id)}` +
+            `&LegalEntity=${encodeURIComponent('Caspeco AB')}` +
+            `&IsReady4Invoicing=${encodeURIComponent('true')}` +
+            `&apikey=${encodeURIComponent(process.env.YOUNIUM_API_KEY)}`;
+
+          console.log('Constructed Get Orders URL:', getOrdersUrl);
+          console.log('Constructed Activation URL:', activationUrl);
+
+          // Now we display the URLs in the modal
+          const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(youniumData))}&hubspotId=${encodeURIComponent(hubspotId)}&orgNo=${encodeURIComponent(orgNo)}` +
+            `&getOrdersUrl=${encodeURIComponent(getOrdersUrl)}&activationUrl=${encodeURIComponent(activationUrl)}`;
 
           return t.modal({
             title: 'Ready for Invoicing Details',
@@ -463,6 +481,7 @@ const onBtnClick = (t, opts) => {
     });
   });
 };
+
 
 // Initialize Trello Power-Up with a static card-detail-badge
 TrelloPowerUp.initialize({

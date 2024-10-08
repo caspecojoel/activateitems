@@ -47,6 +47,12 @@
                 <p><strong>Account Number:</strong> <span id="account-number"></span></p>
                 <p><strong>Order Description:</strong> <span id="order-description"></span></p>
             </div>
+
+            <!-- New section for URLs -->
+            <div class="url-info">
+                <p><strong>Get Orders URL:</strong> <a id="get-orders-url" href="#" target="_blank">Copy/Get Orders URL</a></p>
+                <p><strong>Activation URL:</strong> <a id="activation-url" href="#" target="_blank">Copy/Activation URL</a></p>
+            </div>
         </div>
     </div>
 
@@ -55,6 +61,10 @@
         // Parse the URL and get Younium data
         const urlParams = new URLSearchParams(window.location.search);
         const youniumData = JSON.parse(urlParams.get('youniumData'));
+
+        // Fetch the constructed URLs from the query string
+        const getOrdersUrl = urlParams.get('getOrdersUrl');
+        const activationUrl = urlParams.get('activationUrl');
 
         // Map DOM elements for reusability
         const domElements = {
