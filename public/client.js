@@ -233,18 +233,24 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
         console.log(`Successfully updated Charge ${chargeId} status to ${requestBody.ready4invoicing === "1" ? 'Ready' : 'Not Ready'} for invoicing`);
 
         // Update button text and color instantly
-        if (button) {
-          button.disabled = false;
-          button.innerHTML = requestBody.ready4invoicing === "1" ? 'Unready' : 'Ready';
-          button.classList.toggle('inactivate-button', requestBody.ready4invoicing === "1");
-          button.classList.toggle('activate-button', requestBody.ready4invoicing !== "1");
+          if (button) {
+            button.disabled = false;
+            button.innerHTML = requestBody.ready4invoicing === "1" ? 'Unready' : 'Ready';
+            button.classList.toggle('inactivate-button', requestBody.ready4invoicing === "1");
+            button.classList.toggle('activate-button', requestBody.ready4invoicing !== "1");
+
+            // Update the status column text
+            const statusCell = button.closest('tr').querySelector('td:nth-child(4)'); // Assuming the status column is the 4th column
+            if (statusCell) {
+                statusCell.textContent = requestBody.ready4invoicing === "1" ? 'Ready for invoicing' : 'Not ready for invoicing';
+            }
         }
 
         // Enable all buttons after successful update
         allButtons.forEach(btn => btn.disabled = false);
 
         // Fetch latest data in the background for consistency
-        fetchLatestYouniumData(3, 2000, orgNo, hubspotId);
+        fetchLatestYouniumData(3, 1000, orgNo, hubspotId);
       } else {
         console.error('Failed to update the charge status:', data.message, data.details);
         alert(`Failed to update status: ${data.message}`);
@@ -387,7 +393,6 @@ const fetchYouniumData = (orgNo, hubspotId) => {
       return null;
     });
 };
-
 
 const onBtnClick = (t, opts) => {
   console.log('Button clicked on card:', opts);
