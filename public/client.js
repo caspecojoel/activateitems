@@ -348,20 +348,26 @@ const updateModalWithYouniumData = (youniumData) => {
 
 // Add event listener for toggle buttons
 document.addEventListener('click', function (event) {
-  if (event.target && event.target.tagName === 'BUTTON') {
-    const chargeId = event.target.getAttribute('data-charge-id');
-    console.log('Charge ID:', chargeId); // This should now log the correct ID from the button
-    const productName = event.target.getAttribute('data-product-name');
-    const currentStatus = event.target.textContent.trim() === "Unready"; // Determine current status based on the button text
+  // Ensure the click event is for a product action button by checking if it has a `data-charge-id` attribute
+  if (event.target && event.target.tagName === 'BUTTON' && event.target.hasAttribute('data-charge-id')) {
+      const chargeId = event.target.getAttribute('data-charge-id');
+      const productName = event.target.getAttribute('data-product-name');
+      const currentStatus = event.target.textContent.trim() === "Unready"; // Determine current status based on the button text
 
-    console.log('Click event detected:', event);
-    console.log('Button element clicked:', event.target);
-    console.log('Charge ID:', chargeId);
-    console.log('Product Name:', productName);
-    console.log('Current Status:', currentStatus);
+      console.log('Click event detected:', event);
+      console.log('Button element clicked:', event.target);
+      console.log('Charge ID:', chargeId);
+      console.log('Product Name:', productName);
+      console.log('Current Status:', currentStatus);
 
-    handleToggleButtonClick(chargeId, currentStatus, productName, youniumData);
+      handleToggleButtonClick(chargeId, currentStatus, productName, youniumData);
   }
+});
+
+// Add click event for "More Info" button
+domElements.moreInfoBtn.addEventListener('click', function(event) {
+  event.stopPropagation();  // Prevent this event from bubbling up and triggering the other event listeners
+  domElements.moreInfoSection.style.display = domElements.moreInfoSection.style.display === 'none' ? 'block' : 'none';
 });
 
 
