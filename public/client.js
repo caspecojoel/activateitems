@@ -407,6 +407,12 @@ const fetchYouniumData = (orgNo, hubspotId) => {
 const onBtnClick = (t, opts) => {
   console.log('Button clicked on card:', opts);
 
+  // Show a loading message using t.alert
+  const loadingAlert = t.alert({
+    message: 'Loading... Please wait while the invoicing status is being fetched.',
+    duration: 30 // Set a long duration, but we'll close it manually when done
+  });
+
   return t.card('all').then(card => {
     console.log('Card data:', card);
 
@@ -426,7 +432,7 @@ const onBtnClick = (t, opts) => {
           }
 
           // Replace the placeholder API key with the actual one
-          const apiKey = 'g3dDu4ENgjbqvuorQQQz7eXeFsaZUE'; 
+          const apiKey = 'YOUR-API-KEY'; 
 
           // Construct the Get Orders URL
           const getOrdersUrl = `https://cas-test.loveyourq.se/dev/GetYouniumOrders?OrgNo=${orgNo}&HubspotDealId=${hubspotId}&apikey=${apiKey}`;
@@ -454,6 +460,9 @@ const onBtnClick = (t, opts) => {
           const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(youniumData))}` +
             `&hubspotId=${hubspotId}&orgNo=${orgNo}&getOrdersUrl=${encodeURIComponent(getOrdersUrl)}&activationUrl=${encodeURIComponent(activationUrl)}`;
 
+          // Close the alert when the modal is ready to open
+          t.closeAlert();
+
           return t.modal({
             title: 'Ready for Invoicing Details',
             url: externalUrl,
@@ -466,6 +475,9 @@ const onBtnClick = (t, opts) => {
         })
         .catch(err => {
           console.error('Error fetching Younium data or displaying popup:', err);
+
+          // Close the loading alert if there was an error
+          t.closeAlert();
 
           let errorMessage = 'Failed to load Younium data. Please try again later.';
 
@@ -486,8 +498,6 @@ const onBtnClick = (t, opts) => {
     });
   });
 };
-
-
 
 
 // Initialize Trello Power-Up with a static card-detail-badge
