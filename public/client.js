@@ -377,14 +377,15 @@ document.addEventListener('click', function (event) {
   }
 });
 
-// Function to fetch Younium data with error handling and trimmed error messages
+// Function to fetch Younium data with detailed error handling
 const fetchYouniumData = (orgNo, hubspotId, t) => {
   console.log('Fetching Younium data for:', { orgNo, hubspotId });
 
   if (!orgNo || !hubspotId) {
-    console.warn('Invalid HubSpot ID or Organization Number');
+    const msg = 'Invalid HubSpot ID or Organization Number. Please verify your input.';
+    console.warn(msg);
     return t.alert({
-      message: 'Invalid HubSpot ID or Organization Number. Please verify your input.',
+      message: msg,
       duration: 10
     });
   }
@@ -392,11 +393,11 @@ const fetchYouniumData = (orgNo, hubspotId, t) => {
   const url = `/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`;
   console.log('Constructed URL:', url); // Log the URL to verify it's correct
 
-  const controller = new AbortController(); // Create a new controller
+  const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 25000); // 25-second timeout
 
   return fetch(url, {
-    signal: controller.signal // Pass the signal to the fetch request
+    signal: controller.signal
   })
     .then(response => {
       clearTimeout(timeoutId); // Clear the timeout when the request completes
@@ -420,6 +421,7 @@ const fetchYouniumData = (orgNo, hubspotId, t) => {
       console.error('Error fetching Younium data:', err);
       const errorMessage = err.message.length > 140 ? `${err.message.slice(0, 137)}...` : err.message;
 
+      // Display detailed error in the t.alert
       return t.alert({
         message: errorMessage,
         duration: 10
