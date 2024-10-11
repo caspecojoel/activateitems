@@ -377,7 +377,7 @@ document.addEventListener('click', function (event) {
   }
 });
 
-// Function to fetch Younium data with detailed error handling
+// Function to fetch Younium data with increased timeout and detailed error handling
 const fetchYouniumData = (orgNo, hubspotId, t) => {
   console.log('Fetching Younium data for:', { orgNo, hubspotId });
 
@@ -391,10 +391,10 @@ const fetchYouniumData = (orgNo, hubspotId, t) => {
   }
 
   const url = `/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`;
-  console.log('Constructed URL:', url); // Log the URL to verify it's correct
+  console.log('Constructed URL:', url);
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 25000); // 25-second timeout
+  const timeoutId = setTimeout(() => controller.abort(), 60000); // 60-second timeout
 
   return fetch(url, {
     signal: controller.signal
@@ -418,12 +418,13 @@ const fetchYouniumData = (orgNo, hubspotId, t) => {
       return data;
     })
     .catch(err => {
-      // Log error to ensure it's captured
       console.error('Error fetching Younium data:', err.message);
 
-      // Directly display the error message in t.alert
+      // Handle the aborted request
+      let errorMessage = err.message.includes('aborted') ? 'Request timed out. Please try again later.' : err.message;
+      
       return t.alert({
-        message: err.message,
+        message: errorMessage.length > 140 ? `${errorMessage.slice(0, 137)}...` : errorMessage,
         duration: 10
       });
     });
@@ -498,16 +499,16 @@ const onBtnClick = (t, opts) => {
         .catch(err => {
           console.error('Error fetching Younium data or displaying popup:', err.message);
 
-          // Directly display the error message in t.alert
+          let errorMessage = err.message.includes('aborted') ? 'Request timed out. Please try again later.' : err.message;
+
           return t.alert({
-            message: err.message,
-            duration: 10 // Duration in seconds
+            message: errorMessage.length > 140 ? `${errorMessage.slice(0, 137)}...` : errorMessage,
+            duration: 10
           });
         });
     });
   });
 };
-
 
 TrelloPowerUp.initialize({
   'card-detail-badges': (t, options) => {
