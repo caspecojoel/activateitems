@@ -378,20 +378,20 @@ document.addEventListener('click', function (event) {
 });
 
 
-// Function to fetch Younium data
+// Function to fetch Younium data with improved error handling
 const fetchYouniumData = (orgNo, hubspotId) => {
   console.log('Fetching Younium data for:', { orgNo, hubspotId });
 
   if (!orgNo || !hubspotId) {
-    console.warn('Invalid hubspotId or orgNo');
+    console.warn('Invalid HubSpot ID or Organization Number');
     return Promise.resolve({
-      name: 'Invalid hubspot or orgnummer',
+      name: 'Invalid HubSpot or Organization Number',
       accountNumber: null,
     });
   }
 
   const controller = new AbortController(); // Create a new controller
-  const timeoutId = setTimeout(() => controller.abort(), 25000); // 15-second timeout
+  const timeoutId = setTimeout(() => controller.abort(), 25000); // 25-second timeout
 
   return fetch(`/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`, {
     signal: controller.signal // Pass the signal to the fetch request
@@ -399,7 +399,10 @@ const fetchYouniumData = (orgNo, hubspotId) => {
     .then(response => {
       clearTimeout(timeoutId); // Clear the timeout when the request completes
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        console.error(`Younium API Error: HTTP ${response.status}, ${response.statusText}`);
+        return response.text().then(errorText => {
+          throw new Error(`Younium API error: ${errorText}`);
+        });
       }
       return response.json();
     })
@@ -409,14 +412,17 @@ const fetchYouniumData = (orgNo, hubspotId) => {
     })
     .catch(err => {
       if (err.name === 'AbortError') {
-        console.error('Error: Request timed out after 25 seconds');
+        console.error('Request timed out after 25 seconds');
+        alert('Request timed out. Please try again.');
       } else {
         console.error('Error fetching Younium data:', err);
+        alert(`An error occurred while fetching Younium data: ${err.message}`);
       }
       return null;
     });
 };
 
+// Function to handle button click with enhanced error alerts and modal display
 const onBtnClick = (t, opts) => {
   console.log('Button clicked on card:', opts);
 
@@ -432,7 +438,7 @@ const onBtnClick = (t, opts) => {
     const hubspotId = getCustomFieldValue(card.customFieldItems, '66e2a183ccc0da772098ab1e');
     const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
     console.log('HubSpot ID:', hubspotId);
-    console.log('Org Number:', orgNo);
+    console.log('Organization Number:', orgNo);
 
     return t.member('fullName').then(member => {
       const userName = member.fullName;
@@ -493,7 +499,7 @@ const onBtnClick = (t, opts) => {
           // Customize the error message based on the error type
           if (err.name === 'AbortError') {
             errorMessage = 'Request timed out. Please check your connection and try again.';
-          } else if (err.message.includes('Invalid hubspot or orgnummer')) {
+          } else if (err.message.includes('Invalid HubSpot or Organization Number')) {
             errorMessage = 'Invalid HubSpot ID or Organization Number. Please verify the data and try again.';
           } else if (err.message === 'Failed to fetch Younium data') {
             errorMessage = 'Unable to retrieve data. Please ensure Younium is available and try again.';
@@ -507,6 +513,7 @@ const onBtnClick = (t, opts) => {
     });
   });
 };
+
 
 
 
