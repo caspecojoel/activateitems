@@ -377,29 +377,35 @@ document.addEventListener('click', function (event) {
   }
 });
 
-
-// Function to fetch Younium data with error handling and t.alert for error display
+// Function to fetch Younium data with detailed error handling
 const fetchYouniumData = (orgNo, hubspotId, t) => {
   console.log('Fetching Younium data for:', { orgNo, hubspotId });
 
   if (!orgNo || !hubspotId) {
     console.warn('Invalid HubSpot ID or Organization Number');
-    return Promise.resolve({
-      name: 'Invalid HubSpot or Organization Number',
-      accountNumber: null,
+    return t.alert({
+      message: 'Invalid HubSpot ID or Organization Number. Please verify your input.',
+      duration: 10
     });
   }
+
+  const url = `/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`;
+  console.log('Constructed URL:', url); // Log the URL to verify it's correct
 
   const controller = new AbortController(); // Create a new controller
   const timeoutId = setTimeout(() => controller.abort(), 25000); // 25-second timeout
 
-  return fetch(`/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`, {
+  return fetch(url, {
     signal: controller.signal // Pass the signal to the fetch request
   })
     .then(response => {
       clearTimeout(timeoutId); // Clear the timeout when the request completes
       if (!response.ok) {
+        // Log the error and show a more specific message to the user
         console.error(`Younium API Error: HTTP ${response.status}, ${response.statusText}`);
+        if (response.status === 404) {
+          throw new Error(`Younium API error: No data found for the provided parameters (OrgNo: ${orgNo}, HubSpot ID: ${hubspotId})`);
+        }
         return response.text().then(errorText => {
           throw new Error(`Younium API error: ${errorText}`);
         });
@@ -411,19 +417,13 @@ const fetchYouniumData = (orgNo, hubspotId, t) => {
       return data;
     })
     .catch(err => {
-      if (err.name === 'AbortError') {
-        console.error('Request timed out after 25 seconds');
-        return t.alert({
-          message: 'Request timed out. Please try again.',
-          duration: 10 // Show the alert for 10 seconds
-        });
-      } else {
-        console.error('Error fetching Younium data:', err);
-        return t.alert({
-          message: `An error occurred while fetching Younium data: ${err.message}`,
-          duration: 10 // Show the alert for 10 seconds
-        });
-      }
+      console.error('Error fetching Younium data:', err);
+
+      // Show the detailed error in the t.alert
+      return t.alert({
+        message: `An error occurred while fetching Younium data: ${err.message}`,
+        duration: 10
+      });
     });
 };
 
@@ -504,8 +504,8 @@ const onBtnClick = (t, opts) => {
           // Customize the error message based on the error type
           if (err.name === 'AbortError') {
             errorMessage = 'Request timed out. Please check your connection and try again.';
-          } else if (err.message.includes('Invalid HubSpot or Organization Number')) {
-            errorMessage = 'Invalid HubSpot ID or Organization Number. Please verify the data and try again.';
+          } else if (err.message.includes('No data found for the provided parameters')) {
+            errorMessage = `No data found for the provided OrgNo: ${orgNo} and HubSpot ID: ${hubspotId}.`;
           } else if (err.message === 'Failed to fetch Younium data') {
             errorMessage = 'Unable to retrieve data. Please ensure Younium is available and try again.';
           }
@@ -518,8 +518,6 @@ const onBtnClick = (t, opts) => {
     });
   });
 };
-
-
 
 
 TrelloPowerUp.initialize({
