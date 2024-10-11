@@ -418,12 +418,12 @@ const fetchYouniumData = (orgNo, hubspotId, t) => {
       return data;
     })
     .catch(err => {
-      console.error('Error fetching Younium data:', err);
-      const errorMessage = err.message.length > 140 ? `${err.message.slice(0, 137)}...` : err.message;
+      // Log error to ensure it's captured
+      console.error('Error fetching Younium data:', err.message);
 
-      // Display detailed error in the t.alert
+      // Directly display the error message in t.alert
       return t.alert({
-        message: errorMessage,
+        message: err.message,
         duration: 10
       });
     });
@@ -496,27 +496,11 @@ const onBtnClick = (t, opts) => {
 
         })
         .catch(err => {
-          console.error('Error fetching Younium data or displaying popup:', err);
+          console.error('Error fetching Younium data or displaying popup:', err.message);
 
-          // Close the loading alert if there was an error
-          t.hideAlert();
-
-          let errorMessage = 'Failed to load Younium data. Please try again later.';
-
-          // Customize the error message based on the error type
-          if (err.name === 'AbortError') {
-            errorMessage = 'Request timed out. Please check your connection and try again.';
-          } else if (err.message.includes('No data found for the provided parameters')) {
-            errorMessage = `No data found for the provided OrgNo: ${orgNo} and HubSpot ID: ${hubspotId}.`;
-          } else if (err.message === 'Failed to fetch Younium data') {
-            errorMessage = 'Unable to retrieve data. Please ensure Younium is available and try again.';
-          }
-
-          // Trim the error message if it's too long
-          errorMessage = errorMessage.length > 140 ? `${errorMessage.slice(0, 137)}...` : errorMessage;
-
+          // Directly display the error message in t.alert
           return t.alert({
-            message: errorMessage,
+            message: err.message,
             duration: 10 // Duration in seconds
           });
         });
