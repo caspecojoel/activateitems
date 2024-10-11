@@ -377,10 +377,11 @@ document.addEventListener('click', function (event) {
   }
 });
 
-// Function to fetch Younium data with detailed error handling and more logging
+// Function to fetch Younium data with detailed error handling and clear explanations
 const fetchYouniumData = (orgNo, hubspotId, t) => {
   console.log('Fetching Younium data for:', { orgNo, hubspotId });
 
+  // Validate OrgNo and HubspotId
   if (!orgNo || !hubspotId) {
     const msg = 'Invalid HubSpot ID or Organization Number. Please verify your input.';
     console.warn(msg);
@@ -390,9 +391,11 @@ const fetchYouniumData = (orgNo, hubspotId, t) => {
     });
   }
 
+  // Construct API URL
   const url = `/get-younium-data?orgNo=${encodeURIComponent(orgNo)}&hubspotId=${encodeURIComponent(hubspotId)}`;
   console.log('Constructed URL:', url);
 
+  // Set up abort controller for timeout
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 60000); // 60-second timeout
 
@@ -400,46 +403,54 @@ const fetchYouniumData = (orgNo, hubspotId, t) => {
     signal: controller.signal
   })
     .then(response => {
-      clearTimeout(timeoutId); // Clear the timeout when the request completes
+      clearTimeout(timeoutId); // Clear the timeout once the response is received
 
-      // Log full response status and headers for debugging
+      // Log full response status and headers for debugging purposes
       console.log(`Response Status: ${response.status}, ${response.statusText}`);
       console.log('Response Headers:', JSON.stringify([...response.headers]));
 
+      // Handle non-OK responses
       if (!response.ok) {
         console.error(`Younium API Error: HTTP ${response.status}, ${response.statusText}`);
-        
+
+        if (response.status === 404) {
+          // Specific case for 404 Not Found (with explanation)
+          const errorMsg = `No data found for OrgNo: ${orgNo}, HubSpot ID: ${hubspotId}. ` +
+            `This could mean the order doesn't have a latest version, the OrgNo or HubSpot ID is incorrect, ` +
+            `or the order is not ready for invoicing. Please verify the details.`;
+          throw new Error(errorMsg); // Display clear message for colleagues
+        }
+
         if (response.status === 503) {
+          // Specific case for 503 Service Unavailable
           throw new Error('The Younium service is currently unavailable. Please try again later.');
         }
-        
-        if (response.status === 404) {
-          const errorMsg = `No data found for OrgNo: ${orgNo}, HubSpot ID: ${hubspotId}`;
-          throw new Error(errorMsg);
-        }
-        
+
+        // For other errors, fetch response text and throw it as an error
         return response.text().then(errorText => {
           throw new Error(`Younium API error: ${errorText}`);
         });
       }
+
+      // If response is OK, parse the data
       return response.json();
     })
     .then(data => {
+      // Log the API response for debugging purposes
       console.log('Younium API response data:', JSON.stringify(data, null, 2));
-      return data;
+      return data; // Return data for further processing
     })
     .catch(err => {
-      // Log the full error message to the console
+      // Log the full error message for debugging
       console.error('Error fetching Younium data:', err.message);
 
-      // Handle a meaningful user-friendly error in t.alert
+      // Display the error message in t.alert for user-friendly feedback
       return t.alert({
         message: err.message.length > 140 ? `${err.message.slice(0, 137)}...` : err.message,
         duration: 10
       });
     });
 };
-
 
 
 
