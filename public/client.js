@@ -377,7 +377,7 @@ document.addEventListener('click', function (event) {
   }
 });
 
-// Function to fetch Younium data with detailed error handling
+// Function to fetch Younium data with error handling and trimmed error messages
 const fetchYouniumData = (orgNo, hubspotId, t) => {
   console.log('Fetching Younium data for:', { orgNo, hubspotId });
 
@@ -401,10 +401,10 @@ const fetchYouniumData = (orgNo, hubspotId, t) => {
     .then(response => {
       clearTimeout(timeoutId); // Clear the timeout when the request completes
       if (!response.ok) {
-        // Log the error and show a more specific message to the user
         console.error(`Younium API Error: HTTP ${response.status}, ${response.statusText}`);
         if (response.status === 404) {
-          throw new Error(`Younium API error: No data found for the provided parameters (OrgNo: ${orgNo}, HubSpot ID: ${hubspotId})`);
+          const errorMsg = `No data found for OrgNo: ${orgNo}, HubSpot ID: ${hubspotId}`;
+          throw new Error(errorMsg);
         }
         return response.text().then(errorText => {
           throw new Error(`Younium API error: ${errorText}`);
@@ -418,10 +418,10 @@ const fetchYouniumData = (orgNo, hubspotId, t) => {
     })
     .catch(err => {
       console.error('Error fetching Younium data:', err);
+      const errorMessage = err.message.length > 140 ? `${err.message.slice(0, 137)}...` : err.message;
 
-      // Show the detailed error in the t.alert
       return t.alert({
-        message: `An error occurred while fetching Younium data: ${err.message}`,
+        message: errorMessage,
         duration: 10
       });
     });
@@ -509,6 +509,9 @@ const onBtnClick = (t, opts) => {
           } else if (err.message === 'Failed to fetch Younium data') {
             errorMessage = 'Unable to retrieve data. Please ensure Younium is available and try again.';
           }
+
+          // Trim the error message if it's too long
+          errorMessage = errorMessage.length > 140 ? `${errorMessage.slice(0, 137)}...` : errorMessage;
 
           return t.alert({
             message: errorMessage,
