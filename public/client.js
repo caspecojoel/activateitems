@@ -378,8 +378,8 @@ document.addEventListener('click', function (event) {
 });
 
 
-// Function to fetch Younium data with improved error handling
-const fetchYouniumData = (orgNo, hubspotId) => {
+// Function to fetch Younium data with error handling and t.alert for error display
+const fetchYouniumData = (orgNo, hubspotId, t) => {
   console.log('Fetching Younium data for:', { orgNo, hubspotId });
 
   if (!orgNo || !hubspotId) {
@@ -413,16 +413,21 @@ const fetchYouniumData = (orgNo, hubspotId) => {
     .catch(err => {
       if (err.name === 'AbortError') {
         console.error('Request timed out after 25 seconds');
-        alert('Request timed out. Please try again.');
+        return t.alert({
+          message: 'Request timed out. Please try again.',
+          duration: 10 // Show the alert for 10 seconds
+        });
       } else {
         console.error('Error fetching Younium data:', err);
-        alert(`An error occurred while fetching Younium data: ${err.message}`);
+        return t.alert({
+          message: `An error occurred while fetching Younium data: ${err.message}`,
+          duration: 10 // Show the alert for 10 seconds
+        });
       }
-      return null;
     });
 };
 
-// Function to handle button click with enhanced error alerts and modal display
+// Function to handle button click with t.alert for error handling
 const onBtnClick = (t, opts) => {
   console.log('Button clicked on card:', opts);
 
@@ -444,7 +449,7 @@ const onBtnClick = (t, opts) => {
       const userName = member.fullName;
 
       // Fetch Younium data and display in the modal
-      return fetchYouniumData(orgNo, hubspotId)
+      return fetchYouniumData(orgNo, hubspotId, t)
         .then(youniumData => {
           if (!youniumData) {
             throw new Error('Failed to fetch Younium data');
