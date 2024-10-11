@@ -377,7 +377,7 @@ document.addEventListener('click', function (event) {
   }
 });
 
-// Function to fetch Younium data with detailed error handling
+// Function to fetch Younium data with detailed error handling and more logging
 const fetchYouniumData = (orgNo, hubspotId, t) => {
   console.log('Fetching Younium data for:', { orgNo, hubspotId });
 
@@ -401,10 +401,14 @@ const fetchYouniumData = (orgNo, hubspotId, t) => {
   })
     .then(response => {
       clearTimeout(timeoutId); // Clear the timeout when the request completes
+
+      // Log full response status and headers for debugging
+      console.log(`Response Status: ${response.status}, ${response.statusText}`);
+      console.log('Response Headers:', JSON.stringify([...response.headers]));
+
       if (!response.ok) {
         console.error(`Younium API Error: HTTP ${response.status}, ${response.statusText}`);
         
-        // Handle specific errors like 503
         if (response.status === 503) {
           throw new Error('The Younium service is currently unavailable. Please try again later.');
         }
@@ -435,6 +439,7 @@ const fetchYouniumData = (orgNo, hubspotId, t) => {
       });
     });
 };
+
 
 
 
