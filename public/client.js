@@ -377,7 +377,7 @@ document.addEventListener('click', function (event) {
   }
 });
 
-// Function to fetch Younium data with detailed error handling
+// Function to fetch Younium data with detailed error handling and full object logging
 const fetchYouniumData = (orgNo, hubspotId, t) => {
   console.log('Fetching Younium data for:', { orgNo, hubspotId });
 
@@ -414,13 +414,15 @@ const fetchYouniumData = (orgNo, hubspotId, t) => {
       return response.json();
     })
     .then(data => {
-      console.log('Younium API response data:', data);
+      // Log full structured data
+      console.log('Younium API response data:', JSON.stringify(data, null, 2)); // Pretty-print the JSON data
       return data;
     })
     .catch(err => {
+      // Log the full error message to the console
       console.error('Error fetching Younium data:', err.message);
 
-      // Remove any fallback message and display the actual error
+      // Show the error in t.alert
       return t.alert({
         message: err.message.length > 140 ? `${err.message.slice(0, 137)}...` : err.message,
         duration: 10
@@ -428,9 +430,10 @@ const fetchYouniumData = (orgNo, hubspotId, t) => {
     });
 };
 
-// Function to handle button click with t.alert for error handling
+
+// Function to handle button click with t.alert for error handling and detailed logging
 const onBtnClick = (t, opts) => {
-  console.log('Button clicked on card:', opts);
+  console.log('Button clicked on card:', JSON.stringify(opts, null, 2)); // Log structured opts data
 
   // Show a loading message using t.alert
   const loadingAlert = t.alert({
@@ -439,10 +442,21 @@ const onBtnClick = (t, opts) => {
   });
 
   return t.card('all').then(card => {
-    console.log('Card data:', card);
+    // Log full card data
+    console.log('Card data:', JSON.stringify(card, null, 2)); // Log card data in structured format
 
     const hubspotId = getCustomFieldValue(card.customFieldItems, '66e2a183ccc0da772098ab1e');
     const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
+
+    // Check if HubSpot ID and Org Number are valid before proceeding
+    if (!hubspotId || !orgNo) {
+      console.error('Missing HubSpot ID or Organization Number.');
+      return t.alert({
+        message: 'HubSpot ID or Organization Number is missing.',
+        duration: 10
+      });
+    }
+
     console.log('HubSpot ID:', hubspotId);
     console.log('Organization Number:', orgNo);
 
@@ -456,7 +470,7 @@ const onBtnClick = (t, opts) => {
             throw new Error('Failed to fetch Younium data');
           }
 
-          // Construct the Get Orders and UpdateReady4Invoicing URLs as per your logic
+          // Construct the Get Orders and UpdateReady4Invoicing URLs
           const apiKey = 'YOUR-API-KEY'; 
           const getOrdersUrl = `https://cas-test.loveyourq.se/dev/GetYouniumOrders?OrgNo=${orgNo}&HubspotDealId=${hubspotId}&apikey=${apiKey}`;
           const product = youniumData.products[0]; 
@@ -473,13 +487,16 @@ const onBtnClick = (t, opts) => {
             `&IsReady4Invoicing=1` +
             `&apikey=${apiKey}`;
 
-          // Log the URLs for debugging
+          // Log the constructed URLs for debugging
           console.log('Constructed Get Orders URL:', getOrdersUrl);
           console.log('Constructed Activation URL:', activationUrl);
 
           // Now we display the URLs in the modal
           const externalUrl = `https://activateitems-d22e28f2e719.herokuapp.com/?youniumData=${encodeURIComponent(JSON.stringify(youniumData))}` +
             `&hubspotId=${hubspotId}&orgNo=${orgNo}&getOrdersUrl=${encodeURIComponent(getOrdersUrl)}&activationUrl=${encodeURIComponent(activationUrl)}`;
+
+          // Log the external URL for debugging
+          console.log('Constructed External URL for Modal:', externalUrl);
 
           // Close the alert when the modal is ready to open
           t.hideAlert();
@@ -497,7 +514,7 @@ const onBtnClick = (t, opts) => {
         .catch(err => {
           console.error('Error fetching Younium data or displaying popup:', err.message);
 
-          // Remove fallback and display actual error
+          // Display actual error
           return t.alert({
             message: err.message.length > 140 ? `${err.message.slice(0, 137)}...` : err.message,
             duration: 10
