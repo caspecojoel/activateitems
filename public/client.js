@@ -377,7 +377,7 @@ document.addEventListener('click', function (event) {
   }
 });
 
-// Function to fetch Younium data with detailed error handling and full object logging
+// Function to fetch Younium data with detailed error handling
 const fetchYouniumData = (orgNo, hubspotId, t) => {
   console.log('Fetching Younium data for:', { orgNo, hubspotId });
 
@@ -403,10 +403,17 @@ const fetchYouniumData = (orgNo, hubspotId, t) => {
       clearTimeout(timeoutId); // Clear the timeout when the request completes
       if (!response.ok) {
         console.error(`Younium API Error: HTTP ${response.status}, ${response.statusText}`);
+        
+        // Handle specific errors like 503
+        if (response.status === 503) {
+          throw new Error('The Younium service is currently unavailable. Please try again later.');
+        }
+        
         if (response.status === 404) {
           const errorMsg = `No data found for OrgNo: ${orgNo}, HubSpot ID: ${hubspotId}`;
-          throw new Error(errorMsg); // Ensure this error is thrown
+          throw new Error(errorMsg);
         }
+        
         return response.text().then(errorText => {
           throw new Error(`Younium API error: ${errorText}`);
         });
@@ -414,21 +421,21 @@ const fetchYouniumData = (orgNo, hubspotId, t) => {
       return response.json();
     })
     .then(data => {
-      // Log full structured data
-      console.log('Younium API response data:', JSON.stringify(data, null, 2)); // Pretty-print the JSON data
+      console.log('Younium API response data:', JSON.stringify(data, null, 2));
       return data;
     })
     .catch(err => {
       // Log the full error message to the console
       console.error('Error fetching Younium data:', err.message);
 
-      // Show the error in t.alert
+      // Handle a meaningful user-friendly error in t.alert
       return t.alert({
         message: err.message.length > 140 ? `${err.message.slice(0, 137)}...` : err.message,
         duration: 10
       });
     });
 };
+
 
 
 // Function to handle button click with t.alert for error handling and detailed logging
