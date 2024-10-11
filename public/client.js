@@ -377,7 +377,7 @@ document.addEventListener('click', function (event) {
   }
 });
 
-// Function to fetch Younium data with increased timeout and detailed error handling
+// Function to fetch Younium data with detailed error handling
 const fetchYouniumData = (orgNo, hubspotId, t) => {
   console.log('Fetching Younium data for:', { orgNo, hubspotId });
 
@@ -405,7 +405,7 @@ const fetchYouniumData = (orgNo, hubspotId, t) => {
         console.error(`Younium API Error: HTTP ${response.status}, ${response.statusText}`);
         if (response.status === 404) {
           const errorMsg = `No data found for OrgNo: ${orgNo}, HubSpot ID: ${hubspotId}`;
-          throw new Error(errorMsg);
+          throw new Error(errorMsg); // Ensure this error is thrown
         }
         return response.text().then(errorText => {
           throw new Error(`Younium API error: ${errorText}`);
@@ -420,11 +420,9 @@ const fetchYouniumData = (orgNo, hubspotId, t) => {
     .catch(err => {
       console.error('Error fetching Younium data:', err.message);
 
-      // Handle the aborted request
-      let errorMessage = err.message.includes('aborted') ? 'Request timed out. Please try again later.' : err.message;
-      
+      // Remove any fallback message and display the actual error
       return t.alert({
-        message: errorMessage.length > 140 ? `${errorMessage.slice(0, 137)}...` : errorMessage,
+        message: err.message.length > 140 ? `${err.message.slice(0, 137)}...` : err.message,
         duration: 10
       });
     });
@@ -499,16 +497,16 @@ const onBtnClick = (t, opts) => {
         .catch(err => {
           console.error('Error fetching Younium data or displaying popup:', err.message);
 
-          let errorMessage = err.message.includes('aborted') ? 'Request timed out. Please try again later.' : err.message;
-
+          // Remove fallback and display actual error
           return t.alert({
-            message: errorMessage.length > 140 ? `${errorMessage.slice(0, 137)}...` : errorMessage,
+            message: err.message.length > 140 ? `${err.message.slice(0, 137)}...` : err.message,
             duration: 10
           });
         });
     });
   });
 };
+
 
 TrelloPowerUp.initialize({
   'card-detail-badges': (t, options) => {
