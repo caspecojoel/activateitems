@@ -556,6 +556,8 @@ const onBtnClick = (t, opts) => {
             `&ProductId=${product.productNumber}` +
             `&ChargePlanId=${product.chargePlanId}` +
             `&ChargeId=${charge.id}` +
+            `&ProductLineNumber=${product.productLineNumber || 'N/A'}` +  // Include Product Line Number
+            `&EffectiveStartDate=${encodeURIComponent(charge.effectiveStartDate || 'N/A')}` +  // Include Effective Start Date
             `&LegalEntity=${encodeURIComponent('Caspeco AB')}` +
             `&IsReady4Invoicing=1` +
             `&apikey=${apiKey}`;
