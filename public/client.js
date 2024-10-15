@@ -221,6 +221,7 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
       invoiceAccountId: youniumData.invoiceAccount.accountNumber,
       productId: selectedProduct.productNumber,
       chargePlanId: selectedProduct.chargePlanId,
+      legalEntity: youniumData.legalEntity,  // Add LegalEntity here
       ready4invoicing: currentStatus ? "0" : "1"
     };
 
