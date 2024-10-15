@@ -593,23 +593,12 @@ const onBtnClick = (t, opts) => {
 
 TrelloPowerUp.initialize({
   'card-detail-badges': (t, options) => {
-    return t.card('all').then(card => {
-      const labels = card.labels;
-      
-      // Check if any of the labels is "Offboarding"
-      const hasOffboardingLabel = labels.some(label => label.name === "Offboarding");
-      
-      if (!hasOffboardingLabel) {
-        return [{
-          text: 'View invoicing status',
-          color: 'blue',
-          icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
-          callback: onBtnClick
-        }];
-      } else {
-        // Do not show the "View invoicing status" button if "Offboarding" is present
-        return [];
-      }
-    });
+    // Return a static badge
+    return [{
+      text: 'View invoicing status',
+      color: 'blue',
+      icon: 'https://activateitems-d22e28f2e719.herokuapp.com/favicon.ico',
+      callback: onBtnClick
+    }];
   }
 });
