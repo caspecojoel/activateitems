@@ -135,7 +135,6 @@ const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
   });
 };
 
-
 // Helper to hide the loading spinner
 const hideLoadingSpinner = () => {
   const loadingSpinner = document.getElementById('loading-spinner');
@@ -213,7 +212,7 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
     console.log('Found selected product:', selectedProduct);
     console.log('Found selected charge:', selectedCharge);
 
-    // Prepare the request body with internal IDs (GUIDs)
+    // Prepare the request body with internal IDs (GUIDs), including legalEntity
     const requestBody = {
       chargeId: selectedCharge.id,
       orderId: youniumData.id,
@@ -221,8 +220,12 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
       invoiceAccountId: youniumData.invoiceAccount.accountNumber,
       productId: selectedProduct.productNumber,
       chargePlanId: selectedProduct.chargePlanId,
-      legalEntity: youniumData.legalEntity,  // Add LegalEntity here
-      ready4invoicing: currentStatus ? "0" : "1"
+      legalEntity: youniumData.legalEntity,  // Include LegalEntity in the request
+      ready4invoicing: currentStatus ? "0" : "1",
+      productLineNumber: selectedProduct.productLineNumber || 1, // Default to 1 if undefined
+      effectiveChangeDate: selectedCharge.effectiveStartDate ? 
+                            new Date(selectedCharge.effectiveStartDate).toISOString().split('T')[0] : 
+                            '2024-01-01'  // Provide a default valid date if missing
     };
 
     console.log('Request body being sent to /toggle-invoicing-status:', requestBody);
