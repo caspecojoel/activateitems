@@ -601,8 +601,21 @@ const onBtnClick = (t, opts) => {
 
 
 TrelloPowerUp.initialize({
-  'card-detail-badges': (t, options) => {
-    // Return a static badge
+  'card-detail-badges': async (t, options) => {
+    // Fetch labels on the current card
+    const card = await t.card('labels');
+
+    // Check if the card has the labels "Organization group system" or "Brand group system"
+    const hasRestrictedLabel = card.labels.some(label =>
+      label.name === 'Organization group system' || label.name === 'Brand group system'
+    );
+
+    // If the card has any of the restricted labels, don't show the badge
+    if (hasRestrictedLabel) {
+      return []; // No badges returned if restricted label is present
+    }
+
+    // Otherwise, return the "View invoicing status" badge
     return [{
       text: 'View invoicing status',
       color: 'blue',
