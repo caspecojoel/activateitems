@@ -103,14 +103,16 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
         },
         products: youniumOrder.products.map(product => ({
           productNumber: product.productNumber, // ProductId
-          chargePlanId: product.chargePlanId, // Use correct GUID for ChargePlanId
+          chargePlanId: product.chargePlanId,   // Use correct GUID for ChargePlanId
           name: product.name,
+          productLineNumber: product.productLineNumber, // New field
+          effectiveStartDate: product.effectiveStartDate, // New field
           charges: product.charges
             .filter(charge => charge.isLastVersion) // Only take the latest version of charges
             .map(charge => ({
               id: charge.id, // Use internal GUID for chargeId
               name: charge.name,
-              effectiveStartDate: charge.effectiveStartDate,
+              effectiveStartDate: charge.effectiveStartDate, // Charge's start date
               ready4invoicing: charge.customFields.ready4invoicing === "true" || charge.customFields.ready4invoicing === "1"
             }))
         }))
@@ -350,15 +352,17 @@ app.post('/toggle-invoicing-status', async (req, res) => {
   }
 
   const activationUrl = `https://cas-test.loveyourq.se/dev/UpdateReady4Invoicing` +
-    `?OrderId=${encodeURIComponent(orderId)}` +
-    `&AccountId=${encodeURIComponent(accountId)}` +
-    `&InvoiceAccountId=${encodeURIComponent(invoiceAccountId)}` +
-    `&ProductId=${encodeURIComponent(productId)}` +
-    `&ChargePlanId=${encodeURIComponent(chargePlanId)}` + // Using internal GUID
-    `&ChargeId=${encodeURIComponent(chargeId)}` +         // Using internal GUID
-    `&LegalEntity=${encodeURIComponent('Caspeco AB')}` +
-    `&IsReady4Invoicing=${encodeURIComponent(ready4invoicing)}` +
-    `&apikey=${encodeURIComponent(process.env.YOUNIUM_API_KEY)}`;
+  `?OrderId=${encodeURIComponent(orderId)}` +
+  `&AccountId=${encodeURIComponent(accountId)}` +
+  `&InvoiceAccountId=${encodeURIComponent(invoiceAccountId)}` +
+  `&ProductId=${encodeURIComponent(productId)}` +
+  `&ChargePlanId=${encodeURIComponent(chargePlanId)}` +
+  `&ChargeId=${encodeURIComponent(chargeId)}` +
+  `&ProductLineNumber=${encodeURIComponent(productLineNumber)}` +
+  `&EffectiveStartDate=${encodeURIComponent(effectiveStartDate)}` +
+  `&LegalEntity=${encodeURIComponent('Caspeco AB')}` +
+  `&IsReady4Invoicing=${encodeURIComponent(ready4invoicing)}` +
+  `&apikey=${encodeURIComponent(process.env.YOUNIUM_API_KEY)}`;
 
   console.log('Constructed activation URL:', activationUrl);
 

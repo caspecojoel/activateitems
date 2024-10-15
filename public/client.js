@@ -359,6 +359,7 @@ const updateModalWithYouniumData = (youniumData) => {
 
         const row = document.createElement('tr');
         row.innerHTML = `
+          <td>${product.productLineNumber || 'N/A'}</td> <!-- Added productLineNumber -->
           <td>${product.name || 'N/A'}</td>
           <td>${charge.name || 'N/A'}</td>
           <td>${effectiveStartDate}</td>
@@ -376,7 +377,7 @@ const updateModalWithYouniumData = (youniumData) => {
     } else {
       console.error('Invalid charges data for product:', product);
     }
-  });
+});
 
   // Disable all buttons if order is in draft status
   const allButtons = document.querySelectorAll('.activate-button, .inactivate-button');
