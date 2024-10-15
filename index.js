@@ -352,17 +352,17 @@ app.post('/toggle-invoicing-status', async (req, res) => {
   }
 
   const activationUrl = `https://cas-test.loveyourq.se/dev/UpdateReady4Invoicing` +
-  `?OrderId=${encodeURIComponent(orderId)}` +
-  `&AccountId=${encodeURIComponent(accountId)}` +
-  `&InvoiceAccountId=${encodeURIComponent(invoiceAccountId)}` +
-  `&ProductId=${encodeURIComponent(productId)}` +
-  `&ChargePlanId=${encodeURIComponent(chargePlanId)}` +
-  `&ChargeId=${encodeURIComponent(chargeId)}` +
-  `&ProductLineNumber=${encodeURIComponent(productLineNumber)}` +
-  `&EffectiveStartDate=${encodeURIComponent(effectiveStartDate)}` +
-  `&LegalEntity=${encodeURIComponent('Caspeco AB')}` +
-  `&IsReady4Invoicing=${encodeURIComponent(ready4invoicing)}` +
-  `&apikey=${encodeURIComponent(process.env.YOUNIUM_API_KEY)}`;
+    `?OrderId=${encodeURIComponent(orderId)}` +
+    `&AccountId=${encodeURIComponent(accountId)}` +
+    `&InvoiceAccountId=${encodeURIComponent(invoiceAccountId)}` +
+    `&ProductId=${encodeURIComponent(productId)}` +
+    `&ChargePlanId=${encodeURIComponent(chargePlanId)}` +
+    `&ChargeId=${encodeURIComponent(chargeId)}` +
+    `&ProductLineNumber=${encodeURIComponent(productLineNumber)}` +
+    `&EffectiveChangeDate=${encodeURIComponent(effectiveStartDate)}` +  // Change to EffectiveChangeDate
+    `&LegalEntity=${encodeURIComponent('Caspeco AB')}` +
+    `&IsReady4Invoicing=${encodeURIComponent(ready4invoicing)}` +
+    `&apikey=${encodeURIComponent(process.env.YOUNIUM_API_KEY)}`;
 
   console.log('Constructed activation URL:', activationUrl);
 
