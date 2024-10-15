@@ -140,13 +140,18 @@ body {
     background-color: #c23628; /* Slightly darker red on hover */
 }
 
-/* Disabled/greyed-out style for buttons */
 .activate-button.greyed-out,
 .inactivate-button.greyed-out {
-    background-color: #ccc !important; /* Grey background for disabled buttons */
-    color: #777 !important;            /* Lighter text color to indicate disabled state */
-    cursor: not-allowed !important;    /* Change the cursor to indicate it's not clickable */
-    pointer-events: none;              /* Prevent any interaction with the buttons */
+  background-color: #ccc !important;
+  color: #777 !important;
+  cursor: not-allowed !important;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.draft {
+  font-weight: bold;
+  color: red;
 }
 
 /* Styling for product list */

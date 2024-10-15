@@ -328,78 +328,62 @@ const handleToggleButtonClick = async (chargeId, currentStatus, productName, you
 const updateModalWithYouniumData = (youniumData) => {
   console.log('Updating modal with updated Younium data:', youniumData);
 
-  // Validate that youniumData and required fields are present
   if (!youniumData || !youniumData.account || !youniumData.products) {
     console.error('Invalid Younium data provided to update modal:', youniumData);
     alert('Failed to update the modal. Missing or invalid Younium data.');
     return;
   }
 
-  // Update the modal elements with the new data
   document.getElementById('account-name').textContent = youniumData.account.name || 'N/A';
   
-  // Get the order status element
   const orderStatusElement = document.getElementById('order-status');
   const orderStatus = youniumData.status || 'N/A';
   orderStatusElement.textContent = orderStatus;
 
-  // Check if the status is "draft", apply bold red styling and disable buttons
-  if (orderStatus.toLowerCase() === 'draft') {
-    orderStatusElement.classList.add('draft');  // Apply the 'draft' class to make it bold and red
+  const isDraft = orderStatus.toLowerCase() === 'draft';
 
-    // Disable all buttons
-    const allButtons = document.querySelectorAll('.activate-button, .inactivate-button');
-    allButtons.forEach(btn => {
-      btn.disabled = true;  // Disable buttons
-      btn.classList.add('greyed-out');  // Add grey-out styling
-    });
-  } else {
-    // Remove the draft styling if the status is not "draft"
-    orderStatusElement.classList.remove('draft');
+  // Apply styling to order status element
+  orderStatusElement.classList.toggle('draft', isDraft);
 
-    // Enable all buttons if order is not in draft
-    const allButtons = document.querySelectorAll('.activate-button, .inactivate-button');
-    allButtons.forEach(btn => {
-      btn.disabled = false;  // Enable buttons
-      btn.classList.remove('greyed-out');  // Remove grey-out styling
-    });
-  }
+  // Populate the products table
+  const productsContainer = document.getElementById('products-container');
+  productsContainer.innerHTML = '';
 
-  document.getElementById('order-description').textContent = youniumData.description || 'N/A';
-  document.getElementById('products-container').innerHTML = '';
-
-  // Iterate over the products to populate the table
   youniumData.products.forEach(product => {
     if (product.charges && Array.isArray(product.charges)) {
       product.charges.forEach(charge => {
         const isActivated = charge.ready4invoicing === true || charge.ready4invoicing === "1" || charge.ready4invoicing === "true";
-
         const buttonClass = isActivated ? 'inactivate-button' : 'activate-button';
         const buttonText = isActivated ? 'Unready' : 'Ready';
-
-        // Format the effective start date (if available)
         const effectiveStartDate = charge.effectiveStartDate ? new Date(charge.effectiveStartDate).toLocaleDateString() : 'N/A';
 
-        // Populate the table row
         const row = document.createElement('tr');
-        console.log(`Setting button with Charge ID: ${charge.id} and Product Name: ${product.name}`);
-
         row.innerHTML = `
           <td>${product.name || 'N/A'}</td>
           <td>${charge.name || 'N/A'}</td>
           <td>${effectiveStartDate}</td>
           <td>${isActivated ? 'Ready for invoicing' : 'Not ready for invoicing'}</td>
           <td class="button-container">
-            <button class="${buttonClass}" data-charge-id="${charge.id}" data-product-name="${product.name || ''}">
+            <button class="${buttonClass} ${isDraft ? 'greyed-out' : ''}" 
+                    data-charge-id="${charge.id}" 
+                    data-product-name="${product.name || ''}"
+                    ${isDraft ? 'disabled' : ''}>
               ${buttonText}
             </button>
           </td>
         `;
-        document.getElementById('products-container').appendChild(row);
+        productsContainer.appendChild(row);
       });
     } else {
       console.error('Invalid charges data for product:', product);
     }
+  });
+
+  // Disable all buttons if order is in draft status
+  const allButtons = document.querySelectorAll('.activate-button, .inactivate-button');
+  allButtons.forEach(btn => {
+    btn.disabled = isDraft;
+    btn.classList.toggle('greyed-out', isDraft);
   });
 };
 
