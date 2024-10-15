@@ -401,7 +401,12 @@ document.addEventListener('click', function (event) {
     
     const orderStatus = document.getElementById('order-status').textContent.trim().toLowerCase();
     if (orderStatus === 'draft') {
-      console.log('Order is in draft status. Button click prevented.');
+      console.log('This order is currently in "Draft" status and cannot be marked as ready for invoicing via the Younium API.');
+      
+      // Show a popup alert with a more user-friendly message
+      alert('This order is currently in "Draft" status and cannot be marked as ready for invoicing via the Younium API.');
+      
+      // Prevent the default button click behavior
       event.preventDefault();
       event.stopPropagation();
       return;
