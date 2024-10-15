@@ -2,9 +2,11 @@ const getCustomFieldValue = (fields, fieldId) => {
   const field = fields.find(f => f.idCustomField === fieldId);
   if (!field) {
     console.log(`Custom field with ID ${fieldId} not found in fields:`, fields);
+    return ''; // Return an empty string instead of undefined for consistency
   }
   return field?.value?.text || field?.value?.number || '';
 };
+
 
 // Function to get activation status
 const getActivationStatus = (youniumData) => {
