@@ -364,10 +364,9 @@ const updateModalWithYouniumData = (youniumData) => {
           <td>${effectiveStartDate}</td>
           <td>${isActivated ? 'Ready for invoicing' : 'Not ready for invoicing'}</td>
           <td class="button-container">
-            <button class="${buttonClass} ${isDraft ? 'greyed-out' : ''}" 
+            <button class="${buttonClass}" 
                     data-charge-id="${charge.id}" 
-                    data-product-name="${product.name || ''}"
-                    ${isDraft ? 'disabled' : ''}>
+                    data-product-name="${product.name || ''}">
               ${buttonText}
             </button>
           </td>
@@ -382,19 +381,35 @@ const updateModalWithYouniumData = (youniumData) => {
   // Disable all buttons if order is in draft status
   const allButtons = document.querySelectorAll('.activate-button, .inactivate-button');
   allButtons.forEach(btn => {
-    btn.disabled = isDraft;
-    btn.classList.toggle('greyed-out', isDraft);
+    if (isDraft) {
+      btn.disabled = true;
+      btn.classList.add('greyed-out');
+      btn.style.pointerEvents = 'none';
+    } else {
+      btn.disabled = false;
+      btn.classList.remove('greyed-out');
+      btn.style.pointerEvents = 'auto';
+    }
   });
 };
 
 
 // Add event listener for toggle buttons
 document.addEventListener('click', function (event) {
-  if (event.target && event.target.tagName === 'BUTTON') {
+  if (event.target && event.target.tagName === 'BUTTON' && 
+      (event.target.classList.contains('activate-button') || event.target.classList.contains('inactivate-button'))) {
+    
+    const orderStatus = document.getElementById('order-status').textContent.trim().toLowerCase();
+    if (orderStatus === 'draft') {
+      console.log('Order is in draft status. Button click prevented.');
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
     const chargeId = event.target.getAttribute('data-charge-id');
-    console.log('Charge ID:', chargeId); // This should now log the correct ID from the button
     const productName = event.target.getAttribute('data-product-name');
-    const currentStatus = event.target.textContent.trim() === "Unready"; // Determine current status based on the button text
+    const currentStatus = event.target.textContent.trim() === "Unready";
 
     console.log('Click event detected:', event);
     console.log('Button element clicked:', event.target);

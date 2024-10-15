@@ -141,12 +141,15 @@ body {
 }
 
 .activate-button.greyed-out,
-.inactivate-button.greyed-out {
+.inactivate-button.greyed-out,
+.activate-button:disabled,
+.inactivate-button:disabled {
   background-color: #ccc !important;
   color: #777 !important;
   cursor: not-allowed !important;
-  opacity: 0.6;
-  pointer-events: none;
+  opacity: 0.6 !important;
+  pointer-events: none !important;
+  border: 1px solid #999 !important;
 }
 
 .draft {
