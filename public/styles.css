@@ -140,6 +140,15 @@ body {
     background-color: #c23628; /* Slightly darker red on hover */
 }
 
+/* Disabled/greyed-out style for buttons */
+.activate-button.greyed-out,
+.inactivate-button.greyed-out {
+    background-color: #ccc !important; /* Grey background for disabled buttons */
+    color: #777 !important;            /* Lighter text color to indicate disabled state */
+    cursor: not-allowed !important;    /* Change the cursor to indicate it's not clickable */
+    pointer-events: none;              /* Prevent any interaction with the buttons */
+}
+
 /* Styling for product list */
 .product {
     margin-bottom: 15px;
