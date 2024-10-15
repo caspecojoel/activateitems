@@ -31,10 +31,16 @@ body {
     color: #0C0656; /* The hash symbol is required for color codes */
 }
 
+.status-text.draft {
+    font-weight: bold;
+    color: red;
+}
+
 .greyed-out {
-    opacity: 0.5;
-    pointer-events: none; /* Prevents the user from clicking */
-  }
+    background-color: #ccc; /* Grey background */
+    cursor: not-allowed;
+    pointer-events: none; /* Make them unclickable */
+}
 
   .loading-spinner {
     border: 8px solid #f3f3f3;

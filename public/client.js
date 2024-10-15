@@ -76,6 +76,29 @@ const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
             return;
           }
 
+          // Check if order status is draft
+          const orderStatusElement = document.getElementById('order-status');
+          const orderStatus = updatedYouniumData.status || 'N/A';
+          orderStatusElement.textContent = orderStatus;
+
+          if (orderStatus.toLowerCase() === 'draft') {
+            // Make draft status bold and red
+            orderStatusElement.classList.add('draft');
+
+            // Disable all buttons if order is in draft
+            allButtons.forEach(btn => {
+              btn.disabled = true;
+              btn.classList.add('greyed-out');
+            });
+          } else {
+            // Re-enable buttons if order is not in draft
+            allButtons.forEach(btn => {
+              btn.disabled = false;
+              btn.classList.remove('greyed-out');
+            });
+          }
+
+          // Check if data version is the latest and update the modal
           if (!updatedYouniumData.isLastVersion && !isDataEqual(lastData, updatedYouniumData)) {
             lastData = updatedYouniumData;
             if (attemptNumber < retries) {
@@ -84,27 +107,19 @@ const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
             } else {
               console.warn('Failed to confirm the latest version after multiple retries. Proceeding with the most recent data.');
               updateModalWithYouniumData(updatedYouniumData);
-              hideLoadingSpinner(); // Hide spinner after final data fetch
-              allButtons.forEach(btn => {
-                btn.disabled = false;
-                btn.classList.remove('greyed-out');
-              });
+              hideLoadingSpinner();
               resolve();
             }
           } else {
             console.log('Latest data version confirmed or no changes detected.');
             updateModalWithYouniumData(updatedYouniumData);
-            hideLoadingSpinner(); // Hide spinner after data is updated
-            allButtons.forEach(btn => {
-              btn.disabled = false;
-              btn.classList.remove('greyed-out');
-            });
+            hideLoadingSpinner();
             resolve();
           }
         })
         .catch(fetchError => {
           console.error('Error fetching updated Younium data:', fetchError);
-          hideLoadingSpinner(); // Hide spinner on error
+          hideLoadingSpinner();
           alert('An error occurred while fetching data.');
           allButtons.forEach(btn => {
             btn.disabled = false;
@@ -114,9 +129,10 @@ const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
         });
     };
 
-    tryFetch(1); // Start the first attempt
+    tryFetch(1);
   });
 };
+
 
 // Helper to hide the loading spinner
 const hideLoadingSpinner = () => {
@@ -319,7 +335,34 @@ const updateModalWithYouniumData = (youniumData) => {
 
   // Update the modal elements with the new data
   document.getElementById('account-name').textContent = youniumData.account.name || 'N/A';
-  document.getElementById('order-status').textContent = youniumData.status || 'N/A';
+  
+  // Get the order status element
+  const orderStatusElement = document.getElementById('order-status');
+  const orderStatus = youniumData.status || 'N/A';
+  orderStatusElement.textContent = orderStatus;
+
+  // Check if the status is "draft", apply bold red styling and disable buttons
+  if (orderStatus.toLowerCase() === 'draft') {
+    orderStatusElement.classList.add('draft');  // Apply the 'draft' class to make it bold and red
+
+    // Disable all buttons
+    const allButtons = document.querySelectorAll('.activate-button, .inactivate-button');
+    allButtons.forEach(btn => {
+      btn.disabled = true;  // Disable buttons
+      btn.classList.add('greyed-out');  // Add grey-out styling
+    });
+  } else {
+    // Remove the draft styling if the status is not "draft"
+    orderStatusElement.classList.remove('draft');
+
+    // Enable all buttons if order is not in draft
+    const allButtons = document.querySelectorAll('.activate-button, .inactivate-button');
+    allButtons.forEach(btn => {
+      btn.disabled = false;  // Enable buttons
+      btn.classList.remove('greyed-out');  // Remove grey-out styling
+    });
+  }
+
   document.getElementById('order-description').textContent = youniumData.description || 'N/A';
   document.getElementById('products-container').innerHTML = '';
 
@@ -337,7 +380,6 @@ const updateModalWithYouniumData = (youniumData) => {
 
         // Populate the table row
         const row = document.createElement('tr');
-        // Inside the charges.forEach loop in updateModalWithYouniumData
         console.log(`Setting button with Charge ID: ${charge.id} and Product Name: ${product.name}`);
 
         row.innerHTML = `
@@ -358,6 +400,7 @@ const updateModalWithYouniumData = (youniumData) => {
     }
   });
 };
+
 
 // Add event listener for toggle buttons
 document.addEventListener('click', function (event) {
