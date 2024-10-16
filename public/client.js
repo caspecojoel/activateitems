@@ -84,7 +84,7 @@ const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
   });
 };
 
-const handleOperationStatusChange = async (dropdownElement, chargeId, newStatus) => {
+const handleOperationStatusChange = async (chargeId, newStatus) => {
   const orgNo = document.getElementById('org-number').textContent.trim();
   const hubspotId = document.getElementById('hubspot-id').textContent.trim();
 
@@ -98,13 +98,12 @@ const handleOperationStatusChange = async (dropdownElement, chargeId, newStatus)
     return;
   }
 
-  // Disable the dropdown
-  dropdownElement.disabled = true;
+  // Rename effectiveStartDate to effectiveChangeDate
+  const effectiveChangeDate = selectedCharge.effectiveStartDate
+    ? new Date(selectedCharge.effectiveStartDate + 'Z').toISOString().split('.')[0]
+    : 'undefined';
 
-  // Add spinner next to dropdown
-  let spinner = document.createElement('span');
-  spinner.classList.add('spinner');
-  dropdownElement.parentElement.appendChild(spinner);
+  console.log(`Effective Change Date to be sent: ${effectiveChangeDate}`);
 
   // Prepare the request body with internal IDs (GUIDs)
   const requestBody = {
@@ -116,10 +115,7 @@ const handleOperationStatusChange = async (dropdownElement, chargeId, newStatus)
     chargePlanId: selectedProduct.chargePlanId,
     operationStatus: newStatus,
     legalEntity: youniumData.legalEntity,
-    effectiveChangeDate: selectedCharge.effectiveStartDate
-      ? new Date(selectedCharge.effectiveStartDate).toISOString().split('.')[0]
-      : null,
-    effectiveStartDate: selectedCharge.effectiveStartDate,
+    effectiveChangeDate: effectiveChangeDate,
     productLineNumber: selectedProduct.productLineNumber
   };
 
@@ -138,8 +134,6 @@ const handleOperationStatusChange = async (dropdownElement, chargeId, newStatus)
 
     if (data.success) {
       console.log(`Successfully updated operation status for charge ${chargeId} to "${newStatus}"`);
-      // Optionally, refresh the data to reflect changes
-      await fetchLatestYouniumData(1, 1000, orgNo, hubspotId);
     } else {
       console.error('Failed to update the operation status:', data.message);
       alert(`Failed to update operation status: ${data.message}`);
@@ -147,16 +141,8 @@ const handleOperationStatusChange = async (dropdownElement, chargeId, newStatus)
   } catch (error) {
     console.error('Error during operation status update:', error);
     alert('An error occurred. Please try again.');
-  } finally {
-    // Re-enable the dropdown
-    dropdownElement.disabled = false;
-    // Remove the spinner
-    if (spinner && spinner.parentElement) {
-      spinner.parentElement.removeChild(spinner);
-    }
   }
 };
-
 
 const updateModalWithYouniumData = (youniumData) => {
   console.log('Updating modal with updated Younium data:', youniumData);
@@ -230,8 +216,8 @@ const updateModalWithYouniumData = (youniumData) => {
       dropdown.addEventListener('change', (event) => {
         const chargeId = event.target.getAttribute('data-charge-id');
         const newStatus = event.target.value;
-        handleOperationStatusChange(event.target, chargeId, newStatus);
-      });      
+        handleOperationStatusChange(chargeId, newStatus);
+      });
     }
   });
 };
