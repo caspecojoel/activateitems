@@ -370,8 +370,8 @@ app.post('/toggle-operation-status', async (req, res) => {
     `&ChargeId=${encodeURIComponent(chargeId)}` +
     `&ProductLineNumber=${encodeURIComponent(productLineNumber)}` +
     `&EffectiveChangeDate=${encodeURIComponent(effectiveStartDate)}` +
-    `&LegalEntity=${encodeURIComponent(legalEntity)}` + // Include the LegalEntity in the request
-    `&OperationStatus=${encodeURIComponent(operationStatus)}` +  // Use operationStatus instead
+    `&LegalEntity=${encodeURIComponent(legalEntity)}` + 
+    `&OperationStatus=${encodeURIComponent(operationStatus)}` + 
     `&apikey=${encodeURIComponent(process.env.YOUNIUM_API_KEY)}`;
 
   console.log('Constructed activation URL:', activationUrl);
