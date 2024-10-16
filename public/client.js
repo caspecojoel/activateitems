@@ -99,9 +99,9 @@ const handleOperationStatusChange = async (chargeId, newStatus) => {
     return;
   }
 
-  // Use toLocaleString to format date without timezone
+  // Convert the date to UTC and format it as YYYY-MM-DDTHH:mm:ss
   const effectiveChangeDate = selectedCharge.effectiveStartDate
-    ? new Date(selectedCharge.effectiveStartDate).toLocaleString('sv-SE', { timeZone: 'UTC', hour12: false }).replace(' ', 'T')
+    ? new Date(selectedCharge.effectiveStartDate).toISOString().split('.')[0]
     : 'undefined';
 
   console.log(`Effective Change Date to be sent: ${effectiveChangeDate}`);
@@ -116,7 +116,7 @@ const handleOperationStatusChange = async (chargeId, newStatus) => {
     chargePlanId: selectedProduct.chargePlanId,
     operationStatus: newStatus,
     legalEntity: youniumData.legalEntity,
-    effectiveChangeDate: effectiveChangeDate, // Properly formatted date
+    effectiveChangeDate: effectiveChangeDate, // Correct UTC formatted date
     productLineNumber: selectedProduct.productLineNumber
   };
 
