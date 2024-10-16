@@ -154,6 +154,13 @@ const updateModalWithYouniumData = (youniumData) => {
     return;
   }
 
+  // Log effectiveStartDate to check if it exists
+  youniumData.products.forEach(product => {
+    product.charges.forEach(charge => {
+      console.log(`Charge ID: ${charge.id}, Effective Start Date: ${charge.effectiveStartDate}`);
+    });
+  });
+
   document.getElementById('account-name').textContent = youniumData.account.name || 'N/A';
 
   const orderStatusElement = document.getElementById('order-status');
@@ -283,9 +290,6 @@ const onBtnClick = (t, opts) => {
   });
 
   return t.card('all').then(card => {
-    // Log full card data
-    console.log('Card data:', JSON.stringify(card, null, 2)); // Log card data in structured format
-
     const hubspotId = getCustomFieldValue(card.customFieldItems, '66e2a183ccc0da772098ab1e');
     const orgNo = getCustomFieldValue(card.customFieldItems, '66deaa1c355f14009a688b5d');
 
