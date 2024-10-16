@@ -40,6 +40,7 @@
             <!-- IDs, Order Status, and URLs Section -->
             <div class="id-info">
                 <p><strong>Order Status:</strong> <span id="order-status" class="status-text"></span></p>
+                <p><strong>Legal Entity:</strong> <span id="legal-entity"></span></p>
                 <p><strong>HubSpot ID:</strong> <span id="hubspot-id"></span></p>
                 <p><strong>Org Number:</strong> <span id="org-number"></span></p>
                 <p><strong>Order ID:</strong> <span id="order-id"></span></p>
@@ -74,8 +75,12 @@
             orderDescription: document.getElementById('order-description'),
             productsContainer: document.getElementById('products-container'),
             getOrdersUrl: document.getElementById('get-orders-url'),
-            activationUrl: document.getElementById('activation-url')
+            activationUrl: document.getElementById('activation-url'),
+            legalEntity: document.getElementById('legal-entity') // Added LegalEntity
         };
+
+        // Populate LegalEntity
+        if (domElements.legalEntity) domElements.legalEntity.textContent = youniumData.legalEntity || 'N/A';
     
         // Inject the URLs as plain text into the span elements
         if (domElements.getOrdersUrl) domElements.getOrdersUrl.textContent = decodeURIComponent(getOrdersUrl);

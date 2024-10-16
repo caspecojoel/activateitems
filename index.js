@@ -73,13 +73,20 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
         username: process.env.AUTH_USERNAME,
         password: process.env.AUTH_PASSWORD
       }
-    });    
+    });
 
     console.log('Received response from Younium API:', response.data);
 
-    if (response.data && response.data.length > 0) {
+    if (response.data && response.data.orders && response.data.orders.length > 0) {
+      const orders = response.data.orders;
+
+      // Log all orders with isLastVersion to debug
+      orders.forEach(order => {
+        console.log(`Order Number: ${order.orderNumber}, Version: ${order.version}, isLastVersion: ${order.isLastVersion}`);
+      });
+
       // Find the order with isLastVersion true
-      const youniumOrder = response.data.find(order => order.isLastVersion === true);
+      const youniumOrder = orders.find(order => order.isLastVersion === true);
 
       if (!youniumOrder) {
         console.log('No latest version found for the provided OrgNo and HubspotDealId.');
@@ -88,8 +95,9 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
 
       console.log(`Processing Younium order with ID: ${youniumOrder.id}, Version: ${youniumOrder.version}`);
 
-      // Processing the order
+      // Processing the order, now including LegalEntity
       return {
+        legalEntity: response.data.LegalEntity || 'Unknown LegalEntity', // Add LegalEntity to the returned data
         id: youniumOrder.id, // OrderId
         status: youniumOrder.status,
         description: youniumOrder.description,
@@ -126,6 +134,7 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
     return null;
   }
 }
+
 
 // New endpoint to get Younium data
 app.get('/get-younium-data', async (req, res) => {
@@ -343,7 +352,7 @@ registerTrelloWebhook();
 
 app.post('/toggle-invoicing-status', async (req, res) => {
   console.log('Received request to toggle invoicing status:', req.body);
-  const { chargeId, orderId, accountId, invoiceAccountId, productId, chargePlanId, ready4invoicing } = req.body;
+  const { chargeId, orderId, accountId, invoiceAccountId, productId, chargePlanId, productLineNumber, effectiveStartDate, legalEntity, ready4invoicing } = req.body;
 
   // Ensure the chargePlanId and chargeId correspond to the latest versions
   if (!chargePlanId || !chargeId) {
@@ -359,8 +368,8 @@ app.post('/toggle-invoicing-status', async (req, res) => {
     `&ChargePlanId=${encodeURIComponent(chargePlanId)}` +
     `&ChargeId=${encodeURIComponent(chargeId)}` +
     `&ProductLineNumber=${encodeURIComponent(productLineNumber)}` +
-    `&EffectiveChangeDate=${encodeURIComponent(effectiveStartDate)}` +  // Change to EffectiveChangeDate
-    `&LegalEntity=${encodeURIComponent('Caspeco AB')}` +
+    `&EffectiveChangeDate=${encodeURIComponent(effectiveStartDate)}` +
+    `&LegalEntity=${encodeURIComponent(legalEntity)}` + // Include the LegalEntity in the request
     `&IsReady4Invoicing=${encodeURIComponent(ready4invoicing)}` +
     `&apikey=${encodeURIComponent(process.env.YOUNIUM_API_KEY)}`;
 
@@ -412,6 +421,7 @@ app.post('/toggle-invoicing-status', async (req, res) => {
     }
   }
 });
+
 
 // Error handling
 app.use((req, res, next) => {
