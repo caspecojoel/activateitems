@@ -163,38 +163,6 @@
                 handleOperationStatusChange(chargeId, newStatus);
             }
         });
-        
-        // Function to handle operation status update
-        const handleOperationStatusChange = async (chargeId, newStatus) => {
-            const requestBody = {
-                chargeId,
-                operationStatus: newStatus
-            };
-        
-            console.log('Sending updated operation status to server:', requestBody);
-        
-            try {
-                const response = await fetch('/toggle-operation-status', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(requestBody),
-                });
-        
-                const data = await response.json();
-        
-                if (data.success) {
-                    console.log(`Successfully updated operation status for charge ${chargeId} to "${newStatus}"`);
-                } else {
-                    console.error('Failed to update the operation status:', data.message);
-                    alert(`Failed to update operation status: ${data.message}`);
-                }
-            } catch (error) {
-                console.error('Error updating operation status:', error);
-                alert('An error occurred. Please try again.');
-            }
-        };
         </script>    
 
     <script src="https://p.trellocdn.com/power-up.min.js"></script>
