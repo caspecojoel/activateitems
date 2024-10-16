@@ -214,19 +214,9 @@ th {
     appearance: none;
     padding-right: 30px; /* Add padding to make space for custom arrow */
 }
-
-.spinner {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border: 2px solid rgba(0,0,0,0.1);
-    border-left-color: #000;
-    border-radius: 50%;
-    animation: spinner 1s linear infinite;
-    margin-left: 5px; /* Adjust spacing as needed */
-  }
   
-  @keyframes spinner {
-    to { transform: rotate(360deg); }
-  }
-  
+.loading-indicator {
+    margin-left: 10px;
+    font-style: italic;
+    color: #666;
+}

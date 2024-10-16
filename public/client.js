@@ -88,6 +88,14 @@ const handleOperationStatusChange = async (chargeId, newStatus) => {
   const orgNo = document.getElementById('org-number').textContent.trim();
   const hubspotId = document.getElementById('hubspot-id').textContent.trim();
 
+  // Disable the dropdown and show loading indicator
+  const dropdown = document.querySelector(`select[data-charge-id="${chargeId}"]`);
+  const loadingIndicator = document.createElement('span');
+  loadingIndicator.textContent = ' Loading...';
+  loadingIndicator.className = 'loading-indicator';
+  dropdown.parentNode.appendChild(loadingIndicator);
+  dropdown.disabled = true;
+
   // Fetch selected product and charge details from the UI or stored youniumData
   const selectedCharge = youniumData.products.flatMap(product => product.charges).find(charge => charge.id === chargeId);
   const selectedProduct = youniumData.products.find(product => product.charges.some(charge => charge.id === chargeId));
@@ -95,6 +103,7 @@ const handleOperationStatusChange = async (chargeId, newStatus) => {
   if (!selectedCharge || !selectedProduct) {
     console.error('Selected charge or product not found');
     alert('Error: Unable to find the selected product or charge.');
+    resetDropdown();
     return;
   }
 
@@ -137,10 +146,22 @@ const handleOperationStatusChange = async (chargeId, newStatus) => {
     } else {
       console.error('Failed to update the operation status:', data.message);
       alert(`Failed to update operation status: ${data.message}`);
+      resetDropdown();
     }
   } catch (error) {
     console.error('Error during operation status update:', error);
     alert('An error occurred. Please try again.');
+    resetDropdown();
+  } finally {
+    // Re-enable the dropdown and remove loading indicator
+    resetDropdown();
+  }
+
+  function resetDropdown() {
+    dropdown.disabled = false;
+    if (loadingIndicator.parentNode) {
+      loadingIndicator.parentNode.removeChild(loadingIndicator);
+    }
   }
 };
 
