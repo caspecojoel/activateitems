@@ -20,12 +20,11 @@
                 </div>
             </div>
 
-            <!-- Section for products and charges in a table -->
+            <!-- Section for charges in a table -->
             <div class="form-group product-selection">
                 <table id="products-table">
                     <thead>
                         <tr>
-                            <th>Product</th>
                             <th>Charge</th>
                             <th>Change Date</th>
                             <th>Operation Status</th>
@@ -84,13 +83,6 @@
         if (domElements.getOrdersUrl) domElements.getOrdersUrl.textContent = decodeURIComponent(getOrdersUrl);
         if (domElements.activationUrl) domElements.activationUrl.textContent = decodeURIComponent(activationUrl);
         
-        // Ensure all DOM elements exist
-        Object.keys(domElements).forEach(key => {
-            if (!domElements[key]) {
-                console.error(`Element with ID '${key}' is missing from the HTML.`);
-            }
-        });
-        
         // Populate Younium Account and Order data if the elements exist
         if (domElements.hubspotId) domElements.hubspotId.textContent = urlParams.get('hubspotId');
         if (domElements.orgNumber) domElements.orgNumber.textContent = urlParams.get('orgNo');
@@ -100,17 +92,14 @@
         if (domElements.orderStatus) domElements.orderStatus.textContent = youniumData.status;
         if (domElements.orderDescription) domElements.orderDescription.textContent = youniumData.description;
         
-        // Check if order status is "draft" and apply styling and button disabling
+        // Check if order status is "draft" and apply styling
         const orderStatus = youniumData.status || 'N/A';
         if (orderStatus.toLowerCase() === 'draft') {
             domElements.orderStatus.classList.add('draft'); // Apply bold red styling to draft status
         }
         
-        // Populate product and charge data into the table
-        youniumData.products.sort((a, b) => a.name.localeCompare(b.name)); // Sort products alphabetically
+        // Populate charge data into the table
         youniumData.products.forEach(product => {
-            product.charges.sort((a, b) => a.name.localeCompare(b.name)); // Sort charges alphabetically
-        
             product.charges.forEach(charge => {
                 // Retrieve operation status from customFields
                 const operationStatus = charge.customFields.operationStatus || 'Not set';
@@ -121,7 +110,6 @@
                 // Populate the table row with a dropdown for operationStatus
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${product.name || 'N/A'}</td>
                     <td>${charge.name || 'N/A'}</td>
                     <td>${effectiveStartDate}</td>
                     <td class="operation-status-dropdown">
@@ -147,7 +135,7 @@
                 handleOperationStatusChange(chargeId, newStatus);
             }
         });
-        </script>    
+    </script>
 
     <script src="https://p.trellocdn.com/power-up.min.js"></script>
     <script src="/client.js"></script>
