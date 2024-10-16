@@ -85,9 +85,6 @@ const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
 };
 
 const handleOperationStatusChange = async (dropdownElement, chargeId, newStatus) => {
-  const orgNo = document.getElementById('org-number').textContent.trim();
-  const hubspotId = document.getElementById('hubspot-id').textContent.trim();
-
   if (!youniumData) {
     console.error('youniumData is not available.');
     alert('Error: Data is not available. Please try again.');
@@ -166,8 +163,7 @@ const handleOperationStatusChange = async (dropdownElement, chargeId, newStatus)
   }
 };
 
-const updateModalWithYouniumData = (data) => {
-  youniumData = data; // Assign data to the global variable
+const updateModalWithYouniumData = (youniumData) => {
   console.log('Updating modal with updated Younium data:', youniumData);
 
   if (!youniumData || !youniumData.account || !youniumData.products) {
@@ -225,17 +221,9 @@ const updateModalWithYouniumData = (data) => {
     }
   });
 
-  // Remove existing event listeners and add new ones
+  // Disable all buttons if the order is in draft status
   const allDropdowns = document.querySelectorAll('.operation-status-select');
   allDropdowns.forEach(dropdown => {
-    // Clone the dropdown to remove all existing event listeners
-    const newDropdown = dropdown.cloneNode(true);
-    dropdown.parentNode.replaceChild(newDropdown, dropdown);
-  });
-
-  // Re-select the dropdowns after cloning
-  const updatedDropdowns = document.querySelectorAll('.operation-status-select');
-  updatedDropdowns.forEach(dropdown => {
     if (isDraft) {
       dropdown.disabled = true;
       dropdown.classList.add('greyed-out');
