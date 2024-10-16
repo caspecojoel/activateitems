@@ -1,6 +1,3 @@
-// Declare the youniumData as mutable (let)
-let youniumData = null;
-
 const getCustomFieldValue = (fields, fieldId) => {
   const field = fields.find(f => f.idCustomField === fieldId);
   if (!field) {
