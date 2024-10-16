@@ -57,11 +57,11 @@
         // Parse the URL and get Younium data
         const urlParams = new URLSearchParams(window.location.search);
         const youniumData = JSON.parse(urlParams.get('youniumData'));
-    
+        
         // Fetch the constructed URLs from the query string
         const getOrdersUrl = urlParams.get('getOrdersUrl');
         const activationUrl = urlParams.get('activationUrl');
-    
+        
         // Map DOM elements for reusability
         const domElements = {
             hubspotId: document.getElementById('hubspot-id'),
@@ -76,24 +76,24 @@
             activationUrl: document.getElementById('activation-url'),
             legalEntity: document.getElementById('legal-entity') // Added LegalEntity
         };
-
+        
         // Populate LegalEntity
         if (domElements.legalEntity) domElements.legalEntity.textContent = youniumData.legalEntity || 'N/A';
-    
+        
         // Inject the URLs as plain text into the span elements
         if (domElements.getOrdersUrl) domElements.getOrdersUrl.textContent = decodeURIComponent(getOrdersUrl);
         if (domElements.activationUrl) domElements.activationUrl.textContent = decodeURIComponent(activationUrl);
-    
+        
         // Ensure all DOM elements exist
         Object.keys(domElements).forEach(key => {
             if (!domElements[key]) {
                 console.error(`Element with ID '${key}' is missing from the HTML.`);
             }
         });
-    
+        
         // Show loading spinner while fetching data
         document.getElementById('loading-spinner').style.display = 'block';
-    
+        
         // Populate Younium Account and Order data if the elements exist
         if (domElements.hubspotId) domElements.hubspotId.textContent = urlParams.get('hubspotId');
         if (domElements.orgNumber) domElements.orgNumber.textContent = urlParams.get('orgNo');
@@ -102,14 +102,14 @@
         if (domElements.orderId) domElements.orderId.textContent = youniumData.id;
         if (domElements.orderStatus) domElements.orderStatus.textContent = youniumData.status;
         if (domElements.orderDescription) domElements.orderDescription.textContent = youniumData.description;
-    
+        
         // Check if order status is "draft" and apply styling and button disabling
         const orderStatus = youniumData.status || 'N/A';
         if (orderStatus.toLowerCase() === 'draft') {
             domElements.orderStatus.classList.add('draft'); // Apply bold red styling to draft status
             disableAllButtons(); // Disable all buttons
         }
-    
+        
         // Function to disable all buttons
         function disableAllButtons() {
             const allButtons = document.querySelectorAll('.activate-button, .inactivate-button');
@@ -118,22 +118,22 @@
                 btn.classList.add('greyed-out'); // Apply grey-out styling
             });
         }
-    
+        
         // Hide loading spinner once data is loaded
         document.getElementById('loading-spinner').style.display = 'none';
-    
+        
         // Populate product and charge data into the table
         youniumData.products.sort((a, b) => a.name.localeCompare(b.name)); // Sort products alphabetically
         youniumData.products.forEach(product => {
             product.charges.sort((a, b) => a.name.localeCompare(b.name)); // Sort charges alphabetically
-
+        
             product.charges.forEach(charge => {
                 // Retrieve operation status from customFields
                 const operationStatus = charge.customFields.operationStatus || 'Not set';
-
+        
                 // Format the effective start date (if available)
                 const effectiveStartDate = charge.effectiveStartDate ? new Date(charge.effectiveStartDate).toLocaleDateString() : 'N/A';
-
+        
                 // Populate the table row with a dropdown for operationStatus
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -151,8 +151,51 @@
                 domElements.productsContainer.appendChild(row);
             });
         });
-    </script>
-    
+        
+        // Handle dropdown change for operationStatus
+        document.addEventListener('change', function (event) {
+            if (event.target && event.target.classList.contains('operation-status-select')) {
+                const chargeId = event.target.getAttribute('data-charge-id');
+                const newStatus = event.target.value;
+                console.log(`Operation status changed for Charge ID ${chargeId} to ${newStatus}`);
+        
+                // Send the updated status to the server
+                handleOperationStatusChange(chargeId, newStatus);
+            }
+        });
+        
+        // Function to handle operation status update
+        const handleOperationStatusChange = async (chargeId, newStatus) => {
+            const requestBody = {
+                chargeId,
+                operationStatus: newStatus
+            };
+        
+            console.log('Sending updated operation status to server:', requestBody);
+        
+            try {
+                const response = await fetch('/toggle-operation-status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody),
+                });
+        
+                const data = await response.json();
+        
+                if (data.success) {
+                    console.log(`Successfully updated operation status for charge ${chargeId} to "${newStatus}"`);
+                } else {
+                    console.error('Failed to update the operation status:', data.message);
+                    alert(`Failed to update operation status: ${data.message}`);
+                }
+            } catch (error) {
+                console.error('Error updating operation status:', error);
+                alert('An error occurred. Please try again.');
+            }
+        };
+        </script>    
 
     <script src="https://p.trellocdn.com/power-up.min.js"></script>
     <script src="/client.js"></script>

@@ -121,7 +121,9 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
               id: charge.id, // Use internal GUID for chargeId
               name: charge.name,
               effectiveStartDate: charge.effectiveStartDate, // Charge's start date
-              ready4invoicing: charge.customFields.ready4invoicing === "true" || charge.customFields.ready4invoicing === "1"
+              customFields: {
+                operationStatus: charge.customFields.operationStatus || 'Not set' // Extracting only operationStatus
+              }
             }))
         }))
       };
@@ -134,7 +136,6 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
     return null;
   }
 }
-
 
 // New endpoint to get Younium data
 app.get('/get-younium-data', async (req, res) => {
@@ -346,13 +347,12 @@ app.post('/trello-webhook', async (req, res) => {
   }
 });
 
-
 // Register Trello Webhook on startup
 registerTrelloWebhook();
 
-app.post('/toggle-invoicing-status', async (req, res) => {
-  console.log('Received request to toggle invoicing status:', req.body);
-  const { chargeId, orderId, accountId, invoiceAccountId, productId, chargePlanId, productLineNumber, effectiveStartDate, legalEntity, ready4invoicing } = req.body;
+app.post('/toggle-operation-status', async (req, res) => {
+  console.log('Received request to toggle operation status:', req.body);
+  const { chargeId, orderId, accountId, invoiceAccountId, productId, chargePlanId, productLineNumber, effectiveStartDate, legalEntity, operationStatus } = req.body;
 
   // Ensure the chargePlanId and chargeId correspond to the latest versions
   if (!chargePlanId || !chargeId) {
@@ -360,7 +360,8 @@ app.post('/toggle-invoicing-status', async (req, res) => {
     return res.status(400).json({ success: false, message: 'Invalid chargePlanId or chargeId provided' });
   }
 
-  const activationUrl = `https://cas-test.loveyourq.se/dev/UpdateReady4Invoicing` +
+  // Construct the API URL with the operationStatus instead of ready4invoicing
+  const activationUrl = `https://cas-test.loveyourq.se/dev/UpdateOperationStatus` +
     `?OrderId=${encodeURIComponent(orderId)}` +
     `&AccountId=${encodeURIComponent(accountId)}` +
     `&InvoiceAccountId=${encodeURIComponent(invoiceAccountId)}` +
@@ -370,7 +371,7 @@ app.post('/toggle-invoicing-status', async (req, res) => {
     `&ProductLineNumber=${encodeURIComponent(productLineNumber)}` +
     `&EffectiveChangeDate=${encodeURIComponent(effectiveStartDate)}` +
     `&LegalEntity=${encodeURIComponent(legalEntity)}` + // Include the LegalEntity in the request
-    `&IsReady4Invoicing=${encodeURIComponent(ready4invoicing)}` +
+    `&OperationStatus=${encodeURIComponent(operationStatus)}` +  // Use operationStatus instead
     `&apikey=${encodeURIComponent(process.env.YOUNIUM_API_KEY)}`;
 
   console.log('Constructed activation URL:', activationUrl);
@@ -390,13 +391,13 @@ app.post('/toggle-invoicing-status', async (req, res) => {
     console.log('Received response from Younium API:', response.status, response.data);
 
     if (response.status === 200) {
-      res.json({ success: true, message: 'Status updated successfully' });
+      res.json({ success: true, message: 'Operation status updated successfully' });
     } else {
       console.error('Unexpected response status:', response.status);
-      res.status(response.status).json({ success: false, message: 'Failed to update status', details: response.data });
+      res.status(response.status).json({ success: false, message: 'Failed to update operation status', details: response.data });
     }
   } catch (error) {
-    console.error('Error updating the charge status:', error);
+    console.error('Error updating the operation status:', error);
     if (error.response) {
       console.error('Error response from Younium API:', error.response.status, error.response.data);
       res.status(error.response.status).json({ 
@@ -421,7 +422,6 @@ app.post('/toggle-invoicing-status', async (req, res) => {
     }
   }
 });
-
 
 // Error handling
 app.use((req, res, next) => {
