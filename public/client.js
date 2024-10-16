@@ -90,7 +90,12 @@ const handleOperationStatusChange = async (chargeId, newStatus) => {
   const hubspotId = document.getElementById('hubspot-id').textContent.trim();
 
   const requestBody = {
-    chargeId,
+    chargeId: selectedCharge.id,
+    orderId: youniumData.id,
+    accountId: youniumData.account.accountNumber,
+    invoiceAccountId: youniumData.invoiceAccount.accountNumber,
+    productId: selectedProduct.productNumber,
+    chargePlanId: selectedProduct.chargePlanId,
     operationStatus: newStatus
   };
 
