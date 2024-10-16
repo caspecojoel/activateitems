@@ -48,8 +48,6 @@ const getOperationStatus = (youniumData) => {
 // Fetch updated Younium data with retries and delay
 const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
   return new Promise((resolve, reject) => {
-    let lastData = null;
-
     // Show spinner
     const loadingSpinner = document.getElementById('loading-spinner');
     loadingSpinner.style.display = 'block';
@@ -66,6 +64,9 @@ const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
             reject(new Error('Failed to fetch valid updated Younium data'));
             return;
           }
+
+          // Store the updated Younium data globally for further use
+          youniumData = updatedYouniumData;
 
           // Update modal and resolve
           updateModalWithYouniumData(updatedYouniumData);
@@ -110,7 +111,7 @@ const handleOperationStatusChange = async (chargeId, newStatus) => {
   const loadingIndicator = document.createElement('span');
   loadingIndicator.textContent = ' Updating...';
   loadingIndicator.className = 'loading-indicator';
-  
+
   allDropdowns.forEach(dropdown => {
     dropdown.disabled = true;
     if (dropdown.getAttribute('data-charge-id') === chargeId) {
@@ -118,25 +119,22 @@ const handleOperationStatusChange = async (chargeId, newStatus) => {
     }
   });
 
-  // Fetch selected product and charge details from the UI or stored youniumData
-  const selectedCharge = youniumData.products.flatMap(product => product.charges).find(charge => charge.id === chargeId);
-  const selectedProduct = youniumData.products.find(product => product.charges.some(charge => charge.id === chargeId));
+  // Fetch selected product and charge details from the updated youniumData
+  const selectedCharge = youniumData?.products.flatMap(product => product.charges).find(charge => charge.id === chargeId);
+  const selectedProduct = youniumData?.products.find(product => product.charges.some(charge => charge.id === chargeId));
 
   if (!selectedCharge || !selectedProduct) {
-    console.error('Selected charge or product not found');
+    console.error('Selected charge or product not found in updated data');
     alert('Error: Unable to find the selected product or charge.');
     resetDropdowns();
     return;
   }
 
-  // Rename effectiveStartDate to effectiveChangeDate
+  // Prepare the request body as before
   const effectiveChangeDate = selectedCharge.effectiveStartDate
     ? new Date(selectedCharge.effectiveStartDate + 'Z').toISOString().split('.')[0]
     : 'undefined';
 
-  console.log(`Effective Change Date to be sent: ${effectiveChangeDate}`);
-
-  // Prepare the request body with internal IDs (GUIDs)
   const requestBody = {
     chargeId: selectedCharge.id,
     orderId: youniumData.id,
@@ -176,7 +174,6 @@ const handleOperationStatusChange = async (chargeId, newStatus) => {
     console.error('Error during operation status update:', error);
     alert('An error occurred. Please try again.');
   } finally {
-    // Re-enable all dropdowns and remove loading indicators
     resetDropdowns();
   }
 };
@@ -184,11 +181,11 @@ const handleOperationStatusChange = async (chargeId, newStatus) => {
 function resetDropdowns() {
   const allDropdowns = document.querySelectorAll('.operation-status-select');
   const loadingIndicators = document.querySelectorAll('.loading-indicator');
-  
+
   allDropdowns.forEach(dropdown => {
     dropdown.disabled = false;
   });
-  
+
   loadingIndicators.forEach(indicator => {
     if (indicator.parentNode) {
       indicator.parentNode.removeChild(indicator);
