@@ -99,6 +99,12 @@ const handleOperationStatusChange = async (chargeId, newStatus) => {
     return;
   }
 
+  // Log effectiveChangeDate for debugging
+  const effectiveChangeDate = selectedCharge.effectiveStartDate 
+    ? new Date(selectedCharge.effectiveStartDate).toISOString() 
+    : 'undefined';
+  console.log(`Effective Change Date to be sent: ${effectiveChangeDate}`);
+
   // Prepare the request body with internal IDs (GUIDs)
   const requestBody = {
     chargeId: selectedCharge.id,
@@ -109,7 +115,7 @@ const handleOperationStatusChange = async (chargeId, newStatus) => {
     chargePlanId: selectedProduct.chargePlanId,
     operationStatus: newStatus,
     legalEntity: youniumData.legalEntity,
-    effectiveChangeDate: selectedCharge.effectiveStartDate,
+    effectiveChangeDate: effectiveChangeDate, // Formatted effectiveStartDate
     productLineNumber: selectedProduct.productLineNumber
   };
 
