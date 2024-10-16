@@ -361,7 +361,7 @@ app.post('/toggle-operation-status', async (req, res) => {
   }
 
   // Construct the API URL with the operationStatus instead of ready4invoicing
-  const activationUrl = `https://cas-test.loveyourq.se/dev/UpdateReady4Invoicing` +
+  const activationUrl = `https://cas-test.loveyourq.se/dev/UpdateOperationStatus` +
     `?OrderId=${encodeURIComponent(orderId)}` +
     `&AccountId=${encodeURIComponent(accountId)}` +
     `&InvoiceAccountId=${encodeURIComponent(invoiceAccountId)}` +

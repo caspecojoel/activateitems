@@ -322,7 +322,7 @@ const onBtnClick = (t, opts) => {
 
           console.log('Selected Operation Statuses:', selectedOperationStatuses);
 
-          // Construct the Get Orders and UpdateReady4Invoicing URLs
+          // Construct the Get Orders and UpdateOperationStatus URLs
           const apiKey = 'YOUR-API-KEY';
           const getOrdersUrl = `https://cas-test.loveyourq.se/dev/GetYouniumOrders?OrgNo=${orgNo}&HubspotDealId=${hubspotId}&apikey=${apiKey}`;
           const product = youniumData.products[0];
@@ -331,7 +331,7 @@ const onBtnClick = (t, opts) => {
           // Find the operation status for the current charge
           const selectedStatus = selectedOperationStatuses.find(status => status.chargeId === charge.id)?.operationStatus || 'Not set';
 
-          const activationUrl = `https://cas-test.loveyourq.se/dev/UpdateReady4Invoicing` +
+          const activationUrl = `https://cas-test.loveyourq.se/dev/UpdateOperationStatus` +
             `?OrderId=${youniumData.id}` +
             `&AccountId=${youniumData.account.accountNumber}` +
             `&InvoiceAccountId=${youniumData.invoiceAccount.accountNumber}` +
