@@ -158,6 +158,9 @@ const handleOperationStatusChange = async (chargeId, newStatus) => {
 
     if (data.success) {
       console.log(`Successfully updated operation status for charge ${chargeId} to "${newStatus}"`);
+
+      // Fetch the latest Younium data and update the modal
+      await fetchLatestYouniumData(3, 2000, orgNo, hubspotId);
     } else {
       console.error('Failed to update the operation status:', data.message);
       alert(`Failed to update operation status: ${data.message}`);
