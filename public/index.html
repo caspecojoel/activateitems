@@ -91,9 +91,6 @@
             }
         });
         
-        // Show loading spinner while fetching data
-        document.getElementById('loading-spinner').style.display = 'block';
-        
         // Populate Younium Account and Order data if the elements exist
         if (domElements.hubspotId) domElements.hubspotId.textContent = urlParams.get('hubspotId');
         if (domElements.orgNumber) domElements.orgNumber.textContent = urlParams.get('orgNo');
@@ -107,20 +104,7 @@
         const orderStatus = youniumData.status || 'N/A';
         if (orderStatus.toLowerCase() === 'draft') {
             domElements.orderStatus.classList.add('draft'); // Apply bold red styling to draft status
-            disableAllButtons(); // Disable all buttons
         }
-        
-        // Function to disable all buttons
-        function disableAllButtons() {
-            const allButtons = document.querySelectorAll('.activate-button, .inactivate-button');
-            allButtons.forEach(btn => {
-                btn.disabled = true; // Disable buttons
-                btn.classList.add('greyed-out'); // Apply grey-out styling
-            });
-        }
-        
-        // Hide loading spinner once data is loaded
-        document.getElementById('loading-spinner').style.display = 'none';
         
         // Populate product and charge data into the table
         youniumData.products.sort((a, b) => a.name.localeCompare(b.name)); // Sort products alphabetically
