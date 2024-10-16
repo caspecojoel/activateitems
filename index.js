@@ -352,7 +352,7 @@ registerTrelloWebhook();
 
 app.post('/toggle-operation-status', async (req, res) => {
   console.log('Received request to toggle operation status:', req.body);
-  const { chargeId, orderId, accountId, invoiceAccountId, productId, chargePlanId, productLineNumber, effectiveStartDate, legalEntity, operationStatus } = req.body;
+  const { chargeId, orderId, accountId, invoiceAccountId, productId, chargePlanId, productLineNumber, effectiveChangeDate, legalEntity, operationStatus } = req.body;
 
   // Ensure the chargePlanId and chargeId correspond to the latest versions
   if (!chargePlanId || !chargeId) {
@@ -369,7 +369,7 @@ app.post('/toggle-operation-status', async (req, res) => {
     `&ChargePlanId=${encodeURIComponent(chargePlanId)}` +
     `&ChargeId=${encodeURIComponent(chargeId)}` +
     `&ProductLineNumber=${encodeURIComponent(productLineNumber)}` +
-    `&EffectiveChangeDate=${encodeURIComponent(effectiveStartDate)}` +
+    `&EffectiveChangeDate=${encodeURIComponent(effectiveChangeDate)}` +
     `&LegalEntity=${encodeURIComponent(legalEntity)}` + 
     `&OperationStatus=${encodeURIComponent(operationStatus)}` + 
     `&apikey=${encodeURIComponent(process.env.YOUNIUM_API_KEY)}`;
