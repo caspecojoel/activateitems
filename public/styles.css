@@ -200,8 +200,8 @@ th {
 .operation-status-dropdown::after {
     content: '\25BC'; /* Downward arrow symbol */
     position: absolute;
-    right: 8px; /* Adjusted the position to move the arrow slightly left */
-    top: 50%;
+    right: 70px; /* Adjusted the position to move the arrow slightly left */
+    top: 60%;
     transform: translateY(-50%);
     pointer-events: none;
     color: #999;
