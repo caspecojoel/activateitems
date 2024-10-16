@@ -107,7 +107,8 @@ const handleOperationStatusChange = async (chargeId, newStatus) => {
     invoiceAccountId: youniumData.invoiceAccount.accountNumber,
     productId: selectedProduct.productNumber,
     chargePlanId: selectedProduct.chargePlanId,
-    operationStatus: newStatus // Replaced ready4invoicing with operationStatus
+    operationStatus: newStatus,  // Replaced ready4invoicing with operationStatus
+    legalEntity: youniumData.legalEntity  // Added LegalEntity to the request body
   };
 
   console.log('Request body for operation status change:', requestBody);
