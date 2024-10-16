@@ -57,16 +57,27 @@ const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
         .then(updatedYouniumData => {
           console.log(`Attempt ${attemptNumber}: Updated Younium data received:`, updatedYouniumData);
 
+          // Check for invalid response
           if (!updatedYouniumData || updatedYouniumData.name === 'Invalid hubspot or orgnummer') {
-            console.error('Failed to fetch valid updated Younium data:', updatedYouniumData);
+            console.error('Failed to fetch valid Younium data:', updatedYouniumData);
             alert('Failed to fetch valid updated data. Please verify Hubspot ID and Organization Number.');
             hideLoadingSpinner();
             reject(new Error('Failed to fetch valid updated Younium data'));
             return;
           }
 
-          // Reassign the updated Younium data
+          // Check if products array exists and is valid
+          if (!updatedYouniumData.products || !Array.isArray(updatedYouniumData.products) || updatedYouniumData.products.length === 0) {
+            console.error('Invalid products data in Younium response:', updatedYouniumData);
+            alert('No products found in the updated Younium data.');
+            hideLoadingSpinner();
+            reject(new Error('No products found in Younium data'));
+            return;
+          }
+
+          // Log and reassign updated Younium data
           youniumData = updatedYouniumData;
+          console.log('Valid Younium data structure:', updatedYouniumData);
 
           // Update modal and resolve
           updateModalWithYouniumData(updatedYouniumData);
@@ -74,14 +85,20 @@ const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
           resolve();
         })
         .catch(fetchError => {
-          console.error('Error fetching updated Younium data:', fetchError);
-          hideLoadingSpinner();
-          alert('An error occurred while fetching data.');
-          reject(fetchError);
+          console.error(`Attempt ${attemptNumber}: Error fetching updated Younium data:`, fetchError);
+
+          if (attemptNumber < retries) {
+            console.log(`Retrying in ${delay}ms...`);
+            setTimeout(() => tryFetch(attemptNumber + 1), delay); // Retry with delay
+          } else {
+            hideLoadingSpinner();
+            alert('An error occurred while fetching data after multiple attempts.');
+            reject(fetchError);
+          }
         });
     };
 
-    tryFetch(1);
+    tryFetch(1); // Start with attempt 1
   });
 };
 

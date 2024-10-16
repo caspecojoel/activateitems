@@ -122,7 +122,7 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
               name: charge.name,
               effectiveStartDate: charge.effectiveStartDate, // Charge's start date
               customFields: {
-                operationStatus: charge.customFields.operationStatus || 'Not set' // Extracting only operationStatus
+                operationStatus: charge.customFields?.operationStatus || 'Not set' // Extracting only operationStatus
               }
             }))
         }))
@@ -132,6 +132,7 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
     console.log('No Younium data found for the provided OrgNo and HubspotDealId.');
     return null;
   } catch (error) {
+    // Enhanced error handling to include request status and message
     console.error('Error fetching Younium data:', error.response ? error.response.data : error.message);
     return null;
   }
