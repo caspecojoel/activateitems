@@ -192,16 +192,25 @@ th {
     border-color: #555;
 }
 
+/* Add custom arrow to dropdown */
+.operation-status-dropdown {
+    position: relative;
+}
+
+.operation-status-dropdown::after {
+    content: '\25BC'; /* Downward arrow symbol */
+    position: absolute;
+    right: 70px; /* Adjusted the position to move the arrow slightly left */
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #999;
+}
+
 /* Make sure the dropdown text aligns well */
 .operation-status-dropdown select {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
     padding-right: 30px; /* Add padding to make space for custom arrow */
-}
-  
-.loading-indicator {
-    margin-left: 10px;
-    font-style: italic;
-    color: #666;
 }
