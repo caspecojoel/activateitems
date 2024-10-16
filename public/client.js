@@ -100,7 +100,7 @@ const handleOperationStatusChange = async (chargeId, newStatus) => {
 
   // Rename effectiveStartDate to effectiveChangeDate
   const effectiveChangeDate = selectedCharge.effectiveStartDate
-    ? new Date(selectedCharge.effectiveStartDate).toISOString().split('.')[0] // Convert to required format
+    ? new Date(selectedCharge.effectiveStartDate + 'Z').toISOString().split('.')[0]
     : 'undefined';
 
   console.log(`Effective Change Date to be sent: ${effectiveChangeDate}`);
@@ -115,7 +115,7 @@ const handleOperationStatusChange = async (chargeId, newStatus) => {
     chargePlanId: selectedProduct.chargePlanId,
     operationStatus: newStatus,
     legalEntity: youniumData.legalEntity,
-    effectiveChangeDate: effectiveChangeDate, // Send it as effectiveChangeDate
+    effectiveChangeDate: effectiveChangeDate,
     productLineNumber: selectedProduct.productLineNumber
   };
 
