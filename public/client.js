@@ -112,6 +112,22 @@ function hideLoadingSpinner() {
   }
 }
 
+const fetchWithTimeout = (url, options, timeout = 10000) => {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('Request timed out')), timeout);
+    fetch(url, options)
+      .then(response => {
+        clearTimeout(timer);
+        if (!response.ok) {
+          return reject(new Error('Failed to fetch data.'));
+        }
+        return resolve(response.json());
+      })
+      .catch(error => reject(error));
+  });
+};
+
+// Enhanced handleOperationStatusChange with retry logic
 const handleOperationStatusChange = async (chargeId, newStatus) => {
   if (isOperationInProgress) {
     console.log('An operation is already in progress. Please wait.');
@@ -122,64 +138,65 @@ const handleOperationStatusChange = async (chargeId, newStatus) => {
 
   const orgNo = document.getElementById('org-number').textContent.trim();
   const hubspotId = document.getElementById('hubspot-id').textContent.trim();
-
-  // Check if youniumData is null, if so, fetch the latest data
-  if (!youniumData) {
-    console.log('youniumData is null, fetching latest data...');
-    await fetchLatestYouniumData(3, 2000, orgNo, hubspotId);
-  }
-
-  // Proceed only if youniumData is not null
-  if (!youniumData) {
-    console.error('Failed to retrieve Younium data after retry.');
-    alert('Error: Unable to retrieve Younium data.');
-    resetDropdowns();
-    return;
-  }
-
-  // Disable all dropdowns and show loading indicator
+  
   const allDropdowns = document.querySelectorAll('.operation-status-select');
-  const loadingIndicator = document.createElement('span');
-  loadingIndicator.textContent = ' Updating...';
-  loadingIndicator.className = 'loading-indicator';
+  allDropdowns.forEach(dropdown => dropdown.disabled = true);
 
-  allDropdowns.forEach(dropdown => {
-    dropdown.disabled = true;
-    if (dropdown.getAttribute('data-charge-id') === chargeId) {
-      dropdown.parentNode.appendChild(loadingIndicator.cloneNode(true));
-    }
-  });
-
-  console.log('youniumData structure:', JSON.stringify(youniumData, null, 2));
-
-  // Fetch selected product and charge details from the updated youniumData
   const selectedCharge = youniumData?.products.flatMap(product => product.charges).find(charge => charge.id === chargeId);
   const selectedProduct = youniumData?.products.find(product => product.charges.some(charge => charge.id === chargeId));
 
   if (!selectedCharge || !selectedProduct) {
-    console.error('Selected charge or product not found in updated data');
-    alert('Error: Unable to find the selected product or charge.');
+    console.error('Charge or product not found.');
+    alert('Unable to find the selected charge or product.');
     resetDropdowns();
     return;
   }
 
-  // Continue with the operation status update logic...
+  const requestBody = {
+    chargeId: selectedCharge.id,
+    orderId: youniumData.id,
+    accountId: youniumData.account.accountNumber,
+    invoiceAccountId: youniumData.invoiceAccount.accountNumber,
+    productId: selectedProduct.productNumber,
+    chargePlanId: selectedProduct.chargePlanId,
+    operationStatus: newStatus,
+    legalEntity: youniumData.legalEntity,
+    effectiveChangeDate: selectedCharge.effectiveStartDate || 'undefined',
+    productLineNumber: selectedProduct.productLineNumber
+  };
+
+  const sendRequest = async (retryCount = 3) => {
+    try {
+      const response = await fetchWithTimeout('/toggle-operation-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (response.success) {
+        console.log(`Operation status updated for charge ${chargeId}.`);
+        await fetchLatestYouniumData(3, 2000, orgNo, hubspotId);
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (error) {
+      if (retryCount > 0) {
+        console.log(`Retrying... (${retryCount} attempts left)`);
+        return sendRequest(retryCount - 1);
+      }
+      console.error('Error during update:', error);
+      alert('Failed to update the operation status. Please try again later.');
+    } finally {
+      resetDropdowns();
+    }
+  };
+
+  sendRequest();
 };
 
 function resetDropdowns() {
   const allDropdowns = document.querySelectorAll('.operation-status-select');
-  const loadingIndicators = document.querySelectorAll('.loading-indicator');
-
-  allDropdowns.forEach(dropdown => {
-    dropdown.disabled = false;
-  });
-
-  loadingIndicators.forEach(indicator => {
-    if (indicator.parentNode) {
-      indicator.parentNode.removeChild(indicator);
-    }
-  });
-
+  allDropdowns.forEach(dropdown => dropdown.disabled = false);
   isOperationInProgress = false;
 }
 
@@ -318,8 +335,6 @@ const fetchYouniumData = (orgNo, hubspotId, t) => {
 
 // Function to handle button click with t.alert for error handling and detailed logging
 const onBtnClick = (t, opts) => {
-  console.log('Button clicked on card:', JSON.stringify(opts, null, 2)); // Log structured opts data
-
   // Show a loading message using t.alert
   const loadingAlert = t.alert({
     message: 'Loading... Please wait while the operation status is being fetched.',
