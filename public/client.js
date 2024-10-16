@@ -1,3 +1,5 @@
+let youniumData = null;
+
 const getCustomFieldValue = (fields, fieldId) => {
   const field = fields.find(f => f.idCustomField === fieldId);
   if (!field) {
@@ -166,7 +168,8 @@ const handleOperationStatusChange = async (dropdownElement, chargeId, newStatus)
   }
 };
 
-const updateModalWithYouniumData = (youniumData) => {
+const updateModalWithYouniumData = (data) => {
+  youniumData = data; // Assign data to the global variable
   console.log('Updating modal with updated Younium data:', youniumData);
 
   if (!youniumData || !youniumData.account || !youniumData.products) {
@@ -224,9 +227,17 @@ const updateModalWithYouniumData = (youniumData) => {
     }
   });
 
-  // Disable all buttons if the order is in draft status
+  // Remove existing event listeners and add new ones
   const allDropdowns = document.querySelectorAll('.operation-status-select');
   allDropdowns.forEach(dropdown => {
+    // Clone the dropdown to remove all existing event listeners
+    const newDropdown = dropdown.cloneNode(true);
+    dropdown.parentNode.replaceChild(newDropdown, dropdown);
+  });
+
+  // Re-select the dropdowns after cloning
+  const updatedDropdowns = document.querySelectorAll('.operation-status-select');
+  updatedDropdowns.forEach(dropdown => {
     if (isDraft) {
       dropdown.disabled = true;
       dropdown.classList.add('greyed-out');
