@@ -87,6 +87,13 @@ const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
 // Global variable to track if an operation is in progress
 let isOperationInProgress = false;
 
+function hideLoadingSpinner() {
+  const loadingSpinner = document.getElementById('loading-spinner');
+  if (loadingSpinner) {
+    loadingSpinner.style.display = 'none';
+  }
+}
+
 const handleOperationStatusChange = async (chargeId, newStatus) => {
   if (isOperationInProgress) {
     console.log('An operation is already in progress. Please wait.');
