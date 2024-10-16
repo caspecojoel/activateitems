@@ -55,7 +55,7 @@
     <script>
         // Parse the URL and get Younium data
         const urlParams = new URLSearchParams(window.location.search);
-        youniumData = JSON.parse(urlParams.get('youniumData'));
+        const youniumData = JSON.parse(urlParams.get('youniumData'));
         
         // Fetch the constructed URLs from the query string
         const getOrdersUrl = urlParams.get('getOrdersUrl');

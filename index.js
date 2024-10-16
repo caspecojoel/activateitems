@@ -58,54 +58,32 @@ async function registerTrelloWebhook() {
   }
 }
 
-// Function to handle API request with retries and timeout
-async function fetchWithRetries(url, config, retries = 3, timeout = 10000) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-  try {
-    const response = await axios({
-      ...config,
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-    return response;
-  } catch (error) {
-    clearTimeout(timeoutId);
-
-    if (retries > 0) {
-      console.log(`Retrying request to ${url}... (${retries} attempts left)`);
-      return fetchWithRetries(url, config, retries - 1, timeout);
-    }
-
-    throw error;
-  }
-}
-
 // Function to get Younium order data
 async function getYouniumOrderData(orgNo, hubspotDealId) {
   try {
     console.log(`Fetching Younium order data for OrgNo: ${orgNo}, HubspotDealId: ${hubspotDealId}`);
 
-    const response = await fetchWithRetries(
-      `https://cas-test.loveyourq.se/dev/GetYouniumOrders`,
-      {
-        params: {
-          OrgNo: orgNo,
-          HubspotDealId: hubspotDealId,
-          apikey: process.env.YOUNIUM_API_KEY
-        },
-        auth: {
-          username: process.env.AUTH_USERNAME,
-          password: process.env.AUTH_PASSWORD
-        }
+    const response = await axios.get(`https://cas-test.loveyourq.se/dev/GetYouniumOrders`, {
+      params: {
+        OrgNo: orgNo,
+        HubspotDealId: hubspotDealId,
+        apikey: process.env.YOUNIUM_API_KEY
+      },
+      auth: {
+        username: process.env.AUTH_USERNAME,
+        password: process.env.AUTH_PASSWORD
       }
-    );
+    });
 
     console.log('Received response from Younium API:', response.data);
 
     if (response.data && response.data.orders && response.data.orders.length > 0) {
       const orders = response.data.orders;
+
+      // Log all orders with isLastVersion to debug
+      orders.forEach(order => {
+        console.log(`Order Number: ${order.orderNumber}, Version: ${order.version}, isLastVersion: ${order.isLastVersion}`);
+      });
 
       // Find the order with isLastVersion true
       const youniumOrder = orders.find(order => order.isLastVersion === true);
@@ -117,33 +95,34 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
 
       console.log(`Processing Younium order with ID: ${youniumOrder.id}, Version: ${youniumOrder.version}`);
 
+      // Processing the order, now including LegalEntity
       return {
-        legalEntity: response.data.LegalEntity || 'Unknown LegalEntity',
-        id: youniumOrder.id,
+        legalEntity: response.data.LegalEntity || 'Unknown LegalEntity', // Add LegalEntity to the returned data
+        id: youniumOrder.id, // OrderId
         status: youniumOrder.status,
         description: youniumOrder.description,
         account: {
-          accountNumber: youniumOrder.account.accountNumber,
+          accountNumber: youniumOrder.account.accountNumber, // AccountId
           name: youniumOrder.account.name,
         },
         invoiceAccount: {
-          accountNumber: youniumOrder.invoiceAccount.accountNumber,
+          accountNumber: youniumOrder.invoiceAccount.accountNumber, // InvoiceAccountId
           name: youniumOrder.invoiceAccount.name,
         },
         products: youniumOrder.products.map(product => ({
-          productNumber: product.productNumber,
-          chargePlanId: product.chargePlanId,
+          productNumber: product.productNumber, // ProductId
+          chargePlanId: product.chargePlanId,   // Use correct GUID for ChargePlanId
           name: product.name,
-          productLineNumber: product.productLineNumber,
-          effectiveStartDate: product.effectiveStartDate,
+          productLineNumber: product.productLineNumber, // New field
+          effectiveStartDate: product.effectiveStartDate, // New field
           charges: product.charges
-            .filter(charge => charge.isLastVersion)
+            .filter(charge => charge.isLastVersion) // Only take the latest version of charges
             .map(charge => ({
-              id: charge.id,
+              id: charge.id, // Use internal GUID for chargeId
               name: charge.name,
-              effectiveStartDate: charge.effectiveStartDate,
+              effectiveStartDate: charge.effectiveStartDate, // Charge's start date
               customFields: {
-                operationStatus: charge.customFields?.operationStatus || 'Not set'
+                operationStatus: charge.customFields.operationStatus || 'Not set' // Extracting only operationStatus
               }
             }))
         }))
@@ -158,7 +137,7 @@ async function getYouniumOrderData(orgNo, hubspotDealId) {
   }
 }
 
-// Endpoint to get Younium data
+// New endpoint to get Younium data
 app.get('/get-younium-data', async (req, res) => {
   const { orgNo, hubspotId } = req.query;
   console.log(`Received request for Younium data with OrgNo: ${orgNo}, HubspotId: ${hubspotId}`);
@@ -371,15 +350,17 @@ app.post('/trello-webhook', async (req, res) => {
 // Register Trello Webhook on startup
 registerTrelloWebhook();
 
-// Handle POST to toggle operation status
 app.post('/toggle-operation-status', async (req, res) => {
+  console.log('Received request to toggle operation status:', req.body);
   const { chargeId, orderId, accountId, invoiceAccountId, productId, chargePlanId, productLineNumber, effectiveChangeDate, legalEntity, operationStatus } = req.body;
 
+  // Ensure the chargePlanId and chargeId correspond to the latest versions
   if (!chargePlanId || !chargeId) {
     console.error('Invalid chargePlanId or chargeId provided.');
     return res.status(400).json({ success: false, message: 'Invalid chargePlanId or chargeId provided' });
   }
 
+  // Construct the API URL with the operationStatus instead of ready4invoicing
   const activationUrl = `https://cas-test.loveyourq.se/dev/UpdateOperationStatus` +
     `?OrderId=${encodeURIComponent(orderId)}` +
     `&AccountId=${encodeURIComponent(accountId)}` +
@@ -389,14 +370,25 @@ app.post('/toggle-operation-status', async (req, res) => {
     `&ChargeId=${encodeURIComponent(chargeId)}` +
     `&ProductLineNumber=${encodeURIComponent(productLineNumber)}` +
     `&EffectiveChangeDate=${encodeURIComponent(effectiveChangeDate)}` +
-    `&LegalEntity=${encodeURIComponent(legalEntity)}` +
-    `&OperationStatus=${encodeURIComponent(operationStatus)}` +
-    `&apikey=${process.env.YOUNIUM_API_KEY}`;
+    `&LegalEntity=${encodeURIComponent(legalEntity)}` + 
+    `&OperationStatus=${encodeURIComponent(operationStatus)}` + 
+    `&apikey=${encodeURIComponent(process.env.YOUNIUM_API_KEY)}`;
 
   console.log('Constructed activation URL:', activationUrl);
 
   try {
-    const response = await fetchWithRetries(activationUrl, { auth: { username: process.env.AUTH_USERNAME, password: process.env.AUTH_PASSWORD } });
+    console.log('Sending request to Younium API...');
+    const response = await axios.post(activationUrl, null, {
+      auth: {
+        username: process.env.AUTH_USERNAME,
+        password: process.env.AUTH_PASSWORD
+      },
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    console.log('Received response from Younium API:', response.status, response.data);
 
     if (response.status === 200) {
       res.json({ success: true, message: 'Operation status updated successfully' });
@@ -405,11 +397,28 @@ app.post('/toggle-operation-status', async (req, res) => {
       res.status(response.status).json({ success: false, message: 'Failed to update operation status', details: response.data });
     }
   } catch (error) {
-    console.error('Error updating the operation status:', error.message);
+    console.error('Error updating the operation status:', error);
     if (error.response) {
-      res.status(error.response.status).json({ success: false, message: 'Error from Younium API', details: error.response.data });
+      console.error('Error response from Younium API:', error.response.status, error.response.data);
+      res.status(error.response.status).json({ 
+        success: false, 
+        message: 'Error from Younium API', 
+        details: error.response.data 
+      });
+    } else if (error.request) {
+      console.error('No response received from Younium API');
+      res.status(500).json({ 
+        success: false, 
+        message: 'No response from Younium API', 
+        details: 'The request was made but no response was received' 
+      });
     } else {
-      res.status(500).json({ success: false, message: 'Internal server error', details: error.message });
+      console.error('Error setting up the request:', error.message);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Internal server error', 
+        details: error.message 
+      });
     }
   }
 });

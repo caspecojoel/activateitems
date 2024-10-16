@@ -1,5 +1,3 @@
-let youniumData = null; // Declare globally
-
 const getCustomFieldValue = (fields, fieldId) => {
   const field = fields.find(f => f.idCustomField === fieldId);
   if (!field) {
@@ -9,6 +7,7 @@ const getCustomFieldValue = (fields, fieldId) => {
   return field?.value?.text || field?.value?.number || '';
 };
 
+// Function to get operation status
 const getOperationStatus = (youniumData) => {
   console.log('getOperationStatus received:', youniumData);
   if (!youniumData) {
@@ -46,8 +45,11 @@ const getOperationStatus = (youniumData) => {
   }
 };
 
+// Fetch updated Younium data with retries and delay
 const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
   return new Promise((resolve, reject) => {
+    let lastData = null;
+
     // Show spinner
     const loadingSpinner = document.getElementById('loading-spinner');
     loadingSpinner.style.display = 'block';
@@ -57,27 +59,13 @@ const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
         .then(updatedYouniumData => {
           console.log(`Attempt ${attemptNumber}: Updated Younium data received:`, updatedYouniumData);
 
-          // Check for invalid response
           if (!updatedYouniumData || updatedYouniumData.name === 'Invalid hubspot or orgnummer') {
-            console.error('Failed to fetch valid Younium data:', updatedYouniumData);
+            console.error('Failed to fetch valid updated Younium data:', updatedYouniumData);
             alert('Failed to fetch valid updated data. Please verify Hubspot ID and Organization Number.');
             hideLoadingSpinner();
             reject(new Error('Failed to fetch valid updated Younium data'));
             return;
           }
-
-          // Check if products array exists and is valid
-          if (!updatedYouniumData.products || !Array.isArray(updatedYouniumData.products) || updatedYouniumData.products.length === 0) {
-            console.error('Invalid products data in Younium response:', updatedYouniumData);
-            alert('No products found in the updated Younium data.');
-            hideLoadingSpinner();
-            reject(new Error('No products found in Younium data'));
-            return;
-          }
-
-          // Log and reassign updated Younium data
-          youniumData = updatedYouniumData;
-          console.log('Valid Younium data structure:', updatedYouniumData);
 
           // Update modal and resolve
           updateModalWithYouniumData(updatedYouniumData);
@@ -85,72 +73,46 @@ const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
           resolve();
         })
         .catch(fetchError => {
-          console.error(`Attempt ${attemptNumber}: Error fetching updated Younium data:`, fetchError);
-
-          if (attemptNumber < retries) {
-            console.log(`Retrying in ${delay}ms...`);
-            setTimeout(() => tryFetch(attemptNumber + 1), delay); // Retry with delay
-          } else {
-            hideLoadingSpinner();
-            alert('An error occurred while fetching data after multiple attempts.');
-            reject(fetchError);
-          }
+          console.error('Error fetching updated Younium data:', fetchError);
+          hideLoadingSpinner();
+          alert('An error occurred while fetching data.');
+          reject(fetchError);
         });
     };
 
-    tryFetch(1); // Start with attempt 1
+    tryFetch(1);
   });
 };
 
-// Global variable to track if an operation is in progress
-let isOperationInProgress = false;
-
-function hideLoadingSpinner() {
-  const loadingSpinner = document.getElementById('loading-spinner');
-  if (loadingSpinner) {
-    loadingSpinner.style.display = 'none';
-  }
-}
-
-const fetchWithTimeout = (url, options, timeout = 10000) => {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Request timed out')), timeout);
-    fetch(url, options)
-      .then(response => {
-        clearTimeout(timer);
-        if (!response.ok) {
-          return reject(new Error('Failed to fetch data.'));
-        }
-        return resolve(response.json());
-      })
-      .catch(error => reject(error));
-  });
-};
-
-// Enhanced handleOperationStatusChange with retry logic
-const handleOperationStatusChange = async (chargeId, newStatus) => {
-  if (isOperationInProgress) {
-    console.log('An operation is already in progress. Please wait.');
-    return;
-  }
-
-  isOperationInProgress = true;
-
+const handleOperationStatusChange = async (dropdownElement, chargeId, newStatus, youniumData) => {
   const orgNo = document.getElementById('org-number').textContent.trim();
   const hubspotId = document.getElementById('hubspot-id').textContent.trim();
-  
-  const allDropdowns = document.querySelectorAll('.operation-status-select');
-  allDropdowns.forEach(dropdown => dropdown.disabled = true);
 
-  const selectedCharge = youniumData?.products.flatMap(product => product.charges).find(charge => charge.id === chargeId);
-  const selectedProduct = youniumData?.products.find(product => product.charges.some(charge => charge.id === chargeId));
+  // Fetch selected product and charge details from youniumData
+  const selectedCharge = youniumData.products
+    .flatMap(product => product.charges)
+    .find(charge => charge.id === chargeId);
+  const selectedProduct = youniumData.products
+    .find(product => product.charges.some(charge => charge.id === chargeId));
 
   if (!selectedCharge || !selectedProduct) {
-    console.error('Charge or product not found.');
-    alert('Unable to find the selected charge or product.');
-    resetDropdowns();
+    console.error('Selected charge or product not found');
+    alert('Error: Unable to find the selected product or charge.');
     return;
   }
+
+  // Disable the dropdown
+  dropdownElement.disabled = true;
+
+  // Add spinner next to dropdown
+  let spinner = document.createElement('span');
+  spinner.classList.add('spinner');
+  dropdownElement.parentElement.appendChild(spinner);
+
+  // Prepare the request body with internal IDs (GUIDs)
+  const effectiveChangeDate = selectedCharge.effectiveStartDate
+    ? new Date(selectedCharge.effectiveStartDate + 'Z').toISOString().split('.')[0]
+    : 'undefined';
 
   const requestBody = {
     chargeId: selectedCharge.id,
@@ -161,44 +123,43 @@ const handleOperationStatusChange = async (chargeId, newStatus) => {
     chargePlanId: selectedProduct.chargePlanId,
     operationStatus: newStatus,
     legalEntity: youniumData.legalEntity,
-    effectiveChangeDate: selectedCharge.effectiveStartDate || 'undefined',
+    effectiveChangeDate: effectiveChangeDate,
     productLineNumber: selectedProduct.productLineNumber
   };
 
-  const sendRequest = async (retryCount = 3) => {
-    try {
-      const response = await fetchWithTimeout('/toggle-operation-status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
-      });
+  console.log('Request body for operation status change:', requestBody);
 
-      if (response.success) {
-        console.log(`Operation status updated for charge ${chargeId}.`);
-        await fetchLatestYouniumData(3, 2000, orgNo, hubspotId);
-      } else {
-        throw new Error(response.message);
-      }
-    } catch (error) {
-      if (retryCount > 0) {
-        console.log(`Retrying... (${retryCount} attempts left)`);
-        return sendRequest(retryCount - 1);
-      }
-      console.error('Error during update:', error);
-      alert('Failed to update the operation status. Please try again later.');
-    } finally {
-      resetDropdowns();
+  try {
+    const response = await fetch('/toggle-operation-status', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      console.log(`Successfully updated operation status for charge ${chargeId} to "${newStatus}"`);
+      // Optionally refresh the data to reflect changes
+      await fetchLatestYouniumData(1, 1000, orgNo, hubspotId);
+    } else {
+      console.error('Failed to update the operation status:', data.message);
+      alert(`Failed to update operation status: ${data.message}`);
     }
-  };
-
-  sendRequest();
+  } catch (error) {
+    console.error('Error during operation status update:', error);
+    alert('An error occurred. Please try again.');
+  } finally {
+    // Re-enable the dropdown
+    dropdownElement.disabled = false;
+    // Remove the spinner
+    if (spinner && spinner.parentElement) {
+      spinner.parentElement.removeChild(spinner);
+    }
+  }
 };
-
-function resetDropdowns() {
-  const allDropdowns = document.querySelectorAll('.operation-status-select');
-  allDropdowns.forEach(dropdown => dropdown.disabled = false);
-  isOperationInProgress = false;
-}
 
 const updateModalWithYouniumData = (youniumData) => {
   console.log('Updating modal with updated Younium data:', youniumData);
@@ -240,6 +201,7 @@ const updateModalWithYouniumData = (youniumData) => {
         // Create a table row for each product and charge
         const row = document.createElement('tr');
         row.innerHTML = `
+          <td>${product.name || 'N/A'}</td>
           <td>${charge.name || 'N/A'}</td>
           <td>${effectiveStartDate}</td>
           <td class="operation-status-dropdown">
@@ -257,9 +219,16 @@ const updateModalWithYouniumData = (youniumData) => {
     }
   });
 
-  // Disable all buttons if the order is in draft status
+  // Remove existing event listeners by cloning the dropdowns
   const allDropdowns = document.querySelectorAll('.operation-status-select');
   allDropdowns.forEach(dropdown => {
+    const newDropdown = dropdown.cloneNode(true);
+    dropdown.parentNode.replaceChild(newDropdown, dropdown);
+  });
+
+  // Re-select the dropdowns after cloning
+  const updatedDropdowns = document.querySelectorAll('.operation-status-select');
+  updatedDropdowns.forEach(dropdown => {
     if (isDraft) {
       dropdown.disabled = true;
       dropdown.classList.add('greyed-out');
@@ -271,7 +240,7 @@ const updateModalWithYouniumData = (youniumData) => {
       dropdown.addEventListener('change', (event) => {
         const chargeId = event.target.getAttribute('data-charge-id');
         const newStatus = event.target.value;
-        handleOperationStatusChange(chargeId, newStatus);
+        handleOperationStatusChange(event.target, chargeId, newStatus, youniumData);
       });
     }
   });
@@ -335,6 +304,8 @@ const fetchYouniumData = (orgNo, hubspotId, t) => {
 
 // Function to handle button click with t.alert for error handling and detailed logging
 const onBtnClick = (t, opts) => {
+  console.log('Button clicked on card:', JSON.stringify(opts, null, 2)); // Log structured opts data
+
   // Show a loading message using t.alert
   const loadingAlert = t.alert({
     message: 'Loading... Please wait while the operation status is being fetched.',
