@@ -201,7 +201,7 @@ th {
     content: '\25BC'; /* Downward arrow symbol */
     position: absolute;
     right: 70px; /* Adjusted the position to move the arrow slightly left */
-    top: 60%;
+    top: 50%;
     transform: translateY(-50%);
     pointer-events: none;
     color: #999;
