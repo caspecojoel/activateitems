@@ -36,28 +36,6 @@ body {
     color: red;
 }
 
-.greyed-out {
-    background-color: #ccc; /* Grey background */
-    cursor: not-allowed;
-    pointer-events: none; /* Make them unclickable */
-}
-
-  .loading-spinner {
-    border: 8px solid #f3f3f3;
-    border-radius: 50%;
-    border-top: 8px solid #3498db;
-    width: 40px;
-    height: 40px;
-    animation: spin 2s linear infinite;
-    margin: 20px auto;
-    display: block;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
 .description {
     font-size: 1.1em;
     text-align: center;
@@ -87,69 +65,6 @@ body {
     color: #666666c9;
     margin-top: 10px;
     padding-top: 10px; /* Extra padding to create separation from content */
-}
-
-.loading {
-    font-size: 1.2em;
-    color: #777;
-    text-align: center;
-    margin: 30px 0;
-}
-
-/* Activate Button */
-.activate-button {
-    background-color: #1f8493 !important;
-    color: white !important; /* Ensure text color is always visible */
-    border: none !important;
-    padding: 0.5rem 1.6rem !important;
-    border-radius: 5rem !important; /* Rounded corners */
-    display: flex;
-    align-items: center !important;
-    justify-content: center !important;
-    transition: background-color 0.3s ease;
-    width: 130px; /* Set a fixed width */
-    height: 40px; /* Set a fixed height */
-    text-align: center !important; /* Ensure the text is centered */
-    white-space: nowrap; /* Prevents the text from breaking into multiple lines */
-    font-size: 1em; /* Ensure text size is readable */
-    cursor: pointer; /* Show pointer on hover */
-}
-
-.activate-button:hover {
-    background-color: #1c7482 !important; /* Slightly darker hover effect */
-}
-
-/* Inactivate Button */
-.inactivate-button {
-    background-color: #f43325;
-    color: white;
-    padding: 0.5rem 1.6rem;
-    border: none;
-    cursor: pointer;
-    border-radius: 5rem; /* Make the inactivate button match activate */
-    transition: background-color 0.3s ease;
-    width: 130px; /* Set a fixed width */
-    height: 40px; /* Set a fixed height */
-    font-size: 1em; /* Ensure text size is readable */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.inactivate-button:hover {
-    background-color: #c23628; /* Slightly darker red on hover */
-}
-
-.activate-button.greyed-out,
-.inactivate-button.greyed-out,
-.activate-button:disabled,
-.inactivate-button:disabled {
-  background-color: #ccc !important;
-  color: #777 !important;
-  cursor: not-allowed !important;
-  opacity: 0.6 !important;
-  pointer-events: none !important;
-  border: 1px solid #999 !important;
 }
 
 .draft {
@@ -197,40 +112,6 @@ th {
 
 .button-container {
     text-align: center;
-}
-
-.spinner {
-    display: inline-block;
-    width: 15px;
-    height: 15px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
-    border-top-color: #fff;
-    animation: spin 1s ease-in-out infinite;
-    margin-left: 5px;
-    margin-right: 4px;
-  }
-  
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-.disabled-button {
-    cursor: not-allowed;
-    opacity: 0.5;
-    pointer-events: none;
-}
-  
-.processing-button {
-    background-color: grey;
-    cursor: wait;
-}
-
-.disabled {
-    opacity: 0.5;
-    pointer-events: none;
 }
 
 /* Styling for the products table */
@@ -285,38 +166,54 @@ th {
     transition: background-color 0.3s ease-in-out;
 }
 
-/* Style for the "More Info" button */
-#more-info-btn {
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    margin-top: 15px;
-    transition: background-color 0.3s ease;
+/* Dropdown styling */
+.operation-status-select {
+    width: 100%;
+    padding: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    border: 1px solid rgba(12, 6, 86, 0.24);
+    border-radius: 4px;
+    background-color: #fff;
+    color: #0C0656;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+    appearance: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-#more-info-btn:hover {
-    background-color: #0056b3;
+/* Change color when dropdown is focused */
+.operation-status-select:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
 }
 
-/* Style for the "More Info" section */
-#more-info {
-    padding: 20px;
-    border: 1px solid #ddd;
-    background-color: #f9f9f9;
-    margin-top: 10px;
-    border-radius: 8px;
-    display: none; /* Initially hidden */
-    transition: all 0.3s ease;
+/* Hover effect for dropdown */
+.operation-status-select:hover {
+    border-color: #555;
 }
 
-/* Add a fade-in effect when displaying the section */
-#more-info.show {
-    display: block;
-    opacity: 1;
-    transform: translateY(0);
+/* Add custom arrow to dropdown */
+.operation-status-dropdown {
+    position: relative;
+    width: 100%;
+}
+
+.operation-status-dropdown::after {
+    content: '\25BC'; /* Downward arrow symbol */
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #999;
+}
+
+/* Make sure the dropdown text aligns well */
+.operation-status-dropdown select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    padding-right: 30px; /* Add padding to make space for custom arrow */
 }
 
