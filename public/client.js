@@ -9,7 +9,6 @@ const getCustomFieldValue = (fields, fieldId) => {
   return field?.value?.text || field?.value?.number || '';
 };
 
-// Function to get operation status
 const getOperationStatus = (youniumData) => {
   console.log('getOperationStatus received:', youniumData);
   if (!youniumData) {
