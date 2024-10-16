@@ -84,13 +84,16 @@ const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
   });
 };
 
-const handleOperationStatusChange = async (chargeId, newStatus) => {
+const handleOperationStatusChange = async (dropdownElement, chargeId, newStatus, youniumData) => {
   const orgNo = document.getElementById('org-number').textContent.trim();
   const hubspotId = document.getElementById('hubspot-id').textContent.trim();
 
-  // Fetch selected product and charge details from the UI or stored youniumData
-  const selectedCharge = youniumData.products.flatMap(product => product.charges).find(charge => charge.id === chargeId);
-  const selectedProduct = youniumData.products.find(product => product.charges.some(charge => charge.id === chargeId));
+  // Fetch selected product and charge details from youniumData
+  const selectedCharge = youniumData.products
+    .flatMap(product => product.charges)
+    .find(charge => charge.id === chargeId);
+  const selectedProduct = youniumData.products
+    .find(product => product.charges.some(charge => charge.id === chargeId));
 
   if (!selectedCharge || !selectedProduct) {
     console.error('Selected charge or product not found');
@@ -98,14 +101,19 @@ const handleOperationStatusChange = async (chargeId, newStatus) => {
     return;
   }
 
-  // Rename effectiveStartDate to effectiveChangeDate
+  // Disable the dropdown
+  dropdownElement.disabled = true;
+
+  // Add spinner next to dropdown
+  let spinner = document.createElement('span');
+  spinner.classList.add('spinner');
+  dropdownElement.parentElement.appendChild(spinner);
+
+  // Prepare the request body with internal IDs (GUIDs)
   const effectiveChangeDate = selectedCharge.effectiveStartDate
     ? new Date(selectedCharge.effectiveStartDate + 'Z').toISOString().split('.')[0]
     : 'undefined';
 
-  console.log(`Effective Change Date to be sent: ${effectiveChangeDate}`);
-
-  // Prepare the request body with internal IDs (GUIDs)
   const requestBody = {
     chargeId: selectedCharge.id,
     orderId: youniumData.id,
@@ -134,6 +142,8 @@ const handleOperationStatusChange = async (chargeId, newStatus) => {
 
     if (data.success) {
       console.log(`Successfully updated operation status for charge ${chargeId} to "${newStatus}"`);
+      // Optionally refresh the data to reflect changes
+      await fetchLatestYouniumData(1, 1000, orgNo, hubspotId);
     } else {
       console.error('Failed to update the operation status:', data.message);
       alert(`Failed to update operation status: ${data.message}`);
@@ -141,6 +151,13 @@ const handleOperationStatusChange = async (chargeId, newStatus) => {
   } catch (error) {
     console.error('Error during operation status update:', error);
     alert('An error occurred. Please try again.');
+  } finally {
+    // Re-enable the dropdown
+    dropdownElement.disabled = false;
+    // Remove the spinner
+    if (spinner && spinner.parentElement) {
+      spinner.parentElement.removeChild(spinner);
+    }
   }
 };
 
@@ -202,9 +219,16 @@ const updateModalWithYouniumData = (youniumData) => {
     }
   });
 
-  // Disable all buttons if the order is in draft status
+  // Remove existing event listeners by cloning the dropdowns
   const allDropdowns = document.querySelectorAll('.operation-status-select');
   allDropdowns.forEach(dropdown => {
+    const newDropdown = dropdown.cloneNode(true);
+    dropdown.parentNode.replaceChild(newDropdown, dropdown);
+  });
+
+  // Re-select the dropdowns after cloning
+  const updatedDropdowns = document.querySelectorAll('.operation-status-select');
+  updatedDropdowns.forEach(dropdown => {
     if (isDraft) {
       dropdown.disabled = true;
       dropdown.classList.add('greyed-out');
@@ -216,7 +240,7 @@ const updateModalWithYouniumData = (youniumData) => {
       dropdown.addEventListener('change', (event) => {
         const chargeId = event.target.getAttribute('data-charge-id');
         const newStatus = event.target.value;
-        handleOperationStatusChange(chargeId, newStatus);
+        handleOperationStatusChange(event.target, chargeId, newStatus, youniumData);
       });
     }
   });
