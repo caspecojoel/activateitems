@@ -89,6 +89,17 @@ const handleOperationStatusChange = async (chargeId, newStatus) => {
   const orgNo = document.getElementById('org-number').textContent.trim();
   const hubspotId = document.getElementById('hubspot-id').textContent.trim();
 
+  // Fetch selected product and charge details from the UI or stored youniumData
+  const selectedCharge = youniumData.products.flatMap(product => product.charges).find(charge => charge.id === chargeId);
+  const selectedProduct = youniumData.products.find(product => product.charges.some(charge => charge.id === chargeId));
+
+  if (!selectedCharge || !selectedProduct) {
+    console.error('Selected charge or product not found');
+    alert('Error: Unable to find the selected product or charge.');
+    return;
+  }
+
+  // Prepare the request body with internal IDs (GUIDs)
   const requestBody = {
     chargeId: selectedCharge.id,
     orderId: youniumData.id,
@@ -96,7 +107,7 @@ const handleOperationStatusChange = async (chargeId, newStatus) => {
     invoiceAccountId: youniumData.invoiceAccount.accountNumber,
     productId: selectedProduct.productNumber,
     chargePlanId: selectedProduct.chargePlanId,
-    operationStatus: newStatus
+    operationStatus: newStatus // Replaced ready4invoicing with operationStatus
   };
 
   console.log('Request body for operation status change:', requestBody);
@@ -113,7 +124,7 @@ const handleOperationStatusChange = async (chargeId, newStatus) => {
     const data = await response.json();
 
     if (data.success) {
-      console.log(`Successfully updated charge ${chargeId} to "${newStatus}"`);
+      console.log(`Successfully updated operation status for charge ${chargeId} to "${newStatus}"`);
     } else {
       console.error('Failed to update the operation status:', data.message);
       alert(`Failed to update operation status: ${data.message}`);
