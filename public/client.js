@@ -120,13 +120,23 @@ const handleOperationStatusChange = async (chargeId, newStatus) => {
     }
   });
 
+  console.log('youniumData structure:', JSON.stringify(youniumData, null, 2));
+
   // Fetch selected product and charge details from the updated youniumData
   const selectedCharge = youniumData?.products.flatMap(product => product.charges).find(charge => charge.id === chargeId);
   const selectedProduct = youniumData?.products.find(product => product.charges.some(charge => charge.id === chargeId));
 
-  if (!selectedCharge || !selectedProduct) {
-    console.error('Selected charge or product not found in updated data');
-    alert('Error: Unable to find the selected product or charge.');
+  // Log and validate
+  if (!selectedCharge) {
+    console.error('Charge not found for chargeId:', chargeId, 'in youniumData:', youniumData);
+    alert('Error: Unable to find the selected charge.');
+    resetDropdowns();
+    return;
+  }
+
+  if (!selectedProduct) {
+    console.error('Product not found for chargeId:', chargeId, 'in youniumData:', youniumData);
+    alert('Error: Unable to find the selected product.');
     resetDropdowns();
     return;
   }
