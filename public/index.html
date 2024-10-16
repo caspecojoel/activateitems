@@ -28,7 +28,7 @@
                             <th>Product</th>
                             <th>Charge</th>
                             <th>Change Date</th>
-                            <th>Mark as ready</th>
+                            <th>Operation Status</th>
                         </tr>
                     </thead>                                    
                     <tbody id="products-container"></tbody>                    
@@ -128,25 +128,24 @@
             product.charges.sort((a, b) => a.name.localeCompare(b.name)); // Sort charges alphabetically
 
             product.charges.forEach(charge => {
-                const isActivated = charge.ready4invoicing === true || charge.ready4invoicing === "true" || charge.ready4invoicing === "1";
-                const buttonClass = isActivated ? 'inactivate-button' : 'activate-button';
-                const buttonText = isActivated ? 'Unready' : 'Ready';
+                // Retrieve operation status from customFields
+                const operationStatus = charge.customFields.operationStatus || 'Not set';
 
                 // Format the effective start date (if available)
                 const effectiveStartDate = charge.effectiveStartDate ? new Date(charge.effectiveStartDate).toLocaleDateString() : 'N/A';
 
-                // Populate the table row, now including productLineNumber
+                // Populate the table row with a dropdown for operationStatus
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${product.name || 'N/A'}</td>
                     <td>${charge.name || 'N/A'}</td>
                     <td>${effectiveStartDate}</td>
-                    <td class="button-container">
-                        <button class="${buttonClass}" 
-                                data-charge-id="${charge.id}" 
-                                data-product-name="${product.name || ''}">
-                        ${buttonText}
-                        </button>
+                    <td class="operation-status-dropdown">
+                        <select class="operation-status-select" data-charge-id="${charge.id}">
+                            <option value="Not set" ${operationStatus === 'Not set' ? 'selected' : ''}>Not set</option>
+                            <option value="Pending implementation" ${operationStatus === 'Pending implementation' ? 'selected' : ''}>Pending implementation</option>
+                            <option value="Implementation done" ${operationStatus === 'Implementation done' ? 'selected' : ''}>Implementation done</option>
+                        </select>
                     </td>
                 `;
                 domElements.productsContainer.appendChild(row);
