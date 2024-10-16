@@ -238,7 +238,6 @@ const updateModalWithYouniumData = (youniumData) => {
         // Create a table row for each product and charge
         const row = document.createElement('tr');
         row.innerHTML = `
-          <td>${product.name || 'N/A'}</td>
           <td>${charge.name || 'N/A'}</td>
           <td>${effectiveStartDate}</td>
           <td class="operation-status-dropdown">
