@@ -84,7 +84,6 @@ const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
   });
 };
 
-// Handle operation status change
 const handleOperationStatusChange = async (chargeId, newStatus) => {
   const orgNo = document.getElementById('org-number').textContent.trim();
   const hubspotId = document.getElementById('hubspot-id').textContent.trim();
@@ -116,7 +115,7 @@ const handleOperationStatusChange = async (chargeId, newStatus) => {
     chargePlanId: selectedProduct.chargePlanId,
     operationStatus: newStatus,
     legalEntity: youniumData.legalEntity,
-    effectiveChangeDate: effectiveChangeDate, // Correct UTC formatted date
+    effectiveChangeDate: effectiveChangeDate,
     productLineNumber: selectedProduct.productLineNumber
   };
 
