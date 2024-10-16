@@ -195,7 +195,6 @@ th {
 /* Add custom arrow to dropdown */
 .operation-status-dropdown {
     position: relative;
-    width: 100%;
 }
 
 .operation-status-dropdown::after {
