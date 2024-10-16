@@ -1,3 +1,5 @@
+let youniumData = null; // Declare globally
+
 const getCustomFieldValue = (fields, fieldId) => {
   const field = fields.find(f => f.idCustomField === fieldId);
   if (!field) {
