@@ -1,3 +1,6 @@
+// Declare the youniumData as mutable (let)
+let youniumData = null;
+
 const getCustomFieldValue = (fields, fieldId) => {
   const field = fields.find(f => f.idCustomField === fieldId);
   if (!field) {
@@ -45,7 +48,6 @@ const getOperationStatus = (youniumData) => {
   }
 };
 
-// Fetch updated Younium data with retries and delay
 const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
   return new Promise((resolve, reject) => {
     // Show spinner
@@ -65,7 +67,7 @@ const fetchLatestYouniumData = (retries, delay, orgNo, hubspotId) => {
             return;
           }
 
-          // Store the updated Younium data globally for further use
+          // Reassign the updated Younium data
           youniumData = updatedYouniumData;
 
           // Update modal and resolve
